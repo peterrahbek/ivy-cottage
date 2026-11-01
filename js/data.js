@@ -90,13 +90,16 @@ const DATA = (() => {
     { id: 'x-lights', area: 'wall', name: 'Christmas lights', scene: 'lights', opts: { where: 'cottage' }, seed: 308, verb: 'hang the lights' },
     { id: 'x-cafe-lights', place: 'cafe', area: 'front', name: 'Christmas lights', scene: 'lights', opts: { where: 'cafe' }, seed: 309, verb: 'hang the lights' },
     { id: 'x-cove-lights', place: 'cove', area: 'hutarea', name: 'Christmas lights', scene: 'lights', opts: { where: 'cove' }, seed: 310, verb: 'hang the lights' },
+    { id: 'x-dog', area: 'lawn', name: 'A muddy dog', scene: 'dog', opts: {}, seed: 311, verb: 'give the dog a bath' },
+    { id: 'x-cafe-dog', place: 'cafe', area: 'terrace', name: 'A muddy dog', scene: 'dog', opts: {}, seed: 313, verb: 'give the dog a bath' },
+    { id: 'x-cove-dog', place: 'cove', area: 'beach', name: 'A sandy dog', scene: 'dog', opts: {}, seed: 312, verb: 'give the dog a bath' },
   ];
 
   const FAMILY_OF = {
     lawn: 'mow', stones: 'scrub', roof: 'scrub', fence: 'paint', door: 'paint', wall: 'paint', shutters: 'paint', window: 'wash', roundWindow: 'wash',
     bed: 'weed', pond: 'skim', attic: 'dust', leaves: 'rake', plant: 'plant', build: 'build',
     cafeFloor: 'dust', awning: 'wash', sign: 'paint', tables: 'wash', counter: 'scrub', fridge: 'arrange', lights: 'arrange',
-    beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
+    dog: 'wash', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
   };
   const familyOf = (scene) => FAMILY_OF[scene];
 
@@ -134,6 +137,7 @@ const DATA = (() => {
         ['pond', 'Leaves in the pond', 'leaves'], ['win-bedroom', 'Rain spots on the bedroom windows'], ['lawn-patch', 'Leaves by the gate', 'leaves'],
         ['roof-left', 'Moss creeping back on the roof'], ['path-steps', 'Leaves on the stepping stones', 'leaves'], ['x-bulbs', 'Plant tulip bulbs for spring'],
         ['x-firewood', 'Stack the firewood'], ['shutters', 'Paint the shutters before winter'], ['bed-tulips', 'Tidy the tulip bed'],
+        ['x-dog', 'A muddy dog from next door'],
       ],
       winter: [
         ['path-front', 'Snow on the path', 'snow'], ['win-kitchen', 'Frost on the kitchen window', 'frost'], ['path-steps', 'Snowy stepping stones', 'snow'],
@@ -146,6 +150,7 @@ const DATA = (() => {
         ['fence-right', 'More fresh paint for the fence'], ['shutters', 'A new colour for the shutters'], ['door', 'A new colour for the door'],
         ['lawn-tree', 'The first mow of the year'], ['roof-right', 'Moss by the chimney'], ['x-windowboxes', 'Plant the window boxes'],
         ['x-veg', 'Sow the vegetable patch'], ['x-brickpath', 'Lay a brick path to the shed'], ['pond', 'Spring clean in the pond'],
+        ['x-dog', 'Bath time after a muddy spring walk'],
       ],
     },
     cafe: {
@@ -157,6 +162,7 @@ const DATA = (() => {
       autumn: [
         ['cafe-terrace', 'Leaves on the terrace', 'leaves'], ['cafe-deck', 'Leaves on the deck', 'leaves'], ['cafe-window', 'Rain spots on the shop window'],
         ['cafe-floor', 'Muddy footprints on the floor'], ['cafe-herbs', 'Fresh herbs for the kitchen'], ['cafe-tables', 'Coffee rings on the tables'],
+        ['x-cafe-dog', 'A guest\'s muddy dog'],
         ['cafe-counter', 'Pumpkin spice everywhere'],
       ],
       winter: [
@@ -174,7 +180,7 @@ const DATA = (() => {
       summer: [
         ['cove-castle', 'A sandcastle for the summer'], ['cove-shells', 'Shells after the high tide'], ['cove-rockpool', 'Seaweed in the rock pool'],
         ['cove-litter', 'Picnic litter on the beach'], ['cove-window', 'Sandy fingerprints on the hut window'], ['cove-van-inside', 'Sand in the camper van'],
-        ['cove-boat', 'Weed on the boat'], ['cove-seaweed', 'Seaweed after the tide'],
+        ['cove-boat', 'Weed on the boat'], ['cove-seaweed', 'Seaweed after the tide'], ['x-cove-dog', 'A sandy dog after the beach'],
       ],
       autumn: [
         ['cove-litter', 'The storm washed things up', null, { items: 'storm' }], ['cove-seaweed', 'Storm seaweed on the sand'], ['cove-boardwalk', 'Leaves on the boardwalk', 'leaves'],

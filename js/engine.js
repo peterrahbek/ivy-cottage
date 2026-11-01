@@ -74,10 +74,10 @@ const ENGINE = (() => {
       L.clean.x.drawImage(old.clean.c, ox * dpr - old.ox * k, oy * dpr - old.oy * k, old.clean.c.width * k, old.clean.c.height * k);
       L.clean.x.restore();
     }
-    L.clean.x.save(); L.clean.x.clip(scene.region, 'evenodd'); // clean layer and stamps stay inside the region
+    L.clean.x.save(); L.clean.x.clip(scene.region, scene.fillRule || 'evenodd'); // clean layer and stamps stay inside the region
     if (!(keepClean && old)) scene.clean(L.clean.x, paint);
-    if (scene.cleanOver) { L.over = layer(); L.over.x.save(); L.over.x.clip(scene.region, 'evenodd'); scene.cleanOver(L.over.x); L.over.x.restore(); }
-    L.dirt.x.save(); L.dirt.x.clip(scene.region, 'evenodd'); scene.dirt(L.dirt.x); L.dirt.x.restore();
+    if (scene.cleanOver) { L.over = layer(); L.over.x.save(); L.over.x.clip(scene.region, scene.fillRule || 'evenodd'); scene.cleanOver(L.over.x); L.over.x.restore(); }
+    L.dirt.x.save(); L.dirt.x.clip(scene.region, scene.fillRule || 'evenodd'); scene.dirt(L.dirt.x); L.dirt.x.restore();
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
     if (scene.depth) L.shadow = layer();
     if (units.length) { L.units = layer(); bakeUnits(); }
@@ -109,7 +109,7 @@ const ENGINE = (() => {
   function buildGrid() {
     const g = U.canvas(GW, GH), gx = g.getContext('2d');
     gx.setTransform(1 / CELL, 0, 0, 1 / CELL, 0, 0);
-    gx.fillStyle = '#000'; gx.fill(scene.region, 'evenodd');
+    gx.fillStyle = '#000'; gx.fill(scene.region, scene.fillRule || 'evenodd');
     const a = gx.getImageData(0, 0, GW, GH).data;
     hp = new Float32Array(GW * GH); tough = new Float32Array(GW * GH); inReg = new Uint8Array(GW * GH);
     total = 0;
@@ -674,6 +674,44 @@ const ENGINE = (() => {
     render();
   }
 
+  // the dirt layer masked by the grid (and its soft shadow), redrawn when cells change
+  function updateComp() {
+    const S = scale * dpr;
+    maskCx.putImageData(maskImg, 0, 0);
+    const cx = L.comp.x;
+    cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
+    cx.clearRect(0, 0, L.comp.c.width, L.comp.c.height);
+    cx.globalCompositeOperation = 'source-over';
+    cx.drawImage(L.dirt.c, 0, 0);
+    cx.globalCompositeOperation = 'destination-in';
+    cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
+    cx.drawImage(maskCv, 0, 0, GW, GH, ox * dpr, oy * dpr, W * S, H * S);
+    cx.restore();
+    if (L.shadow) {
+      // thick mess (tall grass, moss, leaves, snow) casts a soft shadow
+      const sx = L.shadow.x;
+      sx.save(); sx.setTransform(1, 0, 0, 1, 0, 0);
+      sx.clearRect(0, 0, L.shadow.c.width, L.shadow.c.height);
+      sx.drawImage(L.comp.c, 0, 0);
+      sx.globalCompositeOperation = 'source-in';
+      sx.fillStyle = 'rgba(25,30,15,0.4)'; sx.fillRect(0, 0, L.shadow.c.width, L.shadow.c.height);
+      sx.restore();
+    }
+    maskDirty = false;
+  }
+
+  // a small picture of the board without the tool, for the before and after
+  // on the finish card; crop in board units
+  function picture(w, crop = { x: 0, y: 120, w: W, h: 360 }) {
+    if (!L) return null;
+    if (maskDirty) updateComp();
+    const h = Math.round((w * crop.h) / crop.w), c = U.canvas(w * 2, h * 2), x = c.getContext('2d');
+    const k = scale * dpr, sx = ox * dpr + crop.x * k, sy = oy * dpr + crop.y * k;
+    for (const key of ['decor', 'clean', 'over', 'comp', 'units', 'top']) if (L[key]) x.drawImage(L[key].c, sx, sy, crop.w * k, crop.h * k, 0, 0, c.width, c.height);
+    c.style.width = w + 'px'; c.style.height = h + 'px';
+    return c;
+  }
+
   function render() {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(L.decor.c, 0, 0);
@@ -684,29 +722,7 @@ const ENGINE = (() => {
     if (scene.live) scene.live(ctx, clock, hp, GW, CELL);
     for (const g of gems) if (g.state === 0) drawGem(ctx, g, false);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
-    if (maskDirty) {
-      maskCx.putImageData(maskImg, 0, 0);
-      const cx = L.comp.x;
-      cx.save(); cx.setTransform(1, 0, 0, 1, 0, 0);
-      cx.clearRect(0, 0, L.comp.c.width, L.comp.c.height);
-      cx.globalCompositeOperation = 'source-over';
-      cx.drawImage(L.dirt.c, 0, 0);
-      cx.globalCompositeOperation = 'destination-in';
-      cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
-      cx.drawImage(maskCv, 0, 0, GW, GH, ox * dpr, oy * dpr, W * S, H * S);
-      cx.restore();
-      if (L.shadow) {
-        // thick mess (tall grass, moss, leaves, snow) casts a soft shadow
-        const sx = L.shadow.x;
-        sx.save(); sx.setTransform(1, 0, 0, 1, 0, 0);
-        sx.clearRect(0, 0, L.shadow.c.width, L.shadow.c.height);
-        sx.drawImage(L.comp.c, 0, 0);
-        sx.globalCompositeOperation = 'source-in';
-        sx.fillStyle = 'rgba(25,30,15,0.4)'; sx.fillRect(0, 0, L.shadow.c.width, L.shadow.c.height);
-        sx.restore();
-      }
-      maskDirty = false;
-    }
+    if (maskDirty) updateComp();
     if (L.shadow) ctx.drawImage(L.shadow.c, 1.2 * S, 2.4 * S);
     ctx.drawImage(L.comp.c, 0, 0);
     if (L.units) {
@@ -808,5 +824,5 @@ const ENGINE = (() => {
     if (!done) { done = true; flushEarn(); cb.onDone && cb.onDone(); }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugStroke, debugFinish, snapshot, get scale() { return scale; }, get total() { return total; } };
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugStroke, debugFinish, snapshot, picture, get scale() { return scale; }, get total() { return total; } };
 })();

@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now() };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -20,6 +20,7 @@
     out.use = out.use || {};
     if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
     out.cloud = out.cloud || {};
+    if (typeof out.pauses !== 'boolean') out.pauses = true;
     if (typeof out.jobsDone !== 'number') out.jobsDone = Object.values(out.done).reduce((a, b) => a + b, 0) + Object.keys(out.sdone).length;
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
@@ -162,15 +163,25 @@
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
         <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wips[n.id] ? 'Half done' : tierOf(n.family).name}</span></div></div>
-        <div class="nextIcon"></div><button class="go" id="goBtn">Start</button>`;
+        <div class="nextPic"><img alt="" hidden><div class="nextIcon"></div></div><button class="go" id="goBtn">Start</button>`;
       card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
+      card.dataset.job = n.id;
+      const showThumb = (url) => {
+        const img = card.querySelector('.nextPic img');
+        if (!url || !img || card.dataset.job !== n.id) return;
+        img.src = url; img.hidden = false; card.querySelector('.nextPic').classList.add('has');
+      };
+      if (thumbs.has(thumbKey(n))) showThumb(thumbs.get(thumbKey(n)));
+      else setTimeout(() => showThumb(jobThumb(n)), 80);
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
     } else if (elsewhere) {
+      card.dataset.job = '';
       const what = nextRestore(elsewhere.id) ? 'Jobs are waiting' : `${DATA.SEASON_NAMES[seasonName()]} jobs are waiting`;
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">All tidy here</div><div class="nextName">${what} at ${placeName(elsewhere.id)}</div>
         <div class="nextMeta">Everything here is done for now.</div></div><button class="go" id="goBtn">Go there</button>`;
       $('#goBtn').onclick = () => { AUDIO.pop(); goPlace(elsewhere.id); };
     } else {
+      card.dataset.job = '';
       const upcoming = DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)];
       const title = S.seasonNo === 0 ? pl.done : `${DATA.SEASON_NAMES[seasonName()]} is all tidy`;
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${S.seasonNo === 0 ? 'All restored' : 'Season done'}</div><div class="nextName">${title}</div>
@@ -194,6 +205,27 @@
       });
     });
   }
+  // a little picture of the mess for the next-job card, drawn once per job
+  const thumbs = new Map();
+  const thumbKey = (c) => `${c.id}|${c.seed}`;
+  function jobThumb(c) {
+    const key = thumbKey(c);
+    if (thumbs.has(key)) return thumbs.get(key);
+    let url = null;
+    try {
+      const cv = U.canvas(128, 128), x = cv.getContext('2d'), k = cv.width / 360;
+      x.setTransform(k, 0, 0, k, 0, -150 * k);
+      const sc = SCENES.build(c.scene, Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}), c.seed, { x0: -4, y0: -4, x1: 364, y1: 604 });
+      sc.decor(x);
+      if (c.color) { x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.clean(x, S.colours[c.color]); x.restore(); }
+      x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.dirt(x); x.restore();
+      if (sc.unitMode === 'collect') for (const u of sc.units || []) sc.drawUnit(x, u, 1);
+      if (sc.top) sc.top(x);
+      url = cv.toDataURL('image/jpeg', 0.82);
+    } catch (_) {}
+    thumbs.set(key, url);
+    return url;
+  }
   function goPlace(id, bought) {
     S.place = id; save();
     $('#sheet').classList.remove('on');
@@ -204,7 +236,7 @@
 
   // ---------------------------------------------------------------- play
   let cur = null, curValue = 0, earnedThis = 0, shownCoins = 0, isReplay = false;
-  let foundThis = null;
+  let foundThis = null, beforePic = null, afterPic = null;
   function startChore(c, replay) {
     AUDIO.birds(false); foundThis = null;
     cur = c; isReplay = replay;
@@ -226,6 +258,7 @@
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
     const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}) });
     ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures, resume });
+    beforePic = ENGINE.picture(96);
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
     const hint = $('#hint');
@@ -330,11 +363,22 @@
     S.jobsDone++;
     save();
     if (first) freshPart = cur.part;
+    sitting.jobs++; sitting.coins += earnedThis + bonus; if (foundThis) sitting.finds++;
     AUDIO.chime(); AUDIO.activity(0, false);
     const o = $('#doneOverlay');
     $('#doneTitle').textContent = U.pick(Math.random, cur.family === 'plant' ? ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'] : cur.family === 'build' ? ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'] : ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
     $('#doneBtn').textContent = 'Back to ' + here().short;
     $('#doneName').textContent = cur.name;
+    const ba = $('#doneBA');
+    afterPic = ENGINE.picture(96);
+    if (afterPic) { const copy = U.canvas(afterPic.width, afterPic.height); copy.getContext('2d').drawImage(afterPic, 0, 0); sitting.pics.push(copy); if (sitting.pics.length > 4) sitting.pics.shift(); }
+    ba.innerHTML = '';
+    if (beforePic && afterPic) {
+      const fig = (pic, label) => { const f = document.createElement('figure'); f.appendChild(pic); const cap = document.createElement('figcaption'); cap.textContent = label; f.appendChild(cap); return f; };
+      ba.appendChild(fig(beforePic, 'Before'));
+      const ar = document.createElement('span'); ar.className = 'arrow'; ar.textContent = '→'; ba.appendChild(ar);
+      ba.appendChild(fig(afterPic, 'After'));
+    }
     $('#doneEarn').innerHTML = coinHtml(earnedThis);
     $('#doneBonus').innerHTML = coinHtml(bonus);
     $('#doneFind').innerHTML = foundThis ? `<i>${foundThis.emoji}</i> ${foundThis.name} is on your shelf` : '';
@@ -345,7 +389,58 @@
     tick();
     shownCoins = S.coins; updatePlayCoins(); updateUpPill();
   }
-  $('#doneBtn').onclick = () => { AUDIO.pop(); leavePlay(); };
+  $('#doneBtn').onclick = () => { AUDIO.pop(); leavePlay(); maybePause(); };
+
+  // --------------------------------------------------------------- pauses
+  // After a few jobs a quiet card suggests a pause: what this sitting has
+  // done, three slow breaths if you like, and an easy way to stop. It never
+  // comes in the middle of a job, and it can be switched off in Settings.
+  const sitting = { jobs: 0, coins: 0, finds: 0, pics: [], since: Date.now(), atJobs: 0 };
+  function maybePause() {
+    if (!S.pauses || sitting.jobs - sitting.atJobs < 4 || Date.now() - sitting.since < 12 * 60000) return;
+    setTimeout(openPause, 700);
+  }
+  function openPause() {
+    const mins = Math.max(1, Math.round((Date.now() - sitting.since) / 60000));
+    const jobs = sitting.jobs - sitting.atJobs;
+    sitting.atJobs = sitting.jobs; sitting.since = Date.now();
+    const el = $('#pause');
+    el.querySelector('.pauseSum').innerHTML = `${jobs} jobs in ${mins} minutes<span class="dot">·</span>${coinHtml(sitting.coins)}${sitting.finds ? `<span class="dot">·</span>${sitting.finds} keepsake${sitting.finds > 1 ? 's' : ''}` : ''}`;
+    const pics = el.querySelector('.pausePics'); pics.innerHTML = '';
+    for (const p of sitting.pics) pics.appendChild(p);
+    sitting.coins = 0; sitting.finds = 0; sitting.pics = [];
+    el.querySelector('.breathTxt').textContent = '';
+    el.querySelector('.orb').className = 'orb';
+    el.querySelector('.pauseBtns').hidden = false; el.querySelector('#pauseStop').hidden = false;
+    el.querySelector('.pauseBye').hidden = true;
+    el.classList.add('on'); AUDIO.soft();
+  }
+  function closePause() { $('#pause').classList.remove('on'); clearTimeout(breathT); }
+  // slow breathing: in for four seconds, out for six, three times
+  let breathT = 0;
+  $('#pauseBreathe').onclick = () => {
+    const el = $('#pause'), orb = el.querySelector('.orb'), txt = el.querySelector('.breathTxt');
+    el.querySelector('.pauseBtns').hidden = true;
+    let n = 0;
+    const step = () => {
+      if (n === 6) { txt.textContent = 'Lovely.'; orb.className = 'orb'; AUDIO.chime(); el.querySelector('.pauseBtns').hidden = false; $('#pauseBreathe').textContent = 'Again'; return; }
+      const inhale = n % 2 === 0;
+      orb.className = 'orb ' + (inhale ? 'in' : 'out');
+      txt.textContent = inhale ? 'Breathe in…' : 'and slowly out…';
+      n++;
+      breathT = setTimeout(step, inhale ? 4000 : 6000);
+    };
+    step();
+  };
+  $('#pauseGo').onclick = () => { AUDIO.pop(); closePause(); };
+  $('#pauseStop').onclick = () => {
+    const el = $('#pause');
+    clearTimeout(breathT);
+    el.querySelector('.pauseBtns').hidden = true; $('#pauseStop').hidden = true;
+    el.querySelector('.pauseBye').hidden = false;
+    AUDIO.volume(0);
+    setTimeout(() => { closePause(); show('title'); renderTitle(); }, 3200);
+  };
   $('#btnBack').onclick = () => { AUDIO.soft(); leavePlay(); };
   function keepWip() {
     if (!cur || $('#doneOverlay').classList.contains('on')) return;
@@ -564,6 +659,7 @@
       <label class="setRow"><span>Music volume</span><input type="range" id="setMusicVol" min="0" max="100" step="5" value="${Math.round(S.musicVol * 100)}"></label>
       <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
       <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
+      <label class="setRow"><span>Suggest a pause now and then</span><input type="checkbox" id="setPauses" ${S.pauses ? 'checked' : ''}></label>
       <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline. Safari and the Home Screen app keep separate saves; move yours with a save code.</div>
       <div class="codeRow"><button class="closeBtn" id="setExport">Copy offline save code</button><button class="closeBtn" id="setImport">Paste save code</button></div>
       <textarea id="setCode" rows="3" placeholder="Paste a save code here" hidden></textarea>
@@ -577,6 +673,7 @@
       body.querySelector('#setMusicVol').oninput = (e) => { S.musicVol = e.target.value / 100; AUDIO.volume(S.musicVol); save(); };
       body.querySelector('#setName').oninput = (e) => { S.name = e.target.value.trim().slice(0, 22); save(); };
       body.querySelector('#setEvening').onchange = (e) => { S.evening = e.target.checked; save(); };
+      body.querySelector('#setPauses').onchange = (e) => { S.pauses = e.target.checked; save(); };
       const codeBox = body.querySelector('#setCode'), loadBtn = body.querySelector('#setLoad');
       body.querySelector('#setExport').onclick = () => {
         const code = 'IVY1:' + btoa(unescape(encodeURIComponent(JSON.stringify(Object.assign({}, S, { wips: {} })))));
@@ -799,6 +896,6 @@
   // test hooks
   window.__ivy = {
     get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startJob: (c) => startChore(c, false),
-    render: () => renderHome(), save, cloudPush, cloudPull, openFriends, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
+    render: () => renderHome(), save, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
   };
 })();

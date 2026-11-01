@@ -103,6 +103,10 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .nextMeta{font-size:13px;color:var(--ink2);font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
 .nextMeta .dot{margin:0 4px}
 .nextIcon{width:46px;height:46px;flex:none}
+.nextPic{position:relative;flex:none;width:64px;height:64px;display:flex;align-items:center;justify-content:center}
+.nextPic img{width:64px;height:64px;border-radius:16px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(80,60,30,.25);display:block}
+.nextPic.has .nextIcon{position:absolute;right:-10px;bottom:-10px;width:34px;height:34px;border-radius:50%;background:var(--card);box-shadow:0 1px 4px rgba(60,40,20,.25);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.nextPic.has .nextIcon canvas{width:30px !important;height:30px !important}
 .go{flex:none;background:var(--sage-d);color:#fff;font-weight:900;font-size:17px;padding:14px 20px;border-radius:16px;box-shadow:0 4px 0 #3f6b3c}
 .go:active{transform:translateY(3px);box-shadow:0 1px 0 #3f6b3c}
 .dock{display:flex;gap:6px;padding:10px 10px 12px}
@@ -208,6 +212,28 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #scene.newdecor svg{animation:newdecor .6s ease}
 @keyframes newdecor{40%{filter:brightness(1.25)}}
 
+#pause{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(40,30,20,.35)}
+#pause.on{display:flex;animation:fadein .5s ease}
+.pauseCard{width:min(340px,92vw);padding:20px 18px 14px;text-align:center}
+.pauseCard h2{margin:0 0 4px;font-size:25px;font-weight:900;color:#46623f}
+.pauseSum{color:var(--ink2);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:2px;margin-bottom:12px}
+.pausePics{display:flex;justify-content:center;gap:8px}
+.pausePics:empty{display:none}
+.pausePics canvas{width:58px !important;height:58px !important;border-radius:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(80,60,30,.2)}
+.breath{height:150px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.orb{width:92px;height:92px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#e2f1dc,#9cc5a1 55%,#5d8a59);box-shadow:0 0 0 10px rgba(156,197,161,.18),0 0 40px rgba(156,197,161,.5);transform:scale(.62);transition:transform 4s ease-in-out}
+.orb.in{transform:scale(1)}
+.orb.out{transform:scale(.62);transition-duration:6s}
+.breathTxt{font-weight:800;color:var(--ink2);min-height:20px}
+.pauseBye{font-weight:800;color:var(--ink2);margin:4px 0 14px;line-height:1.4}
+.pauseBtns{display:flex;gap:8px;justify-content:center}
+.linkBtn{margin-top:12px;font-weight:800;font-size:14px;color:var(--ink3);text-decoration:underline;background:none;border:0}
+#doneBA{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 12px}
+#doneBA:empty{display:none}
+#doneBA figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px}
+#doneBA canvas{border-radius:14px;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(80,60,30,.25)}
+#doneBA figcaption{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+#doneBA .arrow{font-size:22px;font-weight:900;color:var(--sage-d);margin-bottom:16px}
 #doneFind{background:#fbf2d5;border-radius:12px;padding:8px 10px;margin:-6px 0 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:center}
 #doneFind i{font-style:normal;font-size:22px}
 #seasonCard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;
@@ -350,6 +376,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
     <div class="card doneCard">
       <div id="doneTitle">Lovely!</div>
       <div id="doneName"></div>
+      <div id="doneBA"></div>
       <div class="doneRows">
         <div><span>Earned</span><span id="doneEarn"></span></div>
         <div><span>Finishing bonus</span><span id="doneBonus"></span></div>
@@ -364,6 +391,17 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 <div id="sheet"><div class="sheetCard"><div class="grab"></div><div class="sheetHead"><h2 id="sheetTitle"></h2><button class="closeBtn" id="sheetClose">Done</button></div><div id="sheetBody"></div></div></div>
 <div id="toast"></div>
 <div id="seasonCard"><small></small><b></b></div>
+<div id="pause">
+  <div class="card pauseCard">
+    <h2>A lovely place to pause</h2>
+    <div class="pauseSum"></div>
+    <div class="pausePics"></div>
+    <div class="breath"><div class="orb"></div><div class="breathTxt"></div></div>
+    <div class="pauseBye" hidden>Everything will be right here when you come back.</div>
+    <div class="pauseBtns"><button class="closeBtn" id="pauseBreathe">Three slow breaths</button><button class="go" id="pauseGo">Keep tidying</button></div>
+    <button class="linkBtn" id="pauseStop">Done for now</button>
+  </div>
+</div>
 <div id="rotate"><div class="phone"></div><b>Turn your phone upright</b><span>The cottage is made for holding it tall.</span></div>
 
 <script src="js/util.js"></script>

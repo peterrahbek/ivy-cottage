@@ -472,5 +472,106 @@
     };
   }
 
-  Object.assign(SCENES.KINDS, { beach, castle, lights, fridge });
+  // ------------------------------------------------------------ DOG BATH
+  // A muddy dog sitting in a tin bath in the garden, very pleased with itself.
+  // Washing reveals clean fluffy fur; soap bubbles drift up now and then.
+  const COATS = [
+    { fur: '#e2b36a', dark: '#c48c48', light: '#f6dca6', patch: null },
+    { fur: '#f4efe6', dark: '#d8cfc2', light: '#ffffff', patch: '#3b3533' },
+    { fur: '#a8754a', dark: '#875a35', light: '#c99a6c', patch: null },
+  ];
+  function dog(S) {
+    const { r, nz, bleed } = S;
+    const coat = COATS[(r() * COATS.length) | 0];
+    const region = new Path2D();
+    const head = { x: 180, y: 218, r: 80 };
+    region.ellipse(180, 386, 112, 106, 0, 0, Math.PI * 2);                       // body
+    region.moveTo(head.x + head.r, head.y); region.arc(head.x, head.y, head.r, 0, Math.PI * 2);
+    region.moveTo(98 + 30, 236); region.ellipse(98, 236, 30, 70, 0.28, 0, Math.PI * 2);   // ears
+    region.moveTo(262 + 30, 236); region.ellipse(262, 236, 30, 70, -0.28, 0, Math.PI * 2);
+    region.moveTo(122 + 30, 452); region.ellipse(122, 452, 30, 22, 0, 0, Math.PI * 2);    // paws on the rim
+    region.moveTo(238 + 30, 452); region.ellipse(238, 452, 30, 22, 0, 0, Math.PI * 2);
+    region.moveTo(318, 330); region.quadraticCurveTo(352, 270, 330, 236); region.quadraticCurveTo(318, 262, 296, 330); region.closePath(); // tail
+    const furStrokes = [], hit = U.canvas(1, 1).getContext('2d');
+    for (let i = 0; i < 700; i++) {
+      const x = 60 + r() * 300, y = 140 + r() * 360;
+      if (!hit.isPointInPath(region, x, y, 'nonzero')) continue;
+      const a = Math.atan2(y - 300, x - 180) + (r() - 0.5) * 0.8;
+      furStrokes.push({ x, y, a, l: 4 + r() * 6, c: r() < 0.5 ? coat.dark : coat.light });
+    }
+    return {
+      // the head, ears, paws and tail overlap, so they add up rather than cut holes
+      family: 'wash', particle: 'suds', region, depth: true, fillRule: 'nonzero',
+      decor(c) {
+        const { x0, y0, x1, y1 } = bleed;
+        SCENES.mowedLawn(c, nz, x0, y0, x1, y1, true);
+        SCENES.grassGrain(c, r, x0, y0, x1, y1, 6, 0.2);
+        // a fence with a towel over it, a garden hose and a ball
+        c.fillStyle = '#f4ecdc';
+        for (let x = x0 + 6; x < x1; x += 26) { c.fillRect(x, 60, 12, 92); c.beginPath(); c.moveTo(x, 60); c.lineTo(x + 6, 50); c.lineTo(x + 12, 60); c.fill(); }
+        c.fillRect(x0, 82, x1 - x0, 8); c.fillRect(x0, 126, x1 - x0, 8);
+        c.fillStyle = '#8fbfe6'; c.fillRect(24, 78, 70, 58); c.fillStyle = '#ffffff'; for (let y = 86; y < 136; y += 12) c.fillRect(24, y, 70, 4);
+        c.strokeStyle = '#3f9b5a'; c.lineWidth = 6;
+        for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(312, 560, 30 - i * 7, 16 - i * 4, 0, 0, Math.PI * 2); c.stroke(); }
+        dot(c, 42, 560, 16, '#e2574c'); c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(42, 560, 16, 0.6, 2.4); c.stroke();
+        // the back of the tin bath, behind the dog
+        c.fillStyle = '#8f99a3'; c.beginPath(); c.ellipse(180, 470, 156, 44, 0, Math.PI, 0); c.fill();
+        c.fillStyle = '#d9eef6'; c.beginPath(); c.ellipse(180, 474, 140, 34, 0, Math.PI, 0); c.fill();
+      },
+      clean(c) {
+        const g = c.createRadialGradient(160, 260, 20, 180, 330, 230);
+        g.addColorStop(0, coat.light); g.addColorStop(0.55, coat.fur); g.addColorStop(1, coat.dark);
+        c.fillStyle = g; c.fillRect(0, 0, W, H);
+        if (coat.patch) { dot(c, 222, 196, 34, coat.patch); dot(c, 266, 236, 44, coat.patch); c.beginPath(); c.ellipse(140, 380, 44, 36, 0.4, 0, 7); c.fillStyle = coat.patch; c.fill(); }
+        c.lineCap = 'round'; c.lineWidth = 1.3;
+        for (const f of furStrokes) { c.strokeStyle = f.c; c.beginPath(); c.moveTo(f.x, f.y); c.quadraticCurveTo(f.x + Math.cos(f.a + 0.6) * f.l * 0.5, f.y + Math.sin(f.a + 0.6) * f.l * 0.5, f.x + Math.cos(f.a) * f.l, f.y + Math.sin(f.a) * f.l); c.stroke(); }
+        c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(150, 170, 34, 18, -0.5, 0, 7); c.fill();
+        // a little foam hat
+        for (let i = 0; i < 7; i++) dot(c, 160 + i * 7 + (r() - 0.5) * 4, 146 - Math.sin(i / 6 * Math.PI) * 10, 9 + r() * 4, 'rgba(255,255,255,0.9)');
+      },
+      dirt(c) {
+        const g = ramp(['#5b4128', '#6e5032', '#7f6040', '#8f7350']);
+        field(c, 0, 0, W, H, 3, (x, y) => [...g(nz.fbm(x * 0.03, y * 0.03, 4)), 210 + nz.n2(x * 0.08, y * 0.08) * 45]);
+        for (let i = 0; i < 70; i++) { c.fillStyle = U.pick(r, ['rgba(70,48,28,0.75)', 'rgba(95,68,40,0.7)', 'rgba(120,90,55,0.6)']); c.beginPath(); c.ellipse(60 + r() * 260, 140 + r() * 360, 6 + r() * 18, 4 + r() * 12, r() * 3, 0, 7); c.fill(); }
+        c.strokeStyle = 'rgba(45,30,18,0.5)'; c.lineWidth = 0.8;
+        for (let i = 0; i < 60; i++) { let x = 60 + r() * 260, y = 140 + r() * 360; c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 3; k++) { x += (r() - 0.5) * 14; y += (r() - 0.5) * 14; c.lineTo(x, y); } c.stroke(); }
+        for (let i = 0; i < 26; i++) { c.save(); c.translate(70 + r() * 240, 150 + r() * 330); c.rotate(r() * 6.28); c.fillStyle = U.pick(r, ['#c4762f', '#9c5a2a', '#7d8a3a', '#d9a23c']); c.beginPath(); c.ellipse(0, 0, 6, 3, 0, 0, 7); c.fill(); c.restore(); }
+        c.strokeStyle = '#6b5a3a'; c.lineWidth = 1.6;
+        for (let i = 0; i < 10; i++) { const x = 80 + r() * 200, y = 160 + r() * 300; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 26, y + (r() - 0.5) * 18); c.stroke(); }
+      },
+      top(c) {
+        // face: happy closed eyes, nose, smile and tongue, and a collar
+        c.strokeStyle = '#2b2422'; c.lineWidth = 4; c.lineCap = 'round';
+        for (const ex of [150, 210]) { c.beginPath(); c.arc(ex, 214, 11, Math.PI * 1.15, Math.PI * 1.85); c.stroke(); }
+        c.fillStyle = coat.light; c.beginPath(); c.ellipse(180, 262, 44, 32, 0, 0, 7); c.fill();
+        c.fillStyle = '#2b2422'; c.beginPath(); c.moveTo(164, 244); c.quadraticCurveTo(180, 236, 196, 244); c.quadraticCurveTo(190, 260, 180, 262); c.quadraticCurveTo(170, 260, 164, 244); c.fill();
+        dot(c, 175, 245, 3, 'rgba(255,255,255,0.6)');
+        c.strokeStyle = '#2b2422'; c.lineWidth = 3;
+        c.beginPath(); c.moveTo(180, 262); c.lineTo(180, 270); c.moveTo(160, 268); c.quadraticCurveTo(180, 286, 200, 268); c.stroke();
+        c.fillStyle = '#ef8aa6'; c.beginPath(); c.moveTo(172, 278); c.quadraticCurveTo(180, 304, 190, 278); c.closePath(); c.fill();
+        dot(c, 132, 246, 9, 'rgba(239,138,166,0.35)'); dot(c, 228, 246, 9, 'rgba(239,138,166,0.35)');
+        c.fillStyle = '#c9474f'; c.beginPath(); c.ellipse(180, 302, 64, 12, 0, 0, Math.PI); c.fill();
+        dot(c, 180, 318, 8, '#f2c230'); dot(c, 178, 316, 3, '#fff3b8');
+        // the front of the tin bath, with foam spilling over
+        c.fillStyle = '#9aa3ad'; c.beginPath(); c.moveTo(24, 470); c.lineTo(44, 560); c.quadraticCurveTo(180, 590, 316, 560); c.lineTo(336, 470); c.ellipse(180, 470, 156, 44, 0, 0, Math.PI); c.closePath(); c.fill();
+        c.fillStyle = '#b8c0c8'; c.beginPath(); c.moveTo(40, 480); c.lineTo(56, 552); c.lineTo(80, 556); c.lineTo(66, 486); c.closePath(); c.fill();
+        c.strokeStyle = '#6d7680'; c.lineWidth = 6; c.beginPath(); c.ellipse(180, 470, 156, 44, 0, 0, Math.PI); c.stroke();
+        for (let i = 0; i < 22; i++) { const a = (i / 21) * Math.PI; dot(c, 180 + Math.cos(a) * 150, 470 + Math.sin(a) * 40 - 6, 9 + r() * 7, 'rgba(255,255,255,0.92)'); }
+        for (const x of [30, 330]) { c.strokeStyle = '#6d7680'; c.lineWidth = 5; c.beginPath(); c.arc(x, 486, 12, Math.PI * 0.5, Math.PI * 1.5, x > 180); c.stroke(); }
+      },
+      liveTop(c, t) {
+        // soap bubbles drifting up out of the bath
+        for (let i = 0; i < 6; i++) {
+          const life = (t * 0.22 + i / 6) % 1, x = 70 + ((i * 97) % 220) + Math.sin(t * 1.3 + i) * 8, y = 470 - life * 380, s = 5 + (i % 3) * 3;
+          c.globalAlpha = Math.sin(life * Math.PI) * 0.85;
+          c.strokeStyle = 'rgba(255,255,255,0.95)'; c.lineWidth = 1; c.fillStyle = 'rgba(200,230,255,0.25)';
+          c.beginPath(); c.arc(x, y, s, 0, 7); c.fill(); c.stroke();
+          dot(c, x - s * 0.35, y - s * 0.35, s * 0.22, 'rgba(255,255,255,0.9)');
+        }
+        c.globalAlpha = 1;
+      },
+    };
+  }
+
+  Object.assign(SCENES.KINDS, { beach, castle, lights, fridge, dog });
 })();

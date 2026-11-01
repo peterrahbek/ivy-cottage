@@ -61,6 +61,14 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   hot-air balloon, and twelve for the café.
 - **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
   new places take a while to save up for.
+- **Before and after.** The finish card shows a small before-and-after picture
+  of the job, and the next-job card shows a little picture of the mess.
+- **Pauses.** After four jobs and at least twelve minutes, a quiet card
+  suggests a pause: what this sitting has done, three slow breaths (in for
+  four seconds, out for six) if you like, or "Done for now", which fades the
+  music and goes back to the title. It never interrupts a job and can be
+  switched off in Settings.
+- **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
   your cottage, save or share a picture of it (camera button).
 
