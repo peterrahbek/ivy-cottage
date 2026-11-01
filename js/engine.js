@@ -511,5 +511,11 @@ const ENGINE = (() => {
     }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, get scale() { return scale; } };
+  // test hook: finish at once without waiting for animation frames
+  function debugFinish() {
+    for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
+    if (!done) { done = true; cb.onDone && cb.onDone(); }
+  }
+
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, get scale() { return scale; } };
 })();
