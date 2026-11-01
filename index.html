@@ -198,6 +198,17 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #scene.newdecor svg{animation:newdecor .6s ease}
 @keyframes newdecor{40%{filter:brightness(1.25)}}
 
+#doneFind{background:#fbf2d5;border-radius:12px;padding:8px 10px;margin:-6px 0 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:center}
+#doneFind i{font-style:normal;font-size:22px}
+#seasonCard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;
+  background:radial-gradient(circle at 50% 45%,rgba(255,250,241,.96),rgba(246,239,227,.9))}
+#seasonCard.on{animation:seasoncard 2.8s ease forwards}
+@keyframes seasoncard{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
+#seasonCard b{font-size:56px;font-weight:900;color:#46623f}
+#seasonCard.on b{animation:popin .8s cubic-bezier(.2,1.4,.4,1)}
+#seasonCard small{font-size:14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+#seasonCard[data-season=autumn] b{color:#c4622f}#seasonCard[data-season=winter] b{color:#4f7fa8}#seasonCard[data-season=summer] b{color:#d9a12b}#seasonCard[data-season=spring] b{color:#5d8a59}
+
 /* ---------------------------------------------------------------- sheet */
 #sheet{position:fixed;inset:0;background:rgba(40,30,20,.3);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 #sheet.on{opacity:1;pointer-events:auto}
@@ -288,6 +299,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
         <div><span>Finishing bonus</span><span id="doneBonus"></span></div>
         <div class="tot"><span>Total</span><span id="doneTotal"></span></div>
       </div>
+      <div id="doneFind"></div>
       <button class="go" id="doneBtn">Back to the cottage</button>
     </div>
   </div>
@@ -295,6 +307,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 
 <div id="sheet"><div class="sheetCard"><div class="grab"></div><div class="sheetHead"><h2 id="sheetTitle"></h2><button class="closeBtn" id="sheetClose">Done</button></div><div id="sheetBody"></div></div></div>
 <div id="toast"></div>
+<div id="seasonCard"><small></small><b></b></div>
 
 <script src="js/util.js"></script>
 <script src="js/tools.js"></script>

@@ -87,6 +87,7 @@
       $('#restoredTxt').textContent = `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)} · ${d} of ${jobs.length}`;
     }
     document.body.dataset.season = seasonName();
+    AUDIO.birds((seasonName() === 'spring' || seasonName() === 'summer') && !isEvening());
     const n = nextChore();
     const card = $('#nextCard');
     if (n) {
@@ -104,7 +105,8 @@
         <div class="nextMeta">${upcoming} is on its way, with new jobs.</div></div><button class="go" id="goBtn">${upcoming}</button>`;
       $('#goBtn').onclick = () => {
         S.seasonNo++; S.sdone = {}; save();
-        AUDIO.chime(); toast(`${upcoming} has arrived`);
+        AUDIO.chime();
+        seasonCard(upcoming);
         renderHome();
       };
     }
@@ -121,7 +123,9 @@
 
   // ---------------------------------------------------------------- play
   let cur = null, curValue = 0, earnedThis = 0, shownCoins = 0, isReplay = false;
+  let foundThis = null;
   function startChore(c, replay) {
+    AUDIO.birds(false); foundThis = null;
     cur = c; isReplay = replay;
     curValue = Math.round(c.value * (replay ? 0.6 : 1));
     earnedThis = 0; shownCoins = S.coins;
@@ -218,6 +222,8 @@
     $('#doneName').textContent = cur.name;
     $('#doneEarn').innerHTML = coinHtml(earnedThis);
     $('#doneBonus').innerHTML = coinHtml(bonus);
+    $('#doneFind').innerHTML = foundThis ? `<i>${foundThis.emoji}</i> ${foundThis.name} is on your shelf` : '';
+    $('#doneFind').style.display = foundThis ? '' : 'none';
     o.classList.add('on');
     let k = 0; const target = earnedThis + bonus;
     const tick = () => { k = Math.min(target, k + Math.max(1, target / 30)); $('#doneTotal').innerHTML = coinHtml(k); if (k < target) requestAnimationFrame(tick); };
@@ -249,7 +255,7 @@
     },
     onFind(g) {
       if (g.kind === 'coin') { AUDIO.shimmer(); return; }
-      S.finds[g.id] = Date.now(); save();
+      S.finds[g.id] = Date.now(); save(); foundThis = g;
       AUDIO.chime();
       foundBanner(g);
     },
@@ -281,6 +287,15 @@
     } catch (e) { if (e && e.name !== 'AbortError') toast('Could not make the picture'); }
   }
   $('#btnPhoto').onclick = () => { AUDIO.soft(); photo(); };
+
+  function seasonCard(name) {
+    const el = $('#seasonCard');
+    el.dataset.season = name.toLowerCase();
+    el.querySelector('b').textContent = name;
+    el.querySelector('small').textContent = `Year ${1 + Math.floor(S.seasonNo / 4)}`;
+    el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
+    setTimeout(() => el.classList.remove('on'), 2600);
+  }
 
   // ------------------------------------------------------------ finds
   let bannerT = 0;

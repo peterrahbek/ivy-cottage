@@ -179,8 +179,40 @@ const AUDIO = (() => {
     if (beat % 8 === 0) chordIdx++;
   }
 
+  // ------------------------------------------------------------ birdsong
+  // A bird now and then while you look at the cottage in spring and summer.
+  let birdTimer = 0;
+  function chirp(t0) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    const f0 = 2600 + Math.random() * 1600, notes = 2 + ((Math.random() * 4) | 0);
+    o.type = 'sine';
+    g.gain.setValueAtTime(0, t0);
+    let t = t0;
+    for (let i = 0; i < notes; i++) {
+      const f = f0 * (0.9 + Math.random() * 0.3), d = 0.06 + Math.random() * 0.07;
+      o.frequency.setValueAtTime(f, t);
+      o.frequency.exponentialRampToValueAtTime(f * (Math.random() < 0.5 ? 1.35 : 0.75), t + d);
+      g.gain.linearRampToValueAtTime(0.03, t + 0.01); g.gain.linearRampToValueAtTime(0, t + d);
+      t += d + 0.03 + Math.random() * 0.05;
+    }
+    o.connect(g); g.connect(sfx);
+    const w = ac.createGain(); w.gain.value = 0.5; g.connect(w); w.connect(verb);
+    o.start(t0); o.stop(t + 0.1);
+  }
+  function birds(enable) {
+    clearTimeout(birdTimer);
+    if (!enable) return;
+    const next = () => {
+      birdTimer = setTimeout(() => {
+        if (ac && ac.state === 'running' && on.sfx) { const t = ac.currentTime + 0.05; chirp(t); if (Math.random() < 0.4) chirp(t + 0.5 + Math.random() * 0.4); }
+        next();
+      }, 3500 + Math.random() * 6000);
+    };
+    next();
+  }
+
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, buy, chime, shimmer, suspend, resume };
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, buy, chime, shimmer, suspend, resume, birds };
 })();
