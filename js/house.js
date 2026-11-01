@@ -101,7 +101,7 @@ const HOUSE = (() => {
       <g data-part="roofLeft"><path d="${left}" fill="url(#${st.roofLeft ? 'pTiles' : 'pTilesOld'})"/></g>
       <g data-part="roofRight"><path d="${right}" fill="url(#${st.roofRight ? 'pTiles' : 'pTilesOld'})"/></g>
       <path d="M84 174 L200 72 L316 174" fill="none" stroke="${st.roofLeft && st.roofRight ? '#8e4430' : '#5d5243'}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-      <circle cx="200" cy="134" r="13" fill="${st.attic ? 'url(#gRoom)' : 'url(#gGrime)'}" stroke="#efe6d4" stroke-width="3"/>
+      <g data-part="atticWin"><circle cx="200" cy="134" r="13" fill="${st.atticWin ? 'url(#gRoom)' : 'url(#gGrime)'}" stroke="#efe6d4" stroke-width="3"/></g>
       <path d="M200 121 V147 M187 134 H213" stroke="#efe6d4" stroke-width="2"/>`;
   }
 
@@ -258,7 +258,7 @@ const HOUSE = (() => {
       lawnFront: [100, 505], lawnLeft: [120, 410], lawnRight: [300, 440], steps: [272, 415], path: [200, 440],
       fenceLeft: [80, 510], fenceRight: [320, 510], winKitchen: [148, 272], winLiving: [252, 272], winBedroom: [200, 202],
       door: [200, 300], wall: [200, 220], shutters: [200, 270], bedLeft: [143, 345], bedRight: [257, 345], pond: [336, 380],
-      roofLeft: [150, 140], roofRight: [250, 140], attic: [200, 134],
+      roofLeft: [150, 140], roofRight: [250, 140], attic: [252, 80], atticWin: [200, 134],
     }[part] || [200, 300];
     let s = '';
     for (let i = 0; i < 9; i++) {

@@ -10,7 +10,10 @@
     return { coins: 0, earned: 0, tiers: {}, done: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, started: Date.now() };
   }
   function load() {
-    try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && typeof s.coins === 'number') return Object.assign(fresh(), s); } catch (_) {}
+    try {
+      const s = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (s && typeof s.coins === 'number') { const f = fresh(); return Object.assign(f, s, { colours: Object.assign(f.colours, s.colours) }); }
+    } catch (_) {}
     return fresh();
   }
   let S = load();

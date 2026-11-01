@@ -517,5 +517,5 @@ const ENGINE = (() => {
     if (!done) { done = true; cb.onDone && cb.onDone(); }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, get scale() { return scale; } };
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, get scale() { return scale; }, get total() { return total; } };
 })();
