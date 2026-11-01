@@ -94,7 +94,7 @@
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
-        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${tierOf(n.family).name}</span></div></div>
+        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wip && S.wip.id === n.id ? 'Half done' : tierOf(n.family).name}</span></div></div>
         <div class="nextIcon"></div><button class="go" id="goBtn">Start</button>`;
       card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
@@ -141,7 +141,10 @@
     const f = DATA.FINDS[c.id];
     if (f && !S.finds[c.id]) treasures.push({ kind: 'find', id: c.id, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
     const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, S.done.wall ? { wallColor: S.colours.wall } : {}) });
-    ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures });
+    const resume = S.wip && S.wip.id === c.id ? S.wip.grid : null;
+    S.wip = null;
+    ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures, resume });
+    const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
     const hint = $('#hint');
     if (S.touched < 3) { hint.querySelector('span').textContent = 'Drag to ' + DATA.VERBS[fam]; hint.classList.add('on'); } else hint.classList.remove('on');
@@ -232,7 +235,13 @@
   }
   $('#doneBtn').onclick = () => { AUDIO.pop(); leavePlay(); };
   $('#btnBack').onclick = () => { AUDIO.soft(); leavePlay(); };
+  function keepWip() {
+    if (!cur || $('#doneOverlay').classList.contains('on')) return;
+    const g = ENGINE.snapshot();
+    if (g && ENGINE.progress() > 0.02) S.wip = { id: cur.id, grid: g };
+  }
   function leavePlay() {
+    keepWip();
     ENGINE.stop(); AUDIO.stopWork(); save();
     show('home'); renderHome();
     if (freshPart === null && $('#scene .fresh')) AUDIO.shimmer();
@@ -340,7 +349,9 @@
       if (!famUnlocked(fam)) continue;
       const t = tierOf(fam), u = nextUpgrade(fam);
       const dots = F.tiers.map((_, i) => `<i class="${i <= tierIdx(fam) ? 'on' : ''}"></i>`).join('');
-      rows.push(`<div class="shedRow" data-fam="${fam}"><div class="ic"></div><div class="sInfo"><div class="eyebrow">${F.name}</div><div class="sName">${t.name}</div><div class="tiers">${dots}</div></div>
+      const width = (x) => (x.shape === 'rect' ? x.w : x.r * 2);
+      const stat = u ? `<div class="sub">Size ${width(t)} → <b>${width(u.tier)}</b> · Strength ${t.power.toFixed(1)} → <b>${u.tier.power.toFixed(1)}</b></div>` : `<div class="sub">Size ${width(t)} · Strength ${t.power.toFixed(1)}</div>`;
+      rows.push(`<div class="shedRow" data-fam="${fam}"><div class="ic"></div><div class="sInfo"><div class="eyebrow">${F.name}</div><div class="sName">${t.name}</div><div class="tiers">${dots}</div>${stat}</div>
         ${u ? `<button class="buy${S.coins >= u.cost ? ' can' : ''}" data-fam="${fam}"><span>${u.tier.name}</span><span class="price">${coinHtml(u.cost)}</span></button>` : '<div class="maxed">Best tool</div>'}</div>`);
     }
     const h = helperOffer();
@@ -453,7 +464,7 @@
   });
   document.addEventListener('pointerdown', () => AUDIO.unlock(), { once: false, passive: true });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { save(); AUDIO.suspend(); } else AUDIO.resume();
+    if (document.hidden) { if ($('#play').classList.contains('on')) keepWip(); save(); AUDIO.suspend(); } else AUDIO.resume();
   });
   setInterval(save, 5000);
   document.addEventListener('gesturestart', (e) => e.preventDefault());

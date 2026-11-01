@@ -421,7 +421,7 @@ const ENGINE = (() => {
     for (const g of list || []) {
       for (let tries = 0; tries < 300; tries++) {
         const i = 5 + ((Math.random() * (GW - 10)) | 0), j = 5 + ((Math.random() * (GH - 10)) | 0);
-        let ok = true;
+        let ok = hp[j * GW + i] > 0.5;
         for (let dj = -4; dj <= 4 && ok; dj++) for (let di = -4; di <= 4; di++) if (!inReg[(j + dj) * GW + i + di]) { ok = false; break; }
         if (!ok) continue;
         const x = (i + 0.5) * CELL, y = (j + 0.5) * CELL;
@@ -593,6 +593,7 @@ const ENGINE = (() => {
     measure();
     scene = SCENES.build(def.scene, def.opts, def.seed, bleed());
     buildGrid();
+    if (o.resume) restoreGrid(o.resume);
     paintLayers(false);
     valuePerCell = o.value / total;
     coinUnit = Math.max(1, o.value / 36);
@@ -629,6 +630,29 @@ const ENGINE = (() => {
     }
   }
 
+  // ------------------------------------------------------- half-done jobs
+  // The dirt grid packed as one hex digit per cell, so a job left halfway can
+  // pick up where it was.
+  function snapshot() {
+    if (!hp || done) return null;
+    let out = '';
+    for (let k = 0; k < GW * GH; k++) out += inReg[k] ? Math.min(15, Math.ceil(hp[k] * 15)).toString(16) : '-';
+    return out;
+  }
+  function restoreGrid(str) {
+    if (!str || str.length !== GW * GH) return;
+    cleaned = 0;
+    for (let k = 0; k < GW * GH; k++) {
+      if (!inReg[k]) continue;
+      const v = parseInt(str[k], 16);
+      if (Number.isNaN(v)) continue;
+      const h = v / 15;
+      hp[k] = h; maskImg.data[k * 4 + 3] = Math.round(h * 255);
+      if (h <= 0) cleaned++;
+    }
+    maskDirty = true;
+  }
+
   // test hook: finish at once without waiting for animation frames
   function debugFinish() {
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
@@ -636,5 +660,5 @@ const ENGINE = (() => {
     if (!done) { done = true; cb.onDone && cb.onDone(); }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, get scale() { return scale; }, get total() { return total; } };
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, snapshot, get scale() { return scale; }, get total() { return total; } };
 })();
