@@ -7,22 +7,36 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, started: Date.now() };
+  }
+  // fill in anything an older save does not have yet
+  function upgrade(s) {
+    const f = fresh();
+    const out = Object.assign(f, s, { colours: Object.assign(f.colours, s.colours) });
+    if (s.wip && s.wip.id && !s.wips) out.wips = { [s.wip.id]: s.wip.grid };
+    delete out.wip;
+    out.wips = out.wips || {};
+    out.coins = Math.max(0, Math.round(out.coins)); out.earned = Math.round(out.earned || 0);
+    return out;
   }
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (s && typeof s.coins === 'number') { const f = fresh(); return Object.assign(f, s, { colours: Object.assign(f.colours, s.colours) }); }
+      if (s && typeof s.coins === 'number') return upgrade(s);
     } catch (_) {}
     return fresh();
   }
   let S = load();
-  function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (_) {} }
+  let saveWarned = false;
+  function save() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }
+    catch (_) { if (!saveWarned) { saveWarned = true; toast('This phone would not let the game save'); } }
+  }
 
   const tierIdx = (fam) => S.tiers[fam] || 0;
   const tierOf = (fam) => TOOLS.FAM[fam].tiers[tierIdx(fam)];
   const seasonJobs = () => DATA.seasonJobs(S.seasonNo);
-  const nextChore = () => (S.seasonNo === 0 ? DATA.CHORES.find((c) => !S.done[c.id]) : seasonJobs().find((j) => !S.sdone[j.id]));
+  const nextChore = () => DATA.CHORES.find((c) => !S.done[c.id]) || (S.seasonNo > 0 ? seasonJobs().find((j) => !S.sdone[j.id]) : undefined);
   const doneCount = () => DATA.CHORES.filter((c) => S.done[c.id]).length;
   const seasonName = () => (S.seasonNo ? DATA.seasonOf(S.seasonNo) : 'spring');
   const famUnlocked = (fam) => {
@@ -94,7 +108,7 @@
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
-        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wip && S.wip.id === n.id ? 'Half done' : tierOf(n.family).name}</span></div></div>
+        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wips[n.id] ? 'Half done' : tierOf(n.family).name}</span></div></div>
         <div class="nextIcon"></div><button class="go" id="goBtn">Start</button>`;
       card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
@@ -134,15 +148,16 @@
     $('#playTitle').textContent = c.name;
     updatePlayCoins();
     setupBottom();
-    const insets = { top: $('#hudTop').getBoundingClientRect().bottom + 6, bottom: window.innerHeight - $('#hudBottom').getBoundingClientRect().top + 6 };
+    const insets = hudInsets();
     const fam = c.family;
+    const resume = S.wips[c.id] || null;
+    delete S.wips[c.id];
     const treasures = [];
-    for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
+    // coin stashes only on a fresh start, or leaving and coming back would refill them
+    if (!resume) for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
     const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
     const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, S.done.wall ? { wallColor: S.colours.wall } : {}) });
-    const resume = S.wip && S.wip.id === c.id ? S.wip.grid : null;
-    S.wip = null;
     ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures, resume });
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
@@ -150,6 +165,9 @@
     if (S.touched < 3) { hint.querySelector('span').textContent = 'Drag to ' + DATA.VERBS[fam]; hint.classList.add('on'); } else hint.classList.remove('on');
     AUDIO.setWork(workSound(fam, tierOf(fam)));
     setProgress(0);
+  }
+  function hudInsets() {
+    return { top: $('#hudTop').getBoundingClientRect().bottom + 6, bottom: window.innerHeight - $('#hudBottom').getBoundingClientRect().top + 6 };
   }
   function workSound(fam, t) {
     if (fam === 'mow') return t.id === 'shears' ? 'mow' : 'mower';
@@ -215,6 +233,7 @@
   }
 
   function finishChore() {
+    delete S.wips[cur.id];
     const bonus = Math.round(curValue * 0.25);
     S.coins += bonus; S.earned += bonus;
     let first;
@@ -241,7 +260,11 @@
   function keepWip() {
     if (!cur || $('#doneOverlay').classList.contains('on')) return;
     const g = ENGINE.snapshot();
-    if (g && ENGINE.progress() > 0.02) S.wip = { id: cur.id, grid: g };
+    if (!g || ENGINE.progress() <= 0.02) return;
+    delete S.wips[cur.id];
+    S.wips[cur.id] = g;
+    const ids = Object.keys(S.wips);
+    while (ids.length > 5) delete S.wips[ids.shift()];
   }
   function leavePlay() {
     keepWip();
@@ -259,6 +282,7 @@
       AUDIO.coin();
     },
     coinTarget() { const r = $('#playCoins .coin').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; },
+    insets: hudInsets,
     onProgress: setProgress,
     onActivity: (lvl, down) => AUDIO.activity(lvl, down),
     onAutoFinish() { AUDIO.shimmer(); },
@@ -298,7 +322,8 @@
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-cottage.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
     } catch (e) { if (e && e.name !== 'AbortError') toast('Could not make the picture'); }
   }
-  $('#btnPhoto').onclick = () => { AUDIO.soft(); photo(); };
+  const bind = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
+  bind('#btnPhoto', () => { AUDIO.soft(); photo(); });
 
   function seasonCard(name) {
     const el = $('#seasonCard');
@@ -440,13 +465,32 @@
       <label class="setRow"><span>Music</span><input type="checkbox" id="setMusic" ${S.music ? 'checked' : ''}></label>
       <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
       <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
-      <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline.</div>
+      <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline. Safari and the Home Screen app keep separate saves; move yours with a save code.</div>
+      <div class="codeRow"><button class="closeBtn" id="setExport">Copy save code</button><button class="closeBtn" id="setImport">Paste save code</button></div>
+      <textarea id="setCode" rows="3" placeholder="Paste a save code here" hidden></textarea>
+      <button class="go" id="setLoad" hidden>Load this cottage</button>
       <div class="setStats">Coins earned in total: ${U.fmt(S.earned)}</div>
       <button class="danger" id="setReset">Start the cottage over</button>`, (body) => {
       body.querySelector('#setSfx').onchange = (e) => { S.sfx = e.target.checked; AUDIO.set('sfx', S.sfx); save(); };
       body.querySelector('#setMusic').onchange = (e) => { S.music = e.target.checked; AUDIO.set('music', S.music); save(); };
       body.querySelector('#setName').oninput = (e) => { S.name = e.target.value.trim().slice(0, 22); save(); };
       body.querySelector('#setEvening').onchange = (e) => { S.evening = e.target.checked; save(); };
+      const codeBox = body.querySelector('#setCode'), loadBtn = body.querySelector('#setLoad');
+      body.querySelector('#setExport').onclick = () => {
+        const code = 'IVY1:' + btoa(unescape(encodeURIComponent(JSON.stringify(Object.assign({}, S, { wips: {} })))));
+        const showBox = () => { codeBox.hidden = false; codeBox.value = code; codeBox.select(); toast('Copy the code from the box'); };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => toast('Save code copied'), showBox);
+        else showBox();
+      };
+      body.querySelector('#setImport').onclick = () => { codeBox.hidden = false; codeBox.value = ''; loadBtn.hidden = false; codeBox.focus(); };
+      loadBtn.onclick = () => {
+        try {
+          const raw = codeBox.value.trim().replace(/^IVY1:/, '');
+          const s = JSON.parse(decodeURIComponent(escape(atob(raw))));
+          if (!s || typeof s.coins !== 'number') throw new Error('not a save');
+          S = upgrade(s); save(); closeSheet(); toast('Cottage loaded');
+        } catch (_) { toast('That code did not work'); }
+      };
       body.querySelector('#setReset').onclick = (e) => {
         if (e.target.dataset.sure) { S = fresh(); save(); closeSheet(); toast('A fresh start'); return; }
         e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to really start over';
@@ -457,7 +501,7 @@
   $('#btnShed').onclick = () => { AUDIO.pop(); openShed(); };
   $('#btnJobs').onclick = () => { AUDIO.pop(); openJobs(); };
   $('#btnSettings').onclick = () => { AUDIO.pop(); openSettings(); };
-  $('#btnFinds').onclick = () => { AUDIO.pop(); openFinds(); };
+  bind('#btnFinds', () => { AUDIO.pop(); openFinds(); });
 
   // ----------------------------------------------------------------- boot
   function renderTitle() {
@@ -467,14 +511,20 @@
     $('#titleScene').innerHTML = HOUSE.render(st, S.colours, { season: seasonName(), pending, decor: S.decor, pct: doneCount() / DATA.CHORES.length, night: isEvening() });
     if (S.name) $('#title .logo span').textContent = S.name;
     if (S.earned > 0) $('#title .tap').textContent = 'Back to the cottage';
+    const standalone = navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const tip = $('#homeTip');
+    if (tip) tip.hidden = !(ios && !standalone);
   }
   renderTitle();
   $('#title').addEventListener('click', () => {
     AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
     AUDIO.pop();
+    $('#titleScene').innerHTML = '';
     show('home'); renderHome();
   });
-  document.addEventListener('pointerdown', () => AUDIO.unlock(), { once: false, passive: true });
+  // iOS only counts touchend and click as a gesture that may wake the sound up
+  for (const ev of ['pointerdown', 'touchend', 'click']) document.addEventListener(ev, () => AUDIO.unlock(), { passive: true });
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { if ($('#play').classList.contains('on')) keepWip(); save(); AUDIO.suspend(); } else AUDIO.resume();
   });
@@ -487,5 +537,5 @@
   }
 
   // test hooks
-  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startJob: (c) => startChore(c, false), render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); } };
+  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startJob: (c) => startChore(c, false), render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish() };
 })();

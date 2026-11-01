@@ -15,13 +15,13 @@ const ENGINE = (() => {
   let dpr = 1, vw = 0, vh = 0, scale = 1, ox = 0, oy = 0;
   let L = null; // layers
   let scene = null, def = null, tier = null, paint = '#9cc5a1';
-  let hp, tough, inReg, total = 0, cleaned = 0, valuePerCell = 0, coinUnit = 1, coinAcc = 0;
+  let hp, tough, inReg, total = 0, cleaned = 0, valuePerCell = 0, coinUnit = 1, coinAcc = 0, earnAcc = 0;
   let maskCv, maskCx, maskImg, maskDirty = false;
   const tool = { x: 180, y: 480, a: -Math.PI / 2, tx: 180, ty: 480, down: false, pid: null, vib: 0 };
   let parts = [], coins = [], helpers = [];
   let running = false, raf = 0, last = 0, clock = 0, finishing = null, done = false;
   let activity = 0, smoothAct = 0, insets = { top: 70, bottom: 110 };
-  let speedMult = 1;
+  let speedMult = 1, stamped = false;
 
   function init(canvas, callbacks) {
     cv = canvas; ctx = cv.getContext('2d');
@@ -84,9 +84,23 @@ const ENGINE = (() => {
     maskDirty = true;
   }
 
+  const SIDEWAYS = '(orientation: landscape) and (max-height: 520px)';
+  let sideways = false;
+  if (window.matchMedia) {
+    const mq = window.matchMedia(SIDEWAYS);
+    sideways = mq.matches;
+    const onChange = () => { sideways = mq.matches; if (sideways) { tool.down = false; tool.pid = null; } };
+    if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
+  }
   function relayout() {
+    // a phone held sideways gets a 'turn it upright' notice instead; keeping
+    // the layers as they are means nothing turns blurry on the way back
+    if (window.matchMedia && window.matchMedia(SIDEWAYS).matches) return;
+    const d = Math.min(window.devicePixelRatio || 1, 2);
+    if (L && Math.round(window.innerWidth * d) === cv.width && Math.round(window.innerHeight * d) === cv.height) return;
+    if (cb.insets) insets = cb.insets();
     measure();
-    paintLayers(true);
+    paintLayers(stamped);
   }
 
   // ------------------------------------------------------------------- grid
@@ -118,11 +132,22 @@ const ENGINE = (() => {
     maskDirty = true;
   }
 
+  // coins are handed over whole; the fractions per cell collect here
+  function earn(v) {
+    earnAcc += v;
+    const whole = Math.floor(earnAcc + 1e-6);
+    if (whole > 0) { earnAcc -= whole; cb.onEarn && cb.onEarn(whole); }
+  }
+  function flushEarn() {
+    if (earnAcc >= 0.5) cb.onEarn && cb.onEarn(1);
+    earnAcc = 0;
+  }
+
   function clearCell(k) {
     setCell(k, 0);
     cleaned++;
     const x = ((k % GW) + 0.5) * CELL, y = (((k / GW) | 0) + 0.5) * CELL;
-    cb.onEarn && cb.onEarn(valuePerCell);
+    earn(valuePerCell);
     coinAcc += valuePerCell;
     if (coinAcc >= coinUnit) {
       coinAcc -= coinUnit;
@@ -168,8 +193,7 @@ const ENGINE = (() => {
         else setCell(idx, after);
       }
     }
-    if (scene.stamp && !isHelper) scene.stamp(L.clean.x, x, y, a, t, paint);
-    else if (scene.stamp && isHelper) scene.stamp(L.clean.x, x, y, a, t, paint, true);
+    if (scene.stamp) { scene.stamp(L.clean.x, x, y, a, t, paint, isHelper); stamped = true; }
     return removed;
   }
 
@@ -503,7 +527,7 @@ const ENGINE = (() => {
     }
     if (f.t >= f.dur) {
       f.hold += dt;
-      if (f.hold > 0.45 && !done) { done = true; tool.down = false; tool.pid = null; cb.onDone && cb.onDone(); }
+      if (f.hold > 0.45 && !done) { done = true; tool.down = false; tool.pid = null; flushEarn(); cb.onDone && cb.onDone(); }
     }
   }
 
@@ -524,7 +548,9 @@ const ENGINE = (() => {
     if (!running) return;
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
-    last = now; clock += dt;
+    last = now;
+    if (sideways) return; // paused while the phone is on its side
+    clock += dt;
     activity = 0;
     if (!finishing) {
       activity += stepTool(dt);
@@ -597,7 +623,7 @@ const ENGINE = (() => {
     paintLayers(false);
     valuePerCell = o.value / total;
     coinUnit = Math.max(1, o.value / 36);
-    coinAcc = 0;
+    coinAcc = 0; earnAcc = 0; stamped = false;
     parts = []; coins = [];
     makeHelpers(o.helpers || 0);
     placeTreasures(o.treasures);
@@ -658,7 +684,7 @@ const ENGINE = (() => {
   function debugFinish() {
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
     stepGems(0);
-    if (!done) { done = true; cb.onDone && cb.onDone(); }
+    if (!done) { done = true; flushEarn(); cb.onDone && cb.onDone(); }
   }
 
   return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, snapshot, get scale() { return scale; }, get total() { return total; } };

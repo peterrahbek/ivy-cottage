@@ -79,3 +79,35 @@ const U = (() => {
 
   return { rng, noise, clamp, lerp, smooth, easeOut, easeBack, hex, toHex, mix, shade, rgba, lum, canvas, fmt, pick };
 })();
+
+// Safari before iOS 16 has no roundRect on canvas contexts or Path2D, and
+// several scenes use it. Add a small stand-in so older iPhones still work.
+(() => {
+  function roundRect(x, y, w, h, r) {
+    let a = Array.isArray(r) ? r.slice() : [r || 0];
+    a = a.map((v) => (typeof v === 'number' ? v : (v && v.x) || 0));
+    let tl, tr, br, bl;
+    if (a.length === 1) tl = tr = br = bl = a[0];
+    else if (a.length === 2) { tl = br = a[0]; tr = bl = a[1]; }
+    else if (a.length === 3) { tl = a[0]; tr = bl = a[1]; br = a[2]; }
+    else { tl = a[0]; tr = a[1]; br = a[2]; bl = a[3]; }
+    if (w < 0) { x += w; w = -w; }
+    if (h < 0) { y += h; h = -h; }
+    const f = (len, p, q) => (p + q > len ? len / (p + q) : 1);
+    const k = Math.min(f(w, tl, tr), f(w, bl, br), f(h, tl, bl), f(h, tr, br));
+    tl *= k; tr *= k; br *= k; bl *= k;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y);
+    if (tr) this.arcTo(x + w, y, x + w, y + tr, tr);
+    this.lineTo(x + w, y + h - br);
+    if (br) this.arcTo(x + w, y + h, x + w - br, y + h, br);
+    this.lineTo(x + bl, y + h);
+    if (bl) this.arcTo(x, y + h, x, y + h - bl, bl);
+    this.lineTo(x, y + tl);
+    if (tl) this.arcTo(x, y, x + tl, y, tl);
+    this.closePath();
+  }
+  if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = roundRect;
+  if (typeof Path2D !== 'undefined' && !Path2D.prototype.roundRect) Path2D.prototype.roundRect = roundRect;
+  U.roundRectFallback = roundRect;
+})();
