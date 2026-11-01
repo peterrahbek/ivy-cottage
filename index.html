@@ -56,7 +56,13 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 /* ----------------------------------------------------------------- home */
 #home{flex-direction:column;padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
 .topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px}
-.brand{font-weight:900;font-size:22px;color:#46623f;display:flex;align-items:center;gap:6px}
+.brand{font-weight:900;font-size:22px;color:#46623f;display:flex;align-items:center;gap:6px;min-width:0}
+.brand span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topRight{display:flex;align-items:center;gap:8px;flex:none}
+.round.small{width:38px;height:38px}
+.round.small svg{width:20px;height:20px}
+.nameRow input[type=text]{width:52%;font:inherit;font-weight:700;font-size:16px;border:1.5px solid var(--line);border-radius:10px;padding:6px 8px;background:#fff;color:var(--ink);user-select:text;-webkit-user-select:text}
+#scene .star{animation:twinkle 2.2s ease-in-out infinite alternate}
 .brand svg{width:24px;height:24px}
 #sceneWrap{flex:1;min-height:0;position:relative;margin:4px 12px 0;border-radius:22px;overflow:hidden;background:#cfe7ef;
   box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.05),0 6px 18px rgba(80,60,30,.12)}
@@ -239,15 +245,15 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 <section id="title" class="screen on">
   <div id="titleScene"></div>
   <div class="leaves"><i style="left:12%;animation-duration:9s"></i><i style="left:38%;animation-duration:12s;animation-delay:-4s"></i><i style="left:66%;animation-duration:10s;animation-delay:-7s"></i><i style="left:86%;animation-duration:13s;animation-delay:-2s"></i></div>
-  <div class="logo"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/><path d="M20 36 V18" stroke="#3f6b3c" stroke-width="2"/></svg>Ivy Cottage</div>
+  <div class="logo"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/><path d="M20 36 V18" stroke="#3f6b3c" stroke-width="2"/></svg><span>Ivy Cottage</span></div>
   <div class="tag">a forgotten little house that needs some love</div>
   <div class="tap">Tap to begin</div>
 </section>
 
 <section id="home" class="screen">
   <header class="topbar">
-    <div class="brand"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/></svg>Ivy Cottage</div>
-    <div class="coins" id="homeCoins"></div>
+    <div class="brand"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/></svg><span id="brandName">Ivy Cottage</span></div>
+    <div class="topRight"><button class="round small" id="btnPhoto" aria-label="Save a picture of the cottage"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3" fill="#7d7264"/><path d="M8 7 l1.5 -2.5 h5 L16 7z" fill="#7d7264"/><circle cx="12" cy="13.5" r="4" fill="#fffaf1"/><circle cx="12" cy="13.5" r="2.4" fill="#7d7264"/></svg></button><div class="coins" id="homeCoins"></div></div>
   </header>
   <div id="sceneWrap"><div id="scene"></div></div>
   <div class="restored"><div class="bar"><i id="restoredBar"></i></div><span id="restoredTxt"></span></div>

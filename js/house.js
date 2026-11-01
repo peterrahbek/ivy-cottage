@@ -380,6 +380,25 @@ const HOUSE = (() => {
     return `<g class="weather">${s}</g>`;
   }
 
+  // evening: darken everything, then let lit windows and lights glow
+  function night(st, decor) {
+    let s = '<rect width="400" height="540" fill="#1b2350" opacity="0.55" style="mix-blend-mode:multiply"/>';
+    s += '<rect width="400" height="540" fill="#24306a" opacity="0.18"/>';
+    for (let i = 0; i < 30; i++) s += `<circle class="star" cx="${(i * 97) % 400}" cy="${8 + ((i * 53) % 180)}" r="${0.6 + (i % 3) * 0.4}" fill="#fff" style="animation-delay:-${(i * 0.7) % 4}s"/>`;
+    s += '<mask id="mMoon"><rect width="400" height="200" fill="#fff"/><circle cx="337" cy="56" r="14" fill="#000"/></mask><circle cx="330" cy="62" r="16" fill="#fff6d8" mask="url(#mMoon)"/><circle cx="330" cy="62" r="30" fill="#fff6d8" opacity="0.08"/>';
+    const glow = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#ffd98a" opacity="0.9"/><circle cx="${x + w / 2}" cy="${y + h / 2}" r="${Math.max(w, h) * 0.9}" fill="#ffd98a" opacity="0.1"/>
+      <path d="M${x + w / 2} ${y} V${y + h} M${x} ${y + h / 2} H${x + w}" stroke="#7a5a3a" stroke-width="2" opacity="0.6"/>`;
+    const lit = (part) => st[part] && !PEND[part];
+    if (lit('winKitchen')) s += glow(122, 248, 40, 50);
+    if (lit('winLiving')) s += glow(238, 248, 40, 50);
+    if (lit('winBedroom')) s += glow(134, 186, 34, 36) + glow(232, 186, 34, 36);
+    if (lit('atticWin')) s += '<circle cx="200" cy="134" r="11" fill="#ffd98a" opacity="0.9"/><circle cx="200" cy="134" r="22" fill="#ffd98a" opacity="0.15"/>';
+    if (st.door) s += '<path d="M186 275 Q200 264 214 275 Z" fill="#ffd98a"/>';
+    if (decor.lantern) s += '<rect x="230.5" y="278" width="5" height="9" fill="#ffe9a8"/><circle cx="233" cy="283" r="18" fill="#ffd98a" opacity="0.3"/>';
+    if (decor.lights) for (const x0 of [0, 240]) for (let x = x0 + 10; x < x0 + 160; x += 20) s += `<circle cx="${x}" cy="493" r="2.4" fill="${['#ffe08a', '#ffb3c1', '#b3e5ff', '#c8f2b0'][(x / 20 | 0) % 4]}"/><circle cx="${x}" cy="493" r="7" fill="#ffe08a" opacity="0.2"/>`;
+    return `<g class="night" pointer-events="none">${s}</g>`;
+  }
+
   function sparkles(part) {
     if (!part) return '';
     const spots = {
@@ -414,7 +433,7 @@ const HOUSE = (() => {
       ${windowSvg(134, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}${windowSvg(232, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}
       ${windowSvg(122, 248, 40, 50, st.winKitchen, 'winKitchen', 'kitchen')}${windowSvg(238, 248, 40, 50, st.winLiving, 'winLiving', 'living')}
       ${shutters(st, cols.shutters || '#4e7b5b')}${door(s, cols.door)}${ivy(st)}${beds(st)}
-      ${tree(st)}${fence(st, cols.fence)}${faded()}${decorations(opts.decor || {})}${life(st, pct)}${weather()}${sparkles(opts.fresh)}
+      ${tree(st)}${fence(st, cols.fence)}${faded()}${decorations(opts.decor || {})}${life(st, pct)}${weather()}${opts.night ? night(st, opts.decor || {}) : ''}${sparkles(opts.fresh)}
     </svg>`;
   }
 

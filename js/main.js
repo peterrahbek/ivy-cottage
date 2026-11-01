@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, started: Date.now() };
   }
   function load() {
     try {
@@ -58,6 +58,9 @@
     for (const el of document.querySelectorAll('.screen')) el.classList.toggle('on', el.id === id);
   }
 
+  const isEvening = () => { const h = new Date().getHours(); return S.evening && (h >= 20 || h < 6); };
+  const cottageName = () => S.name || 'Ivy Cottage';
+
   function coinHtml(n) { return `<i class="coin"></i><span>${U.fmt(n)}</span>`; }
 
   // ---------------------------------------------------------------- home
@@ -67,7 +70,8 @@
     for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
     for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
     const pct = doneCount() / DATA.CHORES.length;
-    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor });
+    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor, night: isEvening() });
+    $('#brandName').textContent = cottageName();
     if (freshPart) {
       const g = $('#scene').querySelectorAll(`[data-part="${freshPart}"]`);
       g.forEach((el) => el.classList.add('fresh'));
@@ -252,6 +256,32 @@
     onDone: finishChore,
   });
 
+  // ------------------------------------------------------------ photo
+  // Draw the cottage picture into a PNG and hand it to the share sheet.
+  async function photo() {
+    const svg = $('#scene svg');
+    if (!svg) return;
+    try {
+      const W = 1200, H = 1620, band = 150;
+      const xml = new XMLSerializer().serializeToString(svg).replace('<svg ', `<svg width="${W}" height="${H}" `);
+      const img = new Image();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+      await img.decode();
+      const cv = U.canvas(W, H + band), c = cv.getContext('2d');
+      c.fillStyle = '#f6efe3'; c.fillRect(0, 0, W, H + band);
+      c.drawImage(img, 0, 0, W, H);
+      c.fillStyle = '#46623f'; c.font = '900 64px ui-rounded, "SF Pro Rounded", system-ui, sans-serif'; c.textAlign = 'center';
+      c.fillText(cottageName(), W / 2, H + 92);
+      c.fillStyle = '#a89c8b'; c.font = '700 30px ui-rounded, system-ui, sans-serif';
+      c.fillText(S.seasonNo ? `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)}` : `${doneCount()} of ${DATA.CHORES.length} jobs done`, W / 2, H + 132);
+      const blob = await new Promise((res) => cv.toBlob(res, 'image/png'));
+      const file = new File([blob], 'my-cottage.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: cottageName() });
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-cottage.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+    } catch (e) { if (e && e.name !== 'AbortError') toast('Could not make the picture'); }
+  }
+  $('#btnPhoto').onclick = () => { AUDIO.soft(); photo(); };
+
   // ------------------------------------------------------------ finds
   let bannerT = 0;
   function foundBanner(g) {
@@ -370,11 +400,15 @@
     openSheet('Settings', `
       <label class="setRow"><span>Sound effects</span><input type="checkbox" id="setSfx" ${S.sfx ? 'checked' : ''}></label>
       <label class="setRow"><span>Music</span><input type="checkbox" id="setMusic" ${S.music ? 'checked' : ''}></label>
+      <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
+      <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
       <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline.</div>
       <div class="setStats">Coins earned in total: ${U.fmt(S.earned)}</div>
       <button class="danger" id="setReset">Start the cottage over</button>`, (body) => {
       body.querySelector('#setSfx').onchange = (e) => { S.sfx = e.target.checked; AUDIO.set('sfx', S.sfx); save(); };
       body.querySelector('#setMusic').onchange = (e) => { S.music = e.target.checked; AUDIO.set('music', S.music); save(); };
+      body.querySelector('#setName').oninput = (e) => { S.name = e.target.value.trim().slice(0, 22); save(); };
+      body.querySelector('#setEvening').onchange = (e) => { S.evening = e.target.checked; save(); };
       body.querySelector('#setReset').onclick = (e) => {
         if (e.target.dataset.sure) { S = fresh(); save(); closeSheet(); toast('A fresh start'); return; }
         e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to really start over';
@@ -392,7 +426,8 @@
     const st = {}, pending = {};
     for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
     for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
-    $('#titleScene').innerHTML = HOUSE.render(st, S.colours, { season: seasonName(), pending, decor: S.decor, pct: doneCount() / DATA.CHORES.length });
+    $('#titleScene').innerHTML = HOUSE.render(st, S.colours, { season: seasonName(), pending, decor: S.decor, pct: doneCount() / DATA.CHORES.length, night: isEvening() });
+    if (S.name) $('#title .logo span').textContent = S.name;
     if (S.earned > 0) $('#title .tap').textContent = 'Back to the cottage';
   }
   renderTitle();
