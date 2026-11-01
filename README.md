@@ -38,6 +38,14 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 Open the link in Safari, tap Share, then **Add to Home Screen**. It then runs
 full screen and offline. Progress is saved on the phone (localStorage).
 
+Safari and the Home Screen app keep separate saves, and iOS may clear a Safari
+tab's save after a week without a visit. Play from the Home Screen icon. To
+move a cottage (Safari to Home Screen, or to another phone), use Settings >
+Copy save code, then Paste save code on the other side.
+
+Works on iOS 15 and later (a small stand-in covers the canvas `roundRect` that
+iOS 15 lacks). Held sideways, the game pauses and asks to be turned upright.
+
 ## Run locally
 
     node serve.js 8790
