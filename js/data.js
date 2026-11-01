@@ -79,11 +79,19 @@ const DATA = (() => {
       const b = CHORES.find((c) => c.id === baseId);
       const fam = dirt === 'leaves' ? (b.scene === 'pond' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family;
       return Object.assign({}, b, {
-        id: `s${n}-${i}`, base: b.id, name, season, seasonNo: n, pending: dirt || 'grow',
+        id: `s${n}-${i}`, base: b.id, name, season, seasonNo: n, pending: dirt || 'grow', find: SEASON_FINDS[season][i], findId: `${season}-${i}`,
         opts: Object.assign({}, b.opts, dirt ? { dirt } : {}), seed: b.seed + n * 131 + i, family: fam, value: seasonValue(n, i),
       });
     });
   }
+  // one keepsake per seasonal job; each is found once, whichever year
+  const SEASON_FINDS = {
+    summer: [['🍓', 'A wild strawberry'], ['🐢', 'A tiny tortoise'], ['🕶️', 'Someone\'s sunglasses'], ['🦗', 'A grasshopper'], ['🌻', 'A sunflower seed'], ['🐚', 'A seashell from a holiday'], ['🧃', 'A forgotten juice box'], ['🦋', 'A sleepy butterfly']],
+    autumn: [['🦔', 'A hedgehog asleep in the leaves'], ['🍄', 'A little mushroom'], ['🎃', 'A pumpkin seed'], ['🍁', 'The reddest leaf'], ['🌂', 'A lost umbrella'], ['🐿️', 'A squirrel\'s hidden nut'], ['🧦', 'One odd sock'], ['🦉', 'An owl feather']],
+    winter: [['🥕', 'The snowman\'s carrot nose'], ['🧣', 'A lost scarf'], ['❄️', 'A perfect snowflake'], ['🧤', 'A tiny mitten'], ['🐦', 'A robin'], ['🍪', 'A gingerbread biscuit'], ['🕯️', 'A candle stub'], ['🎁', 'A forgotten present']],
+    spring: [['🐣', 'A chick'], ['🐇', 'A bunny'], ['🌷', 'A tulip bulb'], ['🪺', 'An empty nest'], ['🐞', 'Two ladybirds'], ['🥚', 'A painted egg'], ['🌈', 'A rainbow in a puddle'], ['🪱', 'A friendly worm']],
+  };
+
   // tool families that first appear in a season
   const FAMILY_SEASON = { rake: 2, snow: 3 };
 
@@ -143,5 +151,5 @@ const DATA = (() => {
   ];
   const DECOR_UNLOCK = 6;
 
-  return { AREAS, CHORES, FINDS, VERBS, DECOR, DECOR_UNLOCK, SEASON_NAMES, seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
+  return { AREAS, CHORES, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS, DECOR, DECOR_UNLOCK, SEASON_NAMES, seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
 })();

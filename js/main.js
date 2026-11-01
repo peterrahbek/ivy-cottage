@@ -138,8 +138,8 @@
     const fam = c.family;
     const treasures = [];
     for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
-    const f = DATA.FINDS[c.id];
-    if (f && !S.finds[c.id]) treasures.push({ kind: 'find', id: c.id, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
+    const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
+    if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
     const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, S.done.wall ? { wallColor: S.colours.wall } : {}) });
     const resume = S.wip && S.wip.id === c.id ? S.wip.grid : null;
     S.wip = null;
@@ -324,8 +324,17 @@
       const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
       return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : 'Hidden in ' + c.name.replace(/^The /, 'the ')}</span></div>`;
     }).join('');
-    openSheet('Finds', `<div class="findsHead">${got} of ${all.length} keepsakes found</div><div class="findsGrid">${cells}</div>
-      <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins.</div>`);
+    let seasons = '';
+    if (S.seasonNo > 0) {
+      for (const sn of DATA.SEASON_ORDER) {
+        const list = DATA.SEASON_FINDS[sn];
+        const n = list.filter((_, i) => S.finds[`${sn}-${i}`]).length;
+        seasons += `<div class="findsHead">${DATA.SEASON_NAMES[sn]} · ${n} of ${list.length}</div><div class="findsGrid">` +
+          list.map(([e, nm], i) => { const has = !!S.finds[`${sn}-${i}`]; return `<div class="find${has ? ' has' : ''}"><i>${has ? e : '?'}</i><span>${has ? nm : 'A ' + sn + ' secret'}</span></div>`; }).join('') + '</div>';
+      }
+    }
+    openSheet('Finds', `<div class="findsHead">The cottage · ${got} of ${all.length}</div><div class="findsGrid">${cells}</div>${seasons}
+      <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins. Each season has its own secrets.</div>`);
   }
 
   // ---------------------------------------------------------------- toast
