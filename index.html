@@ -89,12 +89,12 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .nextIcon{width:46px;height:46px;flex:none}
 .go{flex:none;background:var(--sage-d);color:#fff;font-weight:900;font-size:17px;padding:14px 20px;border-radius:16px;box-shadow:0 4px 0 #3f6b3c}
 .go:active{transform:translateY(3px);box-shadow:0 1px 0 #3f6b3c}
-.dock{display:flex;gap:10px;padding:10px 12px 12px}
-.dock button{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:11px 6px;font-weight:800;font-size:15px;
+.dock{display:flex;gap:8px;padding:10px 12px 12px}
+.dock button{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:11px 4px;font-weight:800;font-size:14px;
   box-shadow:0 3px 0 var(--line);display:flex;align-items:center;justify-content:center;gap:7px;position:relative}
 .dock button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
 .dock button svg{width:20px;height:20px}
-.dock #btnSettings{flex:0 0 52px}
+.dock #btnSettings{flex:0 0 48px}
 .dock button.alert::after{content:'';position:absolute;top:7px;right:9px;width:10px;height:10px;border-radius:50%;background:var(--terra);
   box-shadow:0 0 0 2px var(--card);animation:pulse 1.6s ease infinite}
 @keyframes pulse{50%{transform:scale(1.3)}}
@@ -145,6 +145,27 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #toast{position:fixed;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;font-weight:800;
   padding:10px 18px;border-radius:999px;transition:all .25s ease;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
+
+#hint{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#hint.on{display:flex}
+#hint .hand{font-size:46px;animation:swipe 1.6s ease-in-out infinite;filter:drop-shadow(0 3px 3px rgba(0,0,0,.3))}
+#hint span{background:rgba(59,53,46,.85);color:#fff;font-weight:800;padding:8px 16px;border-radius:999px;font-size:16px}
+@keyframes swipe{0%,100%{transform:translateX(-60px) rotate(-8deg)}50%{transform:translateX(60px) rotate(8deg)}}
+#found{position:absolute;left:50%;top:calc(64px + var(--safe-t));transform:translate(-50%,-30px) scale(.8);opacity:0;pointer-events:none;display:flex;align-items:center;gap:10px;
+  background:var(--card);border:2px solid #f2d88a;border-radius:18px;padding:8px 16px 8px 10px;box-shadow:0 6px 18px rgba(80,60,30,.25);transition:all .35s cubic-bezier(.2,1.4,.4,1);white-space:nowrap}
+#found.on{opacity:1;transform:translate(-50%,0) scale(1)}
+#found i{font-style:normal;font-size:32px}
+#found small{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+#found b{font-size:16px}
+.prog.pulse{animation:ppulse .5s ease}
+@keyframes ppulse{40%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(127,184,106,.45)}}
+.findsHead{font-weight:800;color:var(--ink2);margin:0 4px 10px}
+.findsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.find{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 4px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:96px}
+.find i{font-style:normal;font-size:30px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--paper2);color:var(--ink3);font-weight:900}
+.find span{font-size:10.5px;font-weight:700;color:var(--ink3);line-height:1.2}
+.find.has span{color:var(--ink);font-size:11.5px}
+.find.has i{background:#fbf2d5}
 
 /* ---------------------------------------------------------------- sheet */
 #sheet{position:fixed;inset:0;background:rgba(40,30,20,.3);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
@@ -208,6 +229,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
   <nav class="dock">
     <button id="btnShed"><svg viewBox="0 0 24 24"><path d="M3 11 L12 4 L21 11 V20 H3Z" fill="#d98b63"/><rect x="9" y="13" width="6" height="7" fill="#8a5a3c"/><path d="M2 11.5 L12 3.5 L22 11.5" stroke="#8a4f36" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Shed</button>
     <button id="btnJobs"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" fill="#f2d88a"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#8a6a2c" stroke-width="2" stroke-linecap="round"/></svg>Jobs</button>
+    <button id="btnFinds"><svg viewBox="0 0 24 24"><path d="M12 3 L14.6 9 L21 9.5 L16 13.6 L17.6 20 L12 16.5 L6.4 20 L8 13.6 L3 9.5 L9.4 9Z" fill="#f2c230" stroke="#c9952a" stroke-width="1.2" stroke-linejoin="round"/></svg>Finds</button>
     <button id="btnSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="#7d7264" stroke-width="3" stroke-dasharray="3.2 2.3"/><circle cx="12" cy="12" r="3" fill="#7d7264"/></svg></button>
   </nav>
 </section>
@@ -223,6 +245,8 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
     <div id="palette"></div>
     <div class="bottomRow"><div id="toolChip"></div><button id="upPill"></button></div>
   </div>
+  <div id="hint"><div class="hand">👆</div><span>Drag to mow</span></div>
+  <div id="found"></div>
   <div id="doneOverlay">
     <div class="card doneCard">
       <div id="doneTitle">Lovely!</div>

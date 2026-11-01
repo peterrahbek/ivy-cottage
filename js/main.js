@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, started: Date.now() };
   }
   function load() {
     try {
@@ -106,7 +106,14 @@
     setupBottom();
     const insets = { top: $('#hudTop').getBoundingClientRect().bottom + 6, bottom: window.innerHeight - $('#hudBottom').getBoundingClientRect().top + 6 };
     const fam = c.family;
-    ENGINE.start(c, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets });
+    const treasures = [];
+    for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
+    const f = DATA.FINDS[c.id];
+    if (f && !S.finds[c.id]) treasures.push({ kind: 'find', id: c.id, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
+    ENGINE.start(c, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures });
+    lastMilestone = 0;
+    const hint = $('#hint');
+    if (S.touched < 3) { hint.querySelector('span').textContent = 'Drag to ' + DATA.VERBS[fam]; hint.classList.add('on'); } else hint.classList.remove('on');
     AUDIO.setWork(workSound(fam, tierOf(fam)));
     setProgress(0);
   }
@@ -156,11 +163,16 @@
     toast(`${u.tier.name}!`);
   };
   function updatePlayCoins() { $('#playCoins').innerHTML = coinHtml(shownCoins); }
-  let lastPct = -1;
+  let lastPct = -1, lastMilestone = 0;
   function setProgress(p) {
     const v = Math.floor(p * 100);
     if (v === lastPct) return;
     lastPct = v;
+    const m = Math.floor(v / 25);
+    if (m > lastMilestone && m < 4) {
+      lastMilestone = m; AUDIO.soft();
+      const pr = $('.prog'); pr.classList.remove('pulse'); void pr.offsetWidth; pr.classList.add('pulse');
+    }
     $('#progFill').style.width = (p * 100).toFixed(1) + '%';
     $('#progTxt').textContent = v + '%';
   }
@@ -204,8 +216,36 @@
     onProgress: setProgress,
     onActivity: (lvl, down) => AUDIO.activity(lvl, down),
     onAutoFinish() { AUDIO.shimmer(); },
+    onTouch() {
+      if ($('#hint').classList.contains('on')) { $('#hint').classList.remove('on'); S.touched++; save(); }
+    },
+    onFind(g) {
+      if (g.kind === 'coin') { AUDIO.shimmer(); return; }
+      S.finds[g.id] = Date.now(); save();
+      AUDIO.chime();
+      foundBanner(g);
+    },
     onDone: finishChore,
   });
+
+  // ------------------------------------------------------------ finds
+  let bannerT = 0;
+  function foundBanner(g) {
+    const b = $('#found');
+    b.innerHTML = `<i>${g.emoji}</i><div><small>You found</small><b>${g.name}</b></div>`;
+    b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+    clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2600);
+  }
+  function openFinds() {
+    const all = DATA.CHORES.filter((c) => DATA.FINDS[c.id]);
+    const got = all.filter((c) => S.finds[c.id]).length;
+    const cells = all.map((c) => {
+      const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
+      return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : 'Hidden in ' + c.name.replace(/^The /, 'the ')}</span></div>`;
+    }).join('');
+    openSheet('Finds', `<div class="findsHead">${got} of ${all.length} keepsakes found</div><div class="findsGrid">${cells}</div>
+      <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins.</div>`);
+  }
 
   // ---------------------------------------------------------------- toast
   let toastT = 0;
@@ -294,6 +334,7 @@
   $('#btnShed').onclick = () => { AUDIO.pop(); openShed(); };
   $('#btnJobs').onclick = () => { AUDIO.pop(); openJobs(); };
   $('#btnSettings').onclick = () => { AUDIO.pop(); openSettings(); };
+  $('#btnFinds').onclick = () => { AUDIO.pop(); openFinds(); };
 
   // ----------------------------------------------------------------- boot
   $('#title').addEventListener('click', () => {
@@ -314,5 +355,5 @@
   }
 
   // test hooks
-  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), save };
+  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), save, reset() { S = fresh(); save(); renderHome(); } };
 })();

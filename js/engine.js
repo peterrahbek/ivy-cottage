@@ -378,6 +378,7 @@ const ENGINE = (() => {
       const k = coins[i];
       k.t += dt / k.dur;
       if (k.t >= 1) { coins.splice(i, 1); cb.onCoinArrive && cb.onCoinArrive(k.v); continue; }
+      if (k.t < 0) continue;
       const e = k.t * k.t * (3 - 2 * k.t);
       k.x = U.lerp(k.sx, k.tx, e);
       k.y = U.lerp(k.sy, k.ty, e) - Math.sin(k.t * Math.PI) * k.lift;
@@ -385,12 +386,83 @@ const ENGINE = (() => {
   }
   function drawCoins(c) {
     for (const k of coins) {
+      if (k.t < 0) continue;
       const s = 7 + Math.sin(k.t * Math.PI) * 3;
       c.fillStyle = 'rgba(0,0,0,0.15)'; c.beginPath(); c.arc(k.x + 1, k.y + 2, s, 0, 7); c.fill();
       c.fillStyle = '#e0a526'; c.beginPath(); c.arc(k.x, k.y, s, 0, 7); c.fill();
       c.fillStyle = '#f7cf4a'; c.beginPath(); c.arc(k.x, k.y, s * 0.78, 0, 7); c.fill();
       c.fillStyle = '#fff3b8'; c.beginPath(); c.arc(k.x - s * 0.3, k.y - s * 0.3, s * 0.28, 0, 7); c.fill();
     }
+  }
+
+  // ------------------------------------------------------------- treasures
+  // Things hidden under the dirt: little stashes of coins and sometimes a
+  // keepsake for the finds shelf. They show through as the dirt thins.
+  let gems = [];
+  const EMOJI_FONT = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+  function placeTreasures(list) {
+    gems = [];
+    const used = [];
+    for (const g of list || []) {
+      for (let tries = 0; tries < 300; tries++) {
+        const i = 5 + ((Math.random() * (GW - 10)) | 0), j = 5 + ((Math.random() * (GH - 10)) | 0);
+        let ok = true;
+        for (let dj = -4; dj <= 4 && ok; dj++) for (let di = -4; di <= 4; di++) if (!inReg[(j + dj) * GW + i + di]) { ok = false; break; }
+        if (!ok) continue;
+        const x = (i + 0.5) * CELL, y = (j + 0.5) * CELL;
+        if (used.some((u) => Math.hypot(u[0] - x, u[1] - y) < 60)) continue;
+        used.push([x, y]);
+        gems.push(Object.assign({ x, y, i, j, state: 0, t: 0, rot: (Math.random() - 0.5) * 0.6 }, g));
+        break;
+      }
+    }
+  }
+  function uncovered(g) {
+    let sum = 0;
+    for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) sum += hp[(g.j + dj) * GW + g.i + di];
+    return sum < 1.2;
+  }
+  function stepGems(dt) {
+    for (const g of gems) {
+      if (g.state === 0 && uncovered(g)) {
+        g.state = 1; g.t = 0;
+        for (let k = 0; k < 16; k++) sparkle(g.x + (Math.random() - 0.5) * 26, g.y + (Math.random() - 0.5) * 26);
+        cb.onEarn && cb.onEarn(g.value);
+        const s = toScreen(g.x, g.y), tgt = cb.coinTarget ? cb.coinTarget() : { x: vw - 40, y: 30 };
+        const n = g.kind === 'coin' ? 4 : 3;
+        for (let k = 0; k < n; k++) coins.push({ x: s.x, y: s.y, sx: s.x + (Math.random() - 0.5) * 30, sy: s.y + (Math.random() - 0.5) * 20, tx: tgt.x, ty: tgt.y, t: -k * 0.08, dur: 0.7 + Math.random() * 0.2, lift: 60 + Math.random() * 40, v: g.value / n });
+        cb.onFind && cb.onFind(g);
+      } else if (g.state === 1) {
+        g.t += dt;
+        if (g.t > 1.6) g.state = 2;
+      }
+    }
+  }
+  function drawGem(c, g, popped) {
+    let sc = 1, alpha = 1, lift = 0;
+    if (popped) {
+      const t = g.t;
+      sc = t < 0.25 ? 1 + U.easeBack(t / 0.25) * 0.9 : 1.9 - Math.min(1, (t - 0.25) / 1.3) * 0.4;
+      lift = Math.min(1, t / 0.4) * 22 + Math.max(0, t - 0.9) * 40;
+      alpha = t < 1.1 ? 1 : Math.max(0, 1 - (t - 1.1) / 0.5);
+    }
+    c.save(); c.globalAlpha = alpha; c.translate(g.x, g.y - lift); c.scale(sc, sc); c.rotate(popped ? 0 : g.rot);
+    if (popped) {
+      const gl = c.createRadialGradient(0, 0, 0, 0, 0, 26);
+      gl.addColorStop(0, 'rgba(255,248,210,0.9)'); gl.addColorStop(1, 'rgba(255,248,210,0)');
+      c.fillStyle = gl; c.beginPath(); c.arc(0, 0, 26, 0, 7); c.fill();
+    }
+    if (g.kind === 'coin') {
+      for (const [dx, dy] of [[-5, 3], [5, 3], [0, -3]]) {
+        c.fillStyle = '#b8841a'; c.beginPath(); c.ellipse(dx, dy + 1.5, 6.5, 5, 0, 0, 7); c.fill();
+        c.fillStyle = '#f2c230'; c.beginPath(); c.ellipse(dx, dy, 6.5, 5, 0, 0, 7); c.fill();
+        c.fillStyle = '#fff3b8'; c.beginPath(); c.ellipse(dx - 2, dy - 1.5, 2, 1.2, 0, 0, 7); c.fill();
+      }
+    } else {
+      c.font = `22px ${EMOJI_FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillText(g.emoji, 0, 1);
+    }
+    c.restore();
   }
 
   // -------------------------------------------------------------- finishing
@@ -420,6 +492,18 @@ const ENGINE = (() => {
     }
   }
 
+  // near the end, make the last dirty spots twinkle so nobody has to hunt
+  let hintT = 0;
+  function hintLeftovers(dt) {
+    hintT -= dt;
+    if (hintT > 0) return;
+    hintT = 0.12;
+    for (let s = 0; s < 400; s++) {
+      const k = (Math.random() * GW * GH) | 0;
+      if (inReg[k] && hp[k] > 0) { sparkle(((k % GW) + 0.5) * CELL, (((k / GW) | 0) + 0.5) * CELL); return; }
+    }
+  }
+
   // ------------------------------------------------------------------- loop
   function frame(now) {
     if (!running) return;
@@ -431,7 +515,9 @@ const ENGINE = (() => {
       activity += stepTool(dt);
       if (helpers.length) stepHelpers(dt);
       if (cleaned / total >= 0.97) beginFinish();
+      else if (cleaned / total > 0.85) hintLeftovers(dt);
     } else stepFinish(dt);
+    stepGems(dt);
     stepParts(dt); stepCoins(dt);
     smoothAct += (Math.min(1, activity / 6) - smoothAct) * Math.min(1, dt * 10);
     cb.onActivity && cb.onActivity(tool.down ? smoothAct : 0, tool.down);
@@ -445,7 +531,10 @@ const ENGINE = (() => {
     ctx.drawImage(L.clean.c, 0, 0);
     if (L.over) ctx.drawImage(L.over.c, 0, 0);
     const S = scale * dpr;
-    if (scene.live) { ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr); scene.live(ctx, clock, hp, GW, CELL); ctx.setTransform(1, 0, 0, 1, 0, 0); }
+    ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
+    if (scene.live) scene.live(ctx, clock, hp, GW, CELL);
+    for (const g of gems) if (g.state === 0) drawGem(ctx, g, false);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     if (maskDirty) {
       maskCx.putImageData(maskImg, 0, 0);
       const cx = L.comp.x;
@@ -463,6 +552,7 @@ const ENGINE = (() => {
     if (L.top) ctx.drawImage(L.top.c, 0, 0);
     ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
     if (scene.liveTop) scene.liveTop(ctx, clock);
+    for (const g of gems) if (g.state === 1) drawGem(ctx, g, true);
     for (const h of helpers) drawHelper(ctx, h);
     drawParts(ctx);
     if (!done) drawTool(ctx);
@@ -483,6 +573,7 @@ const ENGINE = (() => {
     coinAcc = 0;
     parts = []; coins = [];
     makeHelpers(o.helpers || 0);
+    placeTreasures(o.treasures);
     tool.x = tool.tx = 180; tool.y = tool.ty = Math.min(500, H - 60); tool.a = -Math.PI / 2; tool.down = false; tool.pid = null;
     finishing = null; done = false; clock = 0;
     running = true; last = performance.now();
@@ -514,6 +605,7 @@ const ENGINE = (() => {
   // test hook: finish at once without waiting for animation frames
   function debugFinish() {
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
+    stepGems(0);
     if (!done) { done = true; cb.onDone && cb.onDone(); }
   }
 
