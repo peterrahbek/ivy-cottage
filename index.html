@@ -212,6 +212,11 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #seasonCard small{font-size:14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
 #seasonCard[data-season=autumn] b{color:#c4622f}#seasonCard[data-season=winter] b{color:#4f7fa8}#seasonCard[data-season=summer] b{color:#d9a12b}#seasonCard[data-season=spring] b{color:#5d8a59}
 
+@media (prefers-reduced-motion: reduce){
+  #scene .flake,#scene .fleaf,#scene .cloud,#scene .bfly,#scene .balloon,#scene .swing,#scene .bee,#title .leaves i,#upPill.can,#title .tap{animation:none}
+  #scene .flake,#scene .fleaf{display:none}
+}
+
 /* ---------------------------------------------------------------- sheet */
 #sheet{position:fixed;inset:0;background:rgba(40,30,20,.3);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 #sheet.on{opacity:1;pointer-events:auto}
