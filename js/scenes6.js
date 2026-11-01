@@ -213,8 +213,44 @@
       for (let k = 0; k < 5; k++) dot(c, x + Math.cos(k * 1.256) * 1.7, y + Math.sin(k * 1.256) * 1.7, 1.4, '#ffffff');
       dot(c, x, y, 0.9, '#f2c230');
     },
+    // dune plants for the cove
+    marram(c, r, s) {
+      c.lineCap = 'round';
+      for (let i = 0; i < 22; i++) {
+        const a = r() * 6.283, l = s * (0.7 + r() * 0.6), bend = (r() - 0.5) * 0.6;
+        c.strokeStyle = U.pick(r, ['#8aa35a', '#9bb36a', '#a9b878', '#7a9450']); c.lineWidth = 1.3;
+        c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(Math.cos(a) * l * 0.5, Math.sin(a) * l * 0.5, Math.cos(a + bend) * l, Math.sin(a + bend) * l); c.stroke();
+      }
+      dot(c, 0, 0, s * 0.18, '#7a9450');
+    },
+    thrift(c, r, s) {
+      for (let i = 0; i < 40; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * s * 0.75; dot(c, Math.cos(a) * d, Math.sin(a) * d, 1.4, U.pick(r, ['#5d7d45', '#6f8f52'])); }
+      for (let i = 0; i < 6; i++) {
+        const a = r() * 6.283, d = r() * s * 0.6, x = Math.cos(a) * d, y = Math.sin(a) * d;
+        dot(c, x, y, s * 0.24, '#e58fb4'); dot(c, x - 1, y - 1, s * 0.14, '#f6c2da');
+      }
+    },
+    seaholly(c, r, s) {
+      for (let i = 0; i < 9; i++) {
+        const a = (i / 9) * 6.283 + r() * 0.3, l = s * (0.7 + r() * 0.3);
+        c.fillStyle = i % 2 ? '#8aa8b8' : '#9db8c6';
+        c.beginPath(); c.moveTo(0, 0);
+        for (let k = 1; k <= 4; k++) { const d = (l * k) / 4, w = s * 0.18 * (1 - k / 5); c.lineTo(Math.cos(a) * d + Math.cos(a + 1.57) * w * (k % 2 ? 1 : -0.4), Math.sin(a) * d + Math.sin(a + 1.57) * w * (k % 2 ? 1 : -0.4)); }
+        c.closePath(); c.fill();
+      }
+      for (let i = 0; i < 3; i++) { const a = r() * 6.283, d = s * 0.3; dot(c, Math.cos(a) * d, Math.sin(a) * d, s * 0.16, '#6f7fc4'); }
+    },
+    beachrose(c, r, s) {
+      rosette(c, r, s * 0.95, 7, ['#4f8a3a', '#5d9a44', '#467e33'], 0.5);
+      for (let i = 0; i < 3; i++) {
+        const a = r() * 6.28, d = s * (0.15 + r() * 0.4), x = Math.cos(a) * d, y = Math.sin(a) * d, f = s * 0.3;
+        for (let k = 0; k < 5; k++) { const b = (k / 5) * 6.283 + a; dot(c, x + Math.cos(b) * f * 0.5, y + Math.sin(b) * f * 0.5, f * 0.55, '#e0619a'); }
+        dot(c, x, y, f * 0.3, '#f7d54a');
+      }
+    },
   };
   const SETS = {
+    dunes: ['marram', 'thrift', 'marram', 'seaholly', 'marram', 'beachrose'],
     flowers: ['geranium', 'marigold', 'daisy', 'pansy', 'lavender'],
     herbs: ['basil', 'rosemary', 'thyme', 'parsley', 'chives'],
     sunflowers: ['sunflower'], bulbs: ['bulb'], veg: ['lettuce', 'cabbage', 'carrot', 'strawberry'],
@@ -235,7 +271,7 @@
   function plantScene(S) {
     const { r, nz, opts, bleed } = S;
     const box = opts.box || 'planters';
-    const setName = opts.plants || (box === 'windowbox' ? 'herbs' : box === 'veg' ? 'veg' : 'flowers');
+    const setName = opts.plants || (box === 'windowbox' ? 'herbs' : box === 'veg' ? 'veg' : box === 'dunes' ? 'dunes' : 'flowers');
     const set = SETS[setName];
     const region = new Path2D();
     const units = [], boxes = [], pots = [];
@@ -267,6 +303,18 @@
         if (R > 50) for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; add(x + Math.cos(a) * 22, y + Math.sin(a) * 22, 16, set[(i + k) % set.length]); }
         else add(x, y, R > 30 ? 22 : 14, kind);
       });
+    } else if (box === 'dunes') {
+      // bare patches of sand among the dunes, planted with grass and flowers
+      const patches = [[110, 140, 92, 70], [262, 250, 86, 78], [104, 360, 84, 70], [250, 470, 96, 72], [120, 520, 70, 46]];
+      for (const [x, y, rx, ry] of patches) {
+        SCENES.blob(region, x, y, rx, ry, r, 0.1, 16);
+        const n = Math.round((rx * ry) / 650);
+        for (let i = 0, tries = 0; i < n && tries < 200; tries++) {
+          const a = r() * 6.283, d = Math.sqrt(r()) * 0.78, px = x + Math.cos(a) * rx * d, py = y + Math.sin(a) * ry * d;
+          if (units.some((u) => Math.hypot(u.x - px, u.y - py) < 26)) continue;
+          add(px, py, 13 + r() * 3, set[(i + (r() * 2 | 0)) % set.length]); i++;
+        }
+      }
     } else if (box === 'veg') {
       const b = { x: 28, y: 36, w: 304, h: 528, rim: 14 };
       boxes.push(b);
@@ -346,6 +394,13 @@
             c.strokeStyle = 'rgba(255,220,190,0.45)'; c.lineWidth = 2; c.beginPath(); c.arc(p.x, p.y, p.R - 3.5, 3.6, 5.4); c.stroke();
             dot(c, p.x, p.y, p.R - 6, '#3a2618');
           }
+        } else if (box === 'dunes') {
+          const g = ramp(['#d9c08c', '#e6d3a6', '#efe0bd', '#d2b583']);
+          field(c, x0, y0, x1, y1, 3, (x, y) => g(0.5 + Math.sin(y * 0.03 + Math.sin(x * 0.02) * 1.5) * 0.3 + nz.fbm(x * 0.02, y * 0.02, 3) * 0.3));
+          // tufts of old marram grass and a little sand fence
+          for (let i = 0; i < 26; i++) { const x = x0 + r() * (x1 - x0), y = y0 + r() * (y1 - y0); if (!SCENES.nearRegion(region, x, y, 24)) { c.save(); c.translate(x, y); PLANTS.marram(c, r, 11 + r() * 5); c.restore(); } }
+          c.strokeStyle = '#8a6a4a'; c.lineWidth = 2;
+          for (let x = 20; x < 360; x += 26) { c.beginPath(); c.moveTo(x, 584); c.lineTo(x + 2, 600); c.stroke(); }
         } else if (box === 'veg') {
           field(c, x0, y0, x1, y1, 2, (x, y) => { const v = nz.n2(x * 0.4, y * 0.4); return [190 + v * 40, 180 + v * 36, 160 + v * 30]; });
           for (const b of boxes) woodBox(c, b);
@@ -360,10 +415,18 @@
         if (box === 'planters' || box === 'windowbox') for (const b of boxes) woodBox(c, b);
       },
       clean(c) {
-        richSoil(c, r, nz, box === 'veg' || box === 'bed');
+        if (box === 'dunes') field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.fbm(x * 0.05, y * 0.05, 3); return [198 + v * 26, 172 + v * 22, 124 + v * 18]; });
+        else richSoil(c, r, nz, box === 'veg' || box === 'bed');
         if (opts.dirt) for (const u of units) drawPlant(c, u, 1);
       },
-      dirt(c) { drySoil(c, r, nz); },
+      dirt(c) {
+        if (box !== 'dunes') return drySoil(c, r, nz);
+        // loose, wind-rippled sand
+        field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 4); return [232 + v * 16, 214 + v * 16, 172 + v * 14]; });
+        c.strokeStyle = 'rgba(160,130,80,0.35)'; c.lineWidth = 1.2;
+        for (let y = 4; y < H; y += 7) { c.beginPath(); c.moveTo(0, y); for (let x = 0; x <= W; x += 12) c.lineTo(x, y + Math.sin(x * 0.06 + y * 0.4) * 2.2); c.stroke(); }
+        for (let i = 0; i < 120; i++) dot(c, r() * W, r() * H, 0.8 + r() * 1.4, U.pick(r, ['#c9b38a', '#f4ead2', '#a89070']));
+      },
       top(c) {
         if (box !== 'veg') return;
         // seed packets on sticks at the start of each row
@@ -477,10 +540,10 @@
     let drawUnit = drawPlank, joists = [], posts = [], area = null;
 
     if (mat === 'planks') {
-      const parts = opts.jetty ? [{ x: 72, y: 40, w: 216, h: 150 }, { x: 128, y: 190, w: 104, h: 420 }] : [{ x: 18, y: 36, w: 324, h: 528 }];
+      const parts = opts.jetty ? [{ x: 72, y: 40, w: 216, h: 150 }, { x: 128, y: 190, w: 104, h: 420 }] : opts.boardwalk ? [{ x: 112, y: -10, w: 136, h: 620 }] : [{ x: 18, y: 36, w: 324, h: 528 }];
       for (const p of parts) region.rect(p.x, p.y, p.w, p.h);
       area = parts;
-      joists = opts.jetty ? [136, 224, 80, 280] : [24, 104, 184, 264, 336];
+      joists = opts.jetty ? [136, 224, 80, 280] : opts.boardwalk ? [122, 238] : [24, 104, 184, 264, 336];
       for (const p of parts) {
         const js = joists.filter((x) => x > p.x && x < p.x + p.w);
         let row = 0;
@@ -495,7 +558,7 @@
           }
         }
       }
-      if (opts.jetty) for (const p of parts) for (let y = p.y + 30; y < p.y + p.h; y += 90) posts.push([p.x + 6, y], [p.x + p.w - 6, y]);
+      if (opts.jetty || opts.boardwalk) for (const p of parts) for (let y = p.y + 30; y < p.y + p.h; y += 90) posts.push([p.x + 6, y], [p.x + p.w - 6, y]);
     } else if (mat === 'bricks' && opts.path) {
       // a brick path across the lawn, seen from above
       area = [{ x: 104, y: -10, w: 152, h: 620 }];
@@ -549,7 +612,12 @@
     const sitePaint = (c) => {
       // what is under the pieces: joists, mortar, plaster or back boards
       if (mat === 'planks') {
-        if (opts.jetty) {
+        if (opts.jetty && opts.sea) {
+          const g = ramp(['#1f5a74', '#2a6c86', '#3a7f96']);
+          field(c, 0, 0, W, H, 3, (x, y) => g(nz.fbm(x * 0.02, y * 0.02, 3)));
+        } else if (opts.boardwalk) {
+          field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.n2(x * 0.3, y * 0.3); return [196 + v * 30, 172 + v * 26, 120 + v * 20]; });
+        } else if (opts.jetty) {
           const g = ramp(['#2f5b5a', '#3a6b66', '#4a7a6e']);
           field(c, 0, 0, W, H, 3, (x, y) => g(nz.fbm(x * 0.02, y * 0.02, 3)));
         } else {
@@ -588,7 +656,19 @@
       drawUnit,
       decor(c) {
         const { x0, y0, x1, y1 } = bleed;
-        if (mat === 'planks' && opts.jetty) {
+        if (mat === 'planks' && opts.jetty && opts.sea) {
+          const g = ramp(['#2a7398', '#3a88ac', '#58a4c2', '#84c3d6']);
+          field(c, x0, y0, x1, y1, 3, (x, y) => g(nz.fbm(x * 0.012, y * 0.012, 4) * 0.7 + 0.15 - Math.max(0, (y - 470) / 260)));
+          // waves and foam, and the beach at the bottom
+          c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.4;
+          for (let i = 0; i < 46; i++) { const x = x0 + r() * (x1 - x0), y = y0 + r() * (480 - y0); c.beginPath(); c.moveTo(x - 12, y); c.quadraticCurveTo(x, y - 4, x + 12, y); c.stroke(); }
+          field(c, x0, 520, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 3); return [226 + v * 18, 206 + v * 16, 160 + v * 14]; });
+          c.fillStyle = 'rgba(255,255,255,0.7)'; c.beginPath(); c.moveTo(x0, 520); for (let x = x0; x <= x1; x += 10) c.lineTo(x, 516 + Math.sin(x * 0.08) * 4); c.lineTo(x1, 528); c.lineTo(x0, 528); c.fill();
+        } else if (mat === 'planks' && opts.boardwalk) {
+          const g = ramp(['#d9c08c', '#e6d3a6', '#efe0bd', '#d2b583']);
+          field(c, x0, y0, x1, y1, 3, (x, y) => g(0.5 + Math.sin(y * 0.03 + Math.sin(x * 0.02) * 1.5) * 0.3 + nz.fbm(x * 0.02, y * 0.02, 3) * 0.3));
+          for (let i = 0; i < 40; i++) { const x = r() < 0.5 ? x0 + r() * (112 - x0 - 10) : 258 + r() * (x1 - 258), y = y0 + r() * (y1 - y0); c.save(); c.translate(x, y); PLANTS.marram(c, r, 12 + r() * 6); c.restore(); }
+        } else if (mat === 'planks' && opts.jetty) {
           const g = ramp(['#2f6b6a', '#3f7f78', '#5a958a', '#7eb3a2']);
           field(c, x0, y0, x1, y1, 3, (x, y) => g(nz.fbm(x * 0.012, y * 0.012, 4) * 0.8 + 0.1));
           c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 1;
@@ -660,6 +740,19 @@
           for (const [cx, cy, a0] of [[36, 124, 0], [324, 124, Math.PI / 2], [36, 536, -Math.PI / 2], [324, 536, Math.PI]]) {
             for (let i = 0; i < 7; i++) { const a = a0 + (i / 6) * Math.PI / 2; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(a) * 60, cy + Math.sin(a) * 60); c.stroke(); }
             for (let d = 12; d < 60; d += 10) { c.beginPath(); c.arc(cx, cy, d, a0, a0 + Math.PI / 2); c.stroke(); }
+          }
+        } else if (opts.jetty) {
+          // the old jetty: grey, rotten boards with gaps where some are missing
+          for (const u of units) {
+            if (r() < 0.22) continue;
+            c.save(); c.translate(u.x + u.w / 2, u.y + u.h / 2); c.rotate((r() - 0.5) * (r() < 0.3 ? 0.35 : 0.06));
+            const w = u.w * (r() < 0.25 ? 0.5 + r() * 0.3 : 1);
+            c.fillStyle = '#6f6a62'; rect(c, -w / 2, -u.h / 2, w, u.h, 2); c.fill();
+            c.fillStyle = '#8f8a80'; rect(c, -w / 2, -u.h / 2, w, u.h - 2, 2); c.fill();
+            c.strokeStyle = 'rgba(60,55,50,0.5)'; c.lineWidth = 0.7;
+            for (let k = 0; k < 3; k++) { const y = -u.h / 2 + 4 + k * 5; c.beginPath(); c.moveTo(-w / 2 + 3, y); c.lineTo(w / 2 - 3, y + (r() - 0.5) * 2); c.stroke(); }
+            if (r() < 0.5) { c.fillStyle = 'rgba(80,120,60,0.5)'; c.beginPath(); c.ellipse((r() - 0.5) * w * 0.6, 0, 8 + r() * 10, 4, 0, 0, 7); c.fill(); }
+            c.restore();
           }
         } else {
           rubble(c, r, nz, ['#e3c99a', '#c9a56e', '#9c7a52', '#7d6a58'], ['#d9c49a', '#cdb68a', '#e6d4ae']);

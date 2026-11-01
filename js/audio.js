@@ -69,6 +69,10 @@ const AUDIO = (() => {
     snowblower: { type: 'bandpass', f: 1400, q: 0.6, vol: 0.13, engine: 70 },
     plant: { type: 'lowpass', f: 700, q: 1.0, vol: 0.2 },
     build: { type: 'bandpass', f: 1300, q: 1.0, vol: 0.1 },
+    collect: { type: 'lowpass', f: 900, q: 0.8, vol: 0.16 },
+    polish: { type: 'bandpass', f: 2000, q: 1.6, vol: 0.12 },
+    buffer: { type: 'bandpass', f: 1600, q: 0.9, vol: 0.1, engine: 95 },
+    arrange: { type: 'bandpass', f: 1500, q: 1.2, vol: 0.07 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;
@@ -134,8 +138,18 @@ const AUDIO = (() => {
     lastUnit = now;
     const semi = PENTA[unitStep % PENTA.length];
     unitStep++;
-    if (kind === 'build') {
-      const f = 196 * Math.pow(2, semi / 12);
+    if (kind === 'lights' || kind === 'clink') {
+      // a glassy ting for a bulb coming on or a bottle set down
+      const f = (kind === 'lights' ? 784 : 1046.5) * Math.pow(2, semi / 12);
+      tone(f, now, 0.35, 'sine', 0.06, sfx, 0.45);
+      tone(f * 2.4, now, 0.12, 'sine', 0.02, sfx, 0.3);
+    } else if (kind === 'collect') {
+      // a little hop: two quick rising notes
+      const f = 523.25 * Math.pow(2, semi / 12);
+      tone(f, now, 0.1, 'triangle', 0.07, sfx, 0.1);
+      tone(f * 1.5, now + 0.06, 0.16, 'triangle', 0.06, sfx, 0.2);
+    } else if (kind === 'build' || kind === 'sand') {
+      const f = (kind === 'sand' ? 130 : 196) * Math.pow(2, semi / 12);
       tone(f, now, 0.16, 'triangle', 0.16, sfx, 0.12);
       tone(f * 2.76, now, 0.05, 'sine', 0.05, sfx, 0);
       const src = ac.createBufferSource(), g = ac.createGain(), bp = ac.createBiquadFilter();

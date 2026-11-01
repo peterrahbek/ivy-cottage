@@ -131,7 +131,12 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #hudBottom{position:absolute;left:0;right:0;bottom:0;padding:6px 12px calc(10px + var(--safe-b));display:flex;flex-direction:column;gap:8px;pointer-events:none}
 #hudBottom > *{pointer-events:auto}
 .bottomRow{display:flex;gap:8px;align-items:stretch}
-#toolChip{display:flex;align-items:center;gap:6px;background:rgba(255,250,241,.95);border:1.5px solid var(--line);border-radius:16px;padding:4px 12px 4px 6px;font-weight:800;font-size:14px;box-shadow:0 2px 0 var(--line)}
+#toolPick{display:none;gap:6px;padding:6px;margin-bottom:8px;background:rgba(255,250,241,.97);border:1.5px solid var(--line);border-radius:16px;box-shadow:0 4px 14px rgba(80,60,30,.18);overflow-x:auto;scrollbar-width:none}
+#toolPick.on{display:flex}
+#toolPick button{flex:none;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:68px;padding:5px 6px;border-radius:12px;font-weight:800;font-size:11px;color:var(--ink2)}
+#toolPick button.sel{background:var(--sage-d);color:#fff}
+#toolChip .swap{font-size:14px;color:var(--ink3);margin-left:2px}
+#toolChip{cursor:pointer;display:flex;align-items:center;gap:6px;background:rgba(255,250,241,.95);border:1.5px solid var(--line);border-radius:16px;padding:4px 12px 4px 6px;font-weight:800;font-size:14px;box-shadow:0 2px 0 var(--line)}
 #upPill{flex:1;display:none;align-items:center;gap:6px;justify-content:space-between;border-radius:16px;padding:8px 12px;font-size:13px;font-weight:800;
   background:linear-gradient(90deg,rgba(242,216,138,.95) calc(var(--p,0)*100%),rgba(255,250,241,.92) calc(var(--p,0)*100%));border:1.5px solid var(--line);box-shadow:0 2px 0 var(--line);min-height:48px}
 #upPill.on{display:flex}
@@ -323,7 +328,8 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
   </div>
   <div id="hudBottom">
     <div id="palette"></div>
-    <div class="bottomRow"><div id="toolChip"></div><button id="upPill"></button></div>
+    <div id="toolPick"></div>
+    <div class="bottomRow"><div id="toolChip" role="button" aria-label="Choose a tool"></div><button id="upPill"></button></div>
   </div>
   <div id="hint"><div class="hand">👆</div><span>Drag to mow</span></div>
   <div id="found"></div>
@@ -355,6 +361,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 <script src="js/scenes4.js"></script>
 <script src="js/scenes5.js"></script>
 <script src="js/scenes6.js"></script>
+<script src="js/scenes8.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/cafe.js"></script>

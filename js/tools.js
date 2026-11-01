@@ -109,6 +109,33 @@ const TOOLS = (() => {
         { id: 'robo', name: 'Robo-builder', shape: 'rect', w: 66, h: 26, power: 1.7, speed: 240, sprite: 'robobuilder' },
       ],
     },
+    collect: {
+      name: 'Beach tools', job: 'Tidying', icon: 'picker',
+      tiers: [
+        { id: 'hands', name: 'Bare hands', shape: 'circle', r: 12, power: 1.0, speed: 160, sprite: 'gloves' },
+        { id: 'picker', name: 'Litter picker', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'picker' },
+        { id: 'bucket', name: 'Beach bucket', shape: 'circle', r: 24, power: 1.35, speed: 210, sprite: 'beachbucket' },
+        { id: 'sifter', name: 'Sand sifter', shape: 'rect', w: 58, h: 22, power: 1.7, speed: 240, sprite: 'sifter' },
+      ],
+    },
+    polish: {
+      name: 'Polishing kit', job: 'Polishing', icon: 'buffer',
+      tiers: [
+        { id: 'cloth', name: 'Soft cloth', shape: 'circle', r: 12, power: 1.0, speed: 160, sprite: 'cloth' },
+        { id: 'pad', name: 'Wax pad', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'waxpad' },
+        { id: 'buffer', name: 'Orbital buffer', shape: 'circle', r: 26, power: 1.4, speed: 215, sprite: 'buffer' },
+        { id: 'twin', name: 'Twin polisher', shape: 'rect', w: 62, h: 26, power: 1.75, speed: 240, sprite: 'twinbuffer' },
+      ],
+    },
+    arrange: {
+      name: 'Helping hands', job: 'Arranging', icon: 'basket',
+      tiers: [
+        { id: 'hands', name: 'Your hands', shape: 'circle', r: 12, power: 1.0, speed: 160, sprite: 'gloves' },
+        { id: 'basket', name: 'Basket', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'basket' },
+        { id: 'trolley', name: 'Trolley', shape: 'rect', w: 46, h: 18, power: 1.35, speed: 215, sprite: 'trolley' },
+        { id: 'stockbot', name: 'Stock-bot', shape: 'rect', w: 64, h: 24, power: 1.7, speed: 240, sprite: 'robobuilder' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -463,6 +490,84 @@ const TOOLS = (() => {
       c.fillStyle = '#f2c230'; disc(c, -h * 0.35, 0, h * 0.32); c.fill();
       c.fillStyle = '#ffde6e'; disc(c, -h * 0.42, -h * 0.08, h * 0.16); c.fill();
       c.fillStyle = '#2b3a3f'; disc(c, -h * 0.05, -w * 0.08, 1.6); c.fill(); disc(c, -h * 0.05, w * 0.08, 1.6); c.fill();
+    },
+    picker(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.3, -r * 2.6, 2.6, '#9aa3ad');
+      c.fillStyle = '#f2b531'; rr(c, -r * 2.75, -3.5, r * 0.6, 7, 3); c.fill();
+      c.strokeStyle = '#5b636d'; c.lineWidth = 2.2; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-r * 0.3, -1.5); c.quadraticCurveTo(r * 0.5, -r * 0.55, r * 0.95, -r * 0.18); c.stroke();
+      c.beginPath(); c.moveTo(-r * 0.3, 1.5); c.quadraticCurveTo(r * 0.5, r * 0.55, r * 0.95, r * 0.18); c.stroke();
+      c.fillStyle = '#e2574c'; disc(c, r * 0.95, -r * 0.18, 1.8); c.fill(); disc(c, r * 0.95, r * 0.18, 1.8); c.fill();
+    },
+    beachbucket(c, t) {
+      const r = t.r;
+      c.fillStyle = '#b8382f'; disc(c, 0, 0, r * 0.8); c.fill();
+      c.fillStyle = '#e2574c'; disc(c, 0, 0, r * 0.7); c.fill();
+      c.fillStyle = '#e8d3a4'; disc(c, 0, 0, r * 0.52); c.fill();
+      c.fillStyle = '#d6bd85'; disc(c, r * 0.12, r * 0.1, r * 0.3); c.fill();
+      c.strokeStyle = '#f2c230'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r * 0.95, -1.2, 1.2); c.stroke();
+      handle(c, -r * 0.9, -r * 1.9, 3, '#f2c230');
+      c.fillStyle = '#f2c230'; rr(c, -r * 0.95, -r * 0.3, r * 0.5, r * 0.6, 3); c.fill();
+    },
+    sifter(c, t) {
+      const w = t.w, h = t.h;
+      c.fillStyle = '#a2734a'; rr(c, -h / 2, -w / 2, h, w, 3); c.fill();
+      c.fillStyle = 'rgba(232,211,164,0.6)'; rr(c, -h / 2 + 3, -w / 2 + 3, h - 6, w - 6, 2); c.fill();
+      c.strokeStyle = 'rgba(70,60,50,0.55)'; c.lineWidth = 0.6;
+      for (let y = -w / 2 + 5; y < w / 2 - 3; y += 3) { c.beginPath(); c.moveTo(-h / 2 + 3, y); c.lineTo(h / 2 - 3, y); c.stroke(); }
+      for (let x = -h / 2 + 5; x < h / 2 - 3; x += 3) { c.beginPath(); c.moveTo(x, -w / 2 + 3); c.lineTo(x, w / 2 - 3); c.stroke(); }
+      handle(c, -h * 0.5, -h * 1.8, 3, '#c98a55');
+    },
+    cloth(c, t) {
+      const r = t.r;
+      c.fillStyle = '#3d86c6'; rr(c, -r * 0.85, -r * 0.85, r * 1.7, r * 1.7, 4); c.fill();
+      c.fillStyle = '#5fa3dc'; rr(c, -r * 0.85, -r * 0.85, r * 1.7, r * 0.9, 4); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 0.8;
+      for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(-r * 0.7, i * r * 0.3); c.lineTo(r * 0.7, i * r * 0.3 + 1); c.stroke(); }
+    },
+    waxpad(c, t) {
+      const r = t.r;
+      c.fillStyle = '#f2c230'; disc(c, 0, 0, r * 0.95); c.fill();
+      c.fillStyle = '#f7d966'; disc(c, -r * 0.1, -r * 0.1, r * 0.75); c.fill();
+      c.fillStyle = '#3a3633'; rr(c, -r * 0.55, -r * 0.18, r * 1.1, r * 0.36, 3); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.4)'; disc(c, -r * 0.4, -r * 0.45, r * 0.18); c.fill();
+    },
+    buffer(c, t) {
+      const r = t.r;
+      c.fillStyle = 'rgba(255,255,255,0.25)'; disc(c, 0, 0, r); c.fill();
+      c.fillStyle = '#d9534f'; disc(c, 0, 0, r * 0.82); c.fill();
+      c.fillStyle = '#f4ecdc'; disc(c, 0, 0, r * 0.62); c.fill();
+      c.fillStyle = '#3a3633'; disc(c, 0, 0, r * 0.36); c.fill();
+      c.fillStyle = '#6d6a66'; disc(c, -r * 0.08, -r * 0.08, r * 0.18); c.fill();
+      handle(c, -r * 0.4, -r * 1.7, 5, '#3a3633');
+    },
+    twinbuffer(c, t) {
+      const w = t.w, h = t.h, r = h * 0.5;
+      handle(c, 0, -h * 1.6, 4, '#3a3633');
+      c.fillStyle = '#5b636d'; rr(c, -3, -w * 0.3, 6, w * 0.6, 3); c.fill();
+      for (const y of [-w * 0.27, w * 0.27]) {
+        c.fillStyle = '#d9534f'; disc(c, 0, y, r); c.fill();
+        c.fillStyle = '#f4ecdc'; disc(c, 0, y, r * 0.72); c.fill();
+        c.fillStyle = '#3a3633'; disc(c, 0, y, r * 0.3); c.fill();
+      }
+    },
+    basket(c, t) {
+      const r = t.r;
+      c.fillStyle = '#a2734a'; rr(c, -r * 0.9, -r * 0.8, r * 1.8, r * 1.6, r * 0.35); c.fill();
+      c.strokeStyle = '#7d5434'; c.lineWidth = 1;
+      for (let i = -2; i <= 2; i++) { c.beginPath(); c.moveTo(-r * 0.8, i * r * 0.28); c.lineTo(r * 0.8, i * r * 0.28); c.stroke(); }
+      c.fillStyle = '#e2574c'; disc(c, -r * 0.3, -r * 0.2, r * 0.25); c.fill();
+      c.fillStyle = '#7bc25a'; disc(c, r * 0.25, r * 0.15, r * 0.22); c.fill();
+      c.strokeStyle = '#7d5434'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(0, -r * 0.8); c.quadraticCurveTo(-r * 0.2, 0, 0, r * 0.8); c.stroke();
+    },
+    trolley(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.55, -h * 1.5, 2.4, '#9aa3ad');
+      wheel(c, -h * 0.3, -w / 2 + 1, 8, 4); wheel(c, -h * 0.3, w / 2 - 1, 8, 4); wheel(c, h * 0.35, -w / 2 + 1, 8, 4); wheel(c, h * 0.35, w / 2 - 1, 8, 4);
+      c.fillStyle = '#5b636d'; rr(c, -h / 2, -w / 2 + 2, h, w - 4, 3); c.fill();
+      const cols = ['#d9534f', '#f2c230', '#4f9d7a', '#3d86c6'];
+      for (let i = 0; i < 4; i++) { c.fillStyle = cols[i]; rr(c, -h / 2 + 2, -w / 2 + 4 + i * (w - 8) / 4, h - 4, (w - 8) / 4 - 1.5, 2); c.fill(); }
     },
   };
 

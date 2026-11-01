@@ -80,7 +80,7 @@ const ENGINE = (() => {
     L.dirt.x.save(); L.dirt.x.clip(scene.region, 'evenodd'); scene.dirt(L.dirt.x); L.dirt.x.restore();
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
     if (scene.depth) L.shadow = layer();
-    if (units.length) { L.units = layer(); for (const u of units) if (u.done && !growing.includes(u)) scene.drawUnit(L.units.x, u, 1); }
+    if (units.length) { L.units = layer(); bakeUnits(); }
     L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
     release(old);
     maskDirty = true;
@@ -209,6 +209,27 @@ const ENGINE = (() => {
   let units = [], growing = [], cellUnit = null, unitHp = null, unitN = null;
   let touched = [], touchedMark = new Uint8Array(0);
   const unitDur = () => scene.unitDur || 0.45;
+  // 'collect' jobs work the other way round: the pieces lie there to begin
+  // with and fly off to the scene's bucket once picked up
+  const collecting = () => scene.unitMode === 'collect';
+  function bakeUnits() {
+    const x = L.units.x;
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, L.units.c.width, L.units.c.height); x.restore();
+    for (const u of units) if (collecting() ? !u.done : u.done && !growing.includes(u)) scene.drawUnit(x, u, 1);
+  }
+  function drawLeaving(c, u, k) {
+    const t = scene.unitTarget || { x: u.cx, y: u.cy - 140 };
+    let x = u.cx, y = u.cy, s = 1, rot = 0;
+    if (k < 0.2) { const e = U.easeOut(k / 0.2); s = 1 + 0.25 * e; y -= 8 * e; }
+    else {
+      const q = (k - 0.2) / 0.8, e = q * q * (3 - 2 * q);
+      x = U.lerp(u.cx, t.x, e); y = U.lerp(u.cy - 8, t.y, e) - Math.sin(e * Math.PI) * 70;
+      s = 1.25 - 0.85 * e; rot = e * (u.spin || 2.5);
+    }
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s); c.translate(-u.cx, -u.cy);
+    scene.drawUnit(c, u, 1);
+    c.restore();
+  }
   function setupUnits() {
     units = scene.units || [];
     growing = []; touched = [];
@@ -251,7 +272,8 @@ const ENGINE = (() => {
     if (u.done) return;
     u.done = true;
     for (const k of u.cells) if (hp[k] > 0) clearCell(k);
-    if (quiet) { if (L && L.units) scene.drawUnit(L.units.x, u, 1); return; }
+    if (collecting()) { if (L && L.units) bakeUnits(); }
+    if (quiet) { if (L && L.units && !collecting()) scene.drawUnit(L.units.x, u, 1); return; }
     u.t = 0; growing.push(u);
     cb.onUnit && cb.onUnit(scene.unitKind || 'build');
     const kind = scene.unitParticle || 'dust', cols = PCOL[kind] || PCOL.dust;
@@ -265,7 +287,10 @@ const ENGINE = (() => {
     for (let i = growing.length - 1; i >= 0; i--) {
       const u = growing[i];
       u.t += dt;
-      if (u.t >= unitDur()) { growing.splice(i, 1); if (L && L.units) scene.drawUnit(L.units.x, u, 1); }
+      if (u.t < unitDur()) continue;
+      growing.splice(i, 1);
+      if (collecting()) { const t = scene.unitTarget; if (t) for (let k = 0; k < 5; k++) sparkle(t.x + (Math.random() - 0.5) * 24, t.y + (Math.random() - 0.5) * 16); }
+      else if (L && L.units) scene.drawUnit(L.units.x, u, 1);
     }
   }
 
@@ -319,6 +344,9 @@ const ENGINE = (() => {
     snow: ['#ffffff', '#eef6fb', '#dfeaf3'],
     soil: ['#6b4a32', '#5a3d28', '#7d5a3e', '#8a6a4a'],
     chips: ['#e3c99a', '#d4b483', '#c9a56e', '#b98f5a'],
+    sand: ['#e8d3a4', '#dcc28c', '#f1e2bd', '#cdb27a'],
+    seaweed: ['#5d7a3a', '#6e6a2e', '#4f6b3a', '#8a7a3a', '#3f5a2f'],
+    shine: ['#fffbe8', '#ffffff', '#fff3c4'],
   };
   function spawn(kind, x, y, a, amount, t) {
     const n = Math.min(5, amount * 0.9 + (Math.random() < amount * 0.9 % 1 ? 1 : 0));
@@ -336,6 +364,7 @@ const ENGINE = (() => {
       else if (kind === 'dust') { p.vx *= 0.35; p.vy = -8 - Math.random() * 15; p.s = 4 + Math.random() * 6; p.max = 0.9 + Math.random() * 0.6; }
       else if (kind === 'snow') { p.vx *= 0.8; p.vy -= 30; p.s = 1.5 + Math.random() * 2.5; p.max = 0.6 + Math.random() * 0.5; }
       else if (kind === 'water') { p.vx *= 0.1; p.vy = 0; p.s = 2; p.max = 0.8; }
+      else if (kind === 'shine') { p.vx *= 0.2; p.vy = -6 - Math.random() * 10; p.s = 1.5 + Math.random() * 2.5; p.max = 0.5 + Math.random() * 0.4; }
       if (!p.col) { const cols = PCOL[kind] || PCOL.grass; p.col = cols[(Math.random() * cols.length) | 0]; }
       parts.push(p);
     }
@@ -349,7 +378,7 @@ const ENGINE = (() => {
       const p = parts[i];
       p.life += dt;
       if (p.life > p.max) { parts.splice(i, 1); continue; }
-      const g = p.kind === 'suds' || p.kind === 'dust' || p.kind === 'spark' ? -10 : p.kind === 'water' ? 0 : 160;
+      const g = p.kind === 'suds' || p.kind === 'dust' || p.kind === 'spark' || p.kind === 'shine' ? -10 : p.kind === 'water' ? 0 : 160;
       p.vy += g * dt;
       const drag = p.kind === 'dust' || p.kind === 'suds' ? 1.5 : 3.2;
       p.vx -= p.vx * drag * dt; p.vy -= p.vy * (drag * 0.4) * dt;
@@ -372,7 +401,7 @@ const ENGINE = (() => {
       } else if (p.kind === 'water') {
         c.globalAlpha = a * 0.7; c.strokeStyle = '#e6f6ff'; c.lineWidth = 1;
         c.beginPath(); c.ellipse(p.x, p.y, 3 + t * 14, (3 + t * 14) * 0.5, 0, 0, 7); c.stroke();
-      } else if (p.kind === 'spark') {
+      } else if (p.kind === 'spark' || p.kind === 'shine') {
         c.globalAlpha = Math.sin(t * Math.PI);
         c.fillStyle = p.col;
         const s = p.s * (1 - t * 0.5);
@@ -684,7 +713,7 @@ const ENGINE = (() => {
       ctx.drawImage(L.units.c, 0, 0);
       if (growing.length) {
         ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
-        for (const u of growing) scene.drawUnit(ctx, u, Math.min(1, u.t / unitDur()));
+        for (const u of growing) (collecting() ? drawLeaving : scene.drawUnit)(ctx, u, Math.min(1, u.t / unitDur()));
         ctx.setTransform(1, 0, 0, 1, 0, 0);
       }
     }

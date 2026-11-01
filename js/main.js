@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, started: Date.now() };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -17,6 +17,7 @@
     delete out.wip;
     out.wips = out.wips || {};
     out.owned = Object.assign({ cottage: 1 }, s.owned);
+    out.use = out.use || {};
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
     if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
@@ -37,8 +38,11 @@
     catch (_) { if (!saveWarned) { saveWarned = true; toast('This phone would not let the game save'); } }
   }
 
+  // tierIdx = the best tool owned; useIdx = the one picked for work, which
+  // can be any owned tool (some days the shears are nicer than the tractor)
   const tierIdx = (fam) => S.tiers[fam] || 0;
-  const tierOf = (fam) => TOOLS.FAM[fam].tiers[tierIdx(fam)];
+  const useIdx = (fam) => Math.min(tierIdx(fam), S.use[fam] != null ? S.use[fam] : tierIdx(fam));
+  const tierOf = (fam) => TOOLS.FAM[fam].tiers[useIdx(fam)];
 
   // ---------------------------------------------------------------- places
   // Each place has its own chores, picture and decorations; coins, tools,
@@ -69,7 +73,13 @@
   }
   function renderPlace(id, st, opts) {
     if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
+    if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
+  }
+  // decorations plus the Christmas lights once they are up this winter
+  function decorAt(pl) {
+    const lit = jobsAt(pl).some((j) => /lights$/.test(j.base) && S.sdone[j.id]);
+    return lit ? Object.assign({}, S.decor, { [DATA.placeOf(pl).lights]: 1 }) : S.decor;
   }
   function partsDone(pl) {
     const st = {};
@@ -118,7 +128,7 @@
     const pl = here();
     const st = partsDone(pl.id), pending = pendingAt(pl.id);
     const pct = doneCount() / pl.chores.length;
-    $('#scene').innerHTML = renderPlace(pl.id, st, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor, night: isEvening() });
+    $('#scene').innerHTML = renderPlace(pl.id, st, { pct, fresh: freshPart, season: seasonName(), pending, decor: decorAt(pl.id), night: isEvening() });
     $('#brandName').textContent = placeName();
     $('#brandChev').hidden = DATA.PLACES.filter((p) => owned(p.id)).length < 2;
     if (freshPart) {
@@ -196,7 +206,7 @@
     curValue = Math.round(c.value * (replay ? 0.6 : 1));
     earnedThis = 0; shownCoins = S.coins;
     show('play');
-    $('#doneOverlay').classList.remove('on');
+    $('#doneOverlay').classList.remove('on'); $('#toolPick').classList.remove('on');
     $('#playTitle').textContent = c.name;
     updatePlayCoins();
     setupBottom();
@@ -214,7 +224,7 @@
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
     const hint = $('#hint');
-    if (S.touched < 3) { hint.querySelector('span').textContent = 'Drag to ' + DATA.VERBS[fam]; hint.classList.add('on'); } else hint.classList.remove('on');
+    if (S.touched < 3 || c.verb) { hint.querySelector('span').textContent = 'Drag to ' + (c.verb || DATA.VERBS[fam]); hint.classList.add('on'); } else hint.classList.remove('on');
     AUDIO.setWork(workSound(fam, tierOf(fam)));
     setProgress(0);
   }
@@ -228,6 +238,7 @@
     if (fam === 'snow' && t.id === 'blower') return 'snowblower';
     if (fam === 'rake' && t.id === 'blower') return 'washer';
     if (fam === 'rake' && t.id === 'leafvac') return 'vacuum';
+    if (fam === 'polish' && (t.id === 'buffer' || t.id === 'twin')) return 'buffer';
     return fam;
   }
   function setupBottom() {
@@ -236,6 +247,7 @@
     chip.innerHTML = '';
     chip.appendChild(TOOLS.icon(t, 38, cur.color ? S.colours[cur.color] : null));
     const nm = document.createElement('span'); nm.textContent = t.name; chip.appendChild(nm);
+    if (tierIdx(fam) > 0) { const sw = document.createElement('b'); sw.className = 'swap'; sw.textContent = '⇄'; chip.appendChild(sw); }
     updateUpPill();
     const pal = $('#palette');
     if (cur.color) {
@@ -249,6 +261,25 @@
       });
     } else { pal.classList.remove('on'); pal.innerHTML = ''; }
   }
+  // pick any tool already owned, from the chip at the bottom
+  function openToolPick() {
+    const fam = cur.family, pick = $('#toolPick');
+    if (pick.classList.contains('on') || tierIdx(fam) < 1) { pick.classList.remove('on'); if (tierIdx(fam) < 1) toast('Buy a better tool to have a choice'); return; }
+    pick.innerHTML = '';
+    TOOLS.FAM[fam].tiers.slice(0, tierIdx(fam) + 1).forEach((t, i) => {
+      const b = document.createElement('button');
+      if (i === useIdx(fam)) b.className = 'sel';
+      b.appendChild(TOOLS.icon(t, 34, cur.color ? S.colours[cur.color] : null));
+      const nm = document.createElement('span'); nm.textContent = t.name; b.appendChild(nm);
+      b.onclick = () => {
+        S.use[fam] = i; save(); pick.classList.remove('on');
+        ENGINE.setTier(t); AUDIO.pop(); AUDIO.setWork(workSound(fam, t)); setupBottom();
+      };
+      pick.appendChild(b);
+    });
+    pick.classList.add('on'); AUDIO.soft();
+  }
+  $('#toolChip').onclick = openToolPick;
   function updateUpPill() {
     const pill = $('#upPill');
     const u = nextUpgrade(cur.family);
@@ -262,7 +293,7 @@
   $('#upPill').onclick = () => {
     const u = nextUpgrade(cur.family);
     if (!u || S.coins < u.cost) { AUDIO.soft(); $('#upPill').classList.add('nope'); setTimeout(() => $('#upPill').classList.remove('nope'), 400); return; }
-    S.coins -= u.cost; S.tiers[cur.family] = tierIdx(cur.family) + 1; save();
+    S.coins -= u.cost; S.tiers[cur.family] = tierIdx(cur.family) + 1; S.use[cur.family] = S.tiers[cur.family]; save();
     shownCoins = Math.min(shownCoins, S.coins);
     ENGINE.setTier(tierOf(cur.family));
     AUDIO.buy(); AUDIO.setWork(workSound(cur.family, tierOf(cur.family)));
@@ -296,7 +327,7 @@
     AUDIO.chime(); AUDIO.activity(0, false);
     const o = $('#doneOverlay');
     $('#doneTitle').textContent = U.pick(Math.random, cur.family === 'plant' ? ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'] : cur.family === 'build' ? ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'] : ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
-    $('#doneBtn').textContent = S.place === 'cafe' ? 'Back to the café' : 'Back to the cottage';
+    $('#doneBtn').textContent = 'Back to ' + here().short;
     $('#doneName').textContent = cur.name;
     $('#doneEarn').innerHTML = coinHtml(earnedThis);
     $('#doneBonus').innerHTML = coinHtml(bonus);
@@ -371,7 +402,7 @@
       c.fillStyle = '#a89c8b'; c.font = '700 30px ui-rounded, system-ui, sans-serif';
       c.fillText(S.seasonNo && restored(S.place) ? `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)}` : `${doneCount()} of ${here().chores.length} jobs done`, W / 2, H + 132);
       const blob = await new Promise((res) => cv.toBlob(res, 'image/png'));
-      const fname = S.place === 'cafe' ? 'my-cafe.png' : 'my-cottage.png';
+      const fname = `my-${S.place}.png`;
       const file = new File([blob], fname, { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: placeName() });
       else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
@@ -444,7 +475,7 @@
     const rows = [];
     for (const [fam, F] of Object.entries(TOOLS.FAM)) {
       if (!famUnlocked(fam)) continue;
-      const t = tierOf(fam), u = nextUpgrade(fam);
+      const t = F.tiers[tierIdx(fam)], u = nextUpgrade(fam);
       const dots = F.tiers.map((_, i) => `<i class="${i <= tierIdx(fam) ? 'on' : ''}"></i>`).join('');
       const width = (x) => (x.shape === 'rect' ? x.w : x.r * 2);
       const stat = u ? `<div class="sub">Size ${width(t)} → <b>${width(u.tier)}</b> · Strength ${t.power.toFixed(1)} → <b>${u.tier.power.toFixed(1)}</b></div>` : `<div class="sub">Size ${width(t)} · Strength ${t.power.toFixed(1)}</div>`;
@@ -459,7 +490,7 @@
     const tabs = doneCount() >= DATA.DECOR_UNLOCK ? `<div class="tabs"><button class="tab on">Tools</button><button class="tab" id="tabDecor">Decorate</button></div>` : '';
     openSheet('The shed', tabs + `<div class="shedCoins">${coinHtml(S.coins)}</div>` + rows.join(''), (body) => {
       const td = body.querySelector('#tabDecor'); if (td) td.onclick = () => { AUDIO.soft(); openDecor(); };
-      body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(tierOf(row.dataset.fam), 52)));
+      body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(TOOLS.FAM[row.dataset.fam].tiers[tierIdx(row.dataset.fam)], 52)));
       body.querySelectorAll('.buy').forEach((b) => b.onclick = () => {
         if (b.dataset.helper) {
           const o = helperOffer(); if (!o || S.coins < o.cost) return nope(b);
@@ -467,12 +498,12 @@
         }
         const fam = b.dataset.fam, u = nextUpgrade(fam);
         if (!u || S.coins < u.cost) return nope(b);
-        S.coins -= u.cost; S.tiers[fam] = tierIdx(fam) + 1; save(); AUDIO.buy(); toast(`${u.tier.name}!`); openShed();
+        S.coins -= u.cost; S.tiers[fam] = tierIdx(fam) + 1; S.use[fam] = S.tiers[fam]; save(); AUDIO.buy(); toast(`${u.tier.name}!`); openShed();
       });
     });
   }
   function openDecor() {
-    const at = S.place === 'cafe' ? 'the café' : 'the cottage';
+    const at = here().short;
     const rows = here().decor.map((d) => {
       const has = !!S.decor[d.id];
       return `<div class="shedRow"><div class="ic emo">${d.icon}</div><div class="sInfo"><div class="sName">${d.name}</div><div class="sub">${has ? 'At ' + at : 'Appears at ' + at}</div></div>
@@ -632,7 +663,7 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startJob: (c) => startChore(c, false),
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startJob: (c) => startChore(c, false),
     render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
   };
 })();

@@ -21,6 +21,8 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **Tools.** Each kind of job has its own tool line (shears to garden tractor,
   scrubbing brush to turbo washer, small brush to paint sprayer ...). The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
+  Tap the tool at the bottom to switch to any tool you already own (the shears
+  are sometimes nicer than the tractor).
 - **Finds.** Every job hides a keepsake under the mess (a ladybird, an old
   brass key, a friendly frog ...) plus a few coin stashes. The Finds shelf
   collects them.
@@ -32,6 +34,10 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   the sign and the door, and new kinds of job: lay a deck, rebuild a brick
   wall, tile behind the counter (pieces click into place as you work), and
   plant planter boxes, a herb box and flower pots (plants spring up).
+- **Café extra.** Stock the drinks fridge: every shelf has its own drink and
+  every slot a coloured tag, so each bottle goes back in its place.
+- **Christmas lights.** Every winter there is a job at each place to hang the
+  lights, bulb by bulb; once they are up they shine in the place's picture.
 - **Seasons.** After the restoration the year turns. Each season picks a few
   jobs per restored place from a bigger pool (autumn leaves, snow, frost,
   regrowth, plus seasonal planting and building: sunflowers, tulip bulbs, a
@@ -75,6 +81,8 @@ then open http://localhost:8790.
 - `js/scenes5.js` café scenes: floor, awning, sign, tables, coffee machine
 - `js/scenes6.js` planting and building: jobs made of pieces (plants, planks,
   bricks, tiles, logs) that pop into place once the ground under them is worked
+- `js/scenes8.js` Christmas lights, the drinks fridge, and (for the coming
+  cove) beach litter and shells that fly to a bucket, and a sandcastle
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
