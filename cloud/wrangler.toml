@@ -1,0 +1,19 @@
+name = "ivy-cottage"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# Saves, friends lists and nicknames (personal Cloudflare account).
+[[kv_namespaces]]
+binding = "DATA"
+id = "1b74331b08e3494e98f48ab8b6bb8223"
+
+# Writes per IP, counted per Cloudflare location.
+[[unsafe.bindings]]
+name = "WRITE_LIMITER"
+type = "ratelimit"
+namespace_id = "3001"
+simple = { limit = 30, period = 60 }
+
+[observability]
+enabled = true

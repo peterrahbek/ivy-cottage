@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, started: Date.now() };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -19,6 +19,8 @@
     out.owned = Object.assign({ cottage: 1 }, s.owned);
     out.use = out.use || {};
     if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
+    out.cloud = out.cloud || {};
+    if (typeof out.jobsDone !== 'number') out.jobsDone = Object.values(out.done).reduce((a, b) => a + b, 0) + Object.keys(out.sdone).length;
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
     if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
@@ -37,6 +39,7 @@
   function save() {
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }
     catch (_) { if (!saveWarned) { saveWarned = true; toast('This phone would not let the game save'); } }
+    if (S.cloud.code && cloudSig() !== pushedSig) cloudSoon();
   }
 
   // tierIdx = the best tool owned; useIdx = the one picked for work, which
@@ -324,6 +327,7 @@
     let first;
     if (cur.seasonNo) { first = !S.sdone[cur.id]; S.sdone[cur.id] = (S.sdone[cur.id] || 0) + 1; }
     else { first = !S.done[cur.id]; S.done[cur.id] = (S.done[cur.id] || 0) + 1; }
+    S.jobsDone++;
     save();
     if (first) freshPart = cur.part;
     AUDIO.chime(); AUDIO.activity(0, false);
@@ -561,11 +565,13 @@
       <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
       <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
       <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline. Safari and the Home Screen app keep separate saves; move yours with a save code.</div>
-      <div class="codeRow"><button class="closeBtn" id="setExport">Copy save code</button><button class="closeBtn" id="setImport">Paste save code</button></div>
+      <div class="codeRow"><button class="closeBtn" id="setExport">Copy offline save code</button><button class="closeBtn" id="setImport">Paste save code</button></div>
       <textarea id="setCode" rows="3" placeholder="Paste a save code here" hidden></textarea>
       <button class="go" id="setLoad" hidden>Load this cottage</button>
+      ${cloudHtml()}
       <div class="setStats">Coins earned in total: ${U.fmt(S.earned)}</div>
       <button class="danger" id="setReset">Start the cottage over</button>`, (body) => {
+      cloudBind(body);
       body.querySelector('#setSfx').onchange = (e) => { S.sfx = e.target.checked; AUDIO.set('sfx', S.sfx); save(); };
       body.querySelector('#setMusic').onchange = (e) => { S.music = e.target.checked; AUDIO.set('music', S.music); save(); };
       body.querySelector('#setMusicVol').oninput = (e) => { S.musicVol = e.target.value / 100; AUDIO.volume(S.musicVol); save(); };
@@ -590,6 +596,128 @@
       body.querySelector('#setReset').onclick = (e) => {
         if (e.target.dataset.sure) { S = fresh(); save(); closeSheet(); toast('A fresh start'); return; }
         e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to really start over';
+      };
+    });
+  }
+
+  // ----------------------------------------------------------------- cloud
+  // An optional copy of the save on a small Cloudflare service (cloud/): a
+  // cloud code carries the game over to another phone, and friends lists show
+  // nicknames and a few numbers. Everything else works without it, offline.
+  const CLOUD = 'https://ivy-cottage.rahbek.workers.dev/api';
+  let pushedSig = '', cloudTimer = 0, cloudBusy = false;
+  const cloudSig = () => `${S.earned}:${S.coins}:${S.jobsDone}:${Object.keys(S.finds).length}`;
+  const cloudStats = () => ({ finds: Object.keys(S.finds).length, places: restoredPlaces().length, jobs: S.jobsDone });
+  const cloudData = () => JSON.stringify(Object.assign({}, S, { wips: {} }));
+  async function cloudCall(method, path, body) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (S.cloud.code) headers['X-Ivy-Code'] = S.cloud.code;
+    const text = body ? JSON.stringify(body) : undefined;
+    const r = await fetch(CLOUD + path, { method, headers, body: text, keepalive: !!text && text.length < 60000 });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'cloud'), { status: r.status });
+    return d;
+  }
+  // at most one upload every two minutes while playing, and one when leaving
+  function cloudSoon() { if (!cloudTimer) cloudTimer = setTimeout(() => { cloudTimer = 0; cloudPush(); }, 120000); }
+  async function cloudPush() {
+    if (!S.cloud.code || cloudBusy) return;
+    cloudBusy = true;
+    const sig = cloudSig();
+    try { await cloudCall('PUT', '/save', { data: cloudData(), earned: S.earned, stats: cloudStats() }); pushedSig = sig; S.cloud.at = Date.now(); }
+    catch (_) {}
+    cloudBusy = false;
+  }
+  // more progress in the cloud (played on another phone): carry on from there
+  async function cloudPull() {
+    if (!S.cloud.code || $('#play').classList.contains('on')) return;
+    try {
+      const d = await cloudCall('GET', '/save');
+      if (!(d.earned > S.earned) || $('#play').classList.contains('on')) return;
+      const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, wips: S.wips, cloud: S.cloud };
+      S = upgrade(Object.assign(JSON.parse(d.data), keep)); pushedSig = cloudSig(); save();
+      if ($('#home').classList.contains('on')) renderHome(); else renderTitle();
+      toast('Picked up where you left off');
+    } catch (_) {}
+  }
+  async function cloudStart() {
+    const d = await cloudCall('POST', '/save', { data: cloudData(), earned: S.earned, stats: cloudStats() });
+    S.cloud = { code: d.code, at: Date.now() }; pushedSig = cloudSig(); save();
+    return d.code;
+  }
+  function cloudHtml() {
+    if (!S.cloud.code) {
+      return `<div class="setHead">Cloud save</div><div class="setNote">Keep a copy of your progress online, so you can carry on from another phone.</div>
+        <div class="codeRow"><button class="closeBtn" id="cloudOn">Save in the cloud</button><button class="closeBtn" id="cloudHave">I have a code</button></div>
+        <input class="cloudIn" id="cloudIn" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" hidden><button class="go" id="cloudLoad" hidden>Load my progress</button>`;
+    }
+    const at = S.cloud.at ? new Date(S.cloud.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'not yet';
+    return `<div class="setHead">Cloud save</div><div class="cloudCode">${S.cloud.code}</div>
+      <div class="setNote">Your cloud code. On another phone, open Settings, tap <b>I have a code</b> and type it in. Keep it to yourself: anyone with the code can play your game. Last saved: ${at}.</div>
+      <div class="codeRow"><button class="closeBtn" id="cloudCopy">Copy the code</button><button class="closeBtn" id="cloudNow">Save now</button></div>`;
+  }
+  function cloudBind(body) {
+    const on = body.querySelector('#cloudOn');
+    if (on) on.onclick = async () => { on.disabled = true; try { await cloudStart(); toast('Saved in the cloud'); openSettings(); } catch (_) { on.disabled = false; toast('No connection right now'); } };
+    const have = body.querySelector('#cloudHave'), inp = body.querySelector('#cloudIn'), load = body.querySelector('#cloudLoad');
+    if (have) have.onclick = () => { inp.hidden = false; load.hidden = false; inp.focus(); };
+    if (load) load.onclick = async () => {
+      const code = inp.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 12) return toast('A cloud code has 12 letters and digits');
+      const was = S.cloud;
+      S.cloud = { code: `${code.slice(0, 4)}-${code.slice(4, 8)}-${code.slice(8)}` };
+      try {
+        const d = await cloudCall('GET', '/save');
+        const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, cloud: S.cloud };
+        S = upgrade(Object.assign(JSON.parse(d.data), keep)); S.wips = {}; pushedSig = cloudSig(); save();
+        closeSheet(); toast('Welcome back!');
+      } catch (e) { S.cloud = was; toast(e.status === 404 ? 'That code was not found' : 'No connection right now'); }
+    };
+    const copy = body.querySelector('#cloudCopy');
+    if (copy) copy.onclick = () => { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(S.cloud.code).then(() => toast('Code copied'), () => toast(S.cloud.code)); else toast(S.cloud.code); };
+    const now = body.querySelector('#cloudNow');
+    if (now) now.onclick = async () => { await cloudPush(); toast(pushedSig === cloudSig() ? 'Saved' : 'No connection right now'); openSettings(); };
+  }
+
+  // friends lists: a nickname, a list code to share, and everyone's numbers
+  async function openFriends() {
+    const intro = '<div class="setNote">Make a friends list and share its code, or join a friend\'s list. Friends see only your nickname and your numbers, so use a nickname, not your real name.</div>';
+    if (!S.cloud.code) {
+      openSheet('Friends', `${intro}<div class="setNote">Friends lists use the cloud save.</div><button class="go wide" id="frCloud">Turn on cloud save</button>`, (body) => {
+        body.querySelector('#frCloud').onclick = async (e) => { e.target.disabled = true; try { await cloudStart(); openFriends(); } catch (_) { e.target.disabled = false; toast('No connection right now'); } };
+      });
+      return;
+    }
+    openSheet('Friends', '<div class="setNote">Looking up your friends…</div>');
+    let d;
+    try { await cloudPush(); d = await cloudCall('GET', '/list'); }
+    catch (_) { openSheet('Friends', '<div class="setNote">No connection right now. Try again in a moment.</div>'); return; }
+    if (!d.list) {
+      openSheet('Friends', `${intro}
+        <label class="setRow nameRow"><span>Your nickname</span><input type="text" id="frNick" maxlength="16" placeholder="Nickname" value="${(S.cloud.nick || '').replace(/"/g, '&quot;')}"></label>
+        <button class="go wide" id="frNew">Start a friends list</button>
+        <div class="setHead">Or join a friend's list</div>
+        <div class="codeRow"><input class="cloudIn" id="frCode" placeholder="XXX-XXX" autocomplete="off" autocapitalize="characters"><button class="closeBtn" id="frJoin">Join</button></div>`, (body) => {
+        const nick = () => body.querySelector('#frNick').value.trim();
+        const go = async (path, extra, btn) => {
+          if (nick().length < 2) return toast('Pick a nickname first');
+          btn.disabled = true;
+          try { const r = await cloudCall('POST', path, Object.assign({ nick: nick() }, extra)); S.cloud.nick = r.nick; save(); AUDIO.chime(); openFriends(); }
+          catch (e) { btn.disabled = false; toast(e.status === 404 ? 'That list was not found' : e.status === 409 ? 'That list is full' : e.message === 'nickname' ? 'Try another nickname' : 'No connection right now'); }
+        };
+        body.querySelector('#frNew').onclick = (e) => go('/list', {}, e.target);
+        body.querySelector('#frJoin').onclick = (e) => go('/list/join', { list: body.querySelector('#frCode').value }, e.target);
+      });
+      return;
+    }
+    const rows = d.members.map((m, i) => `<div class="friendRow${m.me ? ' me' : ''}"><div class="rank">${i + 1}</div><div class="fnick">${m.nick.replace(/</g, '&lt;')}${m.me ? ' <small>(you)</small>' : ''}</div>
+      <div class="fstat">${coinHtml(m.earned)}<span title="Keepsakes">⭐ ${m.finds}</span><span title="Places restored">🏡 ${m.places}</span></div></div>`).join('');
+    openSheet('Friends', `<div class="setNote">Your friends list: <b class="listCode">${d.list}</b>. Share the code so friends can join. Ranked by coins earned.</div>${rows}
+      <div class="codeRow"><button class="closeBtn" id="frRefresh">Refresh</button><button class="closeBtn" id="frLeave">Leave the list</button></div>`, (body) => {
+      body.querySelector('#frRefresh').onclick = () => { AUDIO.soft(); openFriends(); };
+      body.querySelector('#frLeave').onclick = async (e) => {
+        if (!e.target.dataset.sure) { e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to leave'; return; }
+        try { await cloudCall('POST', '/list/leave', {}); toast('You left the list'); openFriends(); } catch (_) { toast('No connection right now'); }
       };
     });
   }
@@ -633,6 +761,7 @@
   $('#btnPlaces').onclick = () => { AUDIO.pop(); openPlaces(); };
   $('#home .brand').onclick = () => { AUDIO.pop(); openPlaces(); };
   $('#btnSettings').onclick = () => { AUDIO.pop(); openSettings(); };
+  bind('#btnFriends', () => { AUDIO.pop(); openFriends(); });
   bind('#btnFinds', () => { AUDIO.pop(); openFinds(); });
 
   // ----------------------------------------------------------------- boot
@@ -646,6 +775,7 @@
     if (tip) tip.hidden = !(ios && !standalone);
   }
   renderTitle();
+  cloudPull();
   $('#title').addEventListener('click', () => {
     AUDIO.volume(S.musicVol); AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
     AUDIO.pop();
@@ -655,7 +785,8 @@
   // iOS only counts touchend and click as a gesture that may wake the sound up
   for (const ev of ['pointerdown', 'touchend', 'click']) document.addEventListener(ev, () => AUDIO.unlock(), { passive: true });
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { if ($('#play').classList.contains('on')) keepWip(); save(); AUDIO.suspend(); } else AUDIO.resume();
+    if (document.hidden) { if ($('#play').classList.contains('on')) keepWip(); save(); AUDIO.suspend(); if (S.cloud.code && cloudSig() !== pushedSig) cloudPush(); }
+    else { AUDIO.resume(); cloudPull(); }
   });
   setInterval(save, 5000);
   document.addEventListener('gesturestart', (e) => e.preventDefault());
@@ -668,6 +799,6 @@
   // test hooks
   window.__ivy = {
     get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startJob: (c) => startChore(c, false),
-    render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
+    render: () => renderHome(), save, cloudPush, cloudPull, openFriends, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
   };
 })();

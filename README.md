@@ -42,6 +42,12 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   lighthouse, and a camper van in four steps: vacuum, wash, wax, polish.
 - **Music.** Three quiet tunes of the game's own, one per place, in a key that
   follows the season and slower in the evening; volume in Settings.
+- **Cloud save and friends (optional).** Settings > Save in the cloud gives a
+  12-character cloud code; on another phone, I have a code picks the game up
+  again, and a phone that finds more progress in the cloud carries on from it.
+  The trophy button opens friends lists: pick a nickname, start a list and
+  share its 6-character code, or join a friend's list. Friends see only
+  nicknames and numbers (coins earned, keepsakes, places restored).
 - **Café extra.** Stock the drinks fridge: every shelf has its own drink and
   every slot a coloured tag, so each bottle goes back in its place.
 - **Christmas lights.** Every winter there is a job at each place to hang the
@@ -70,6 +76,16 @@ Copy save code, then Paste save code on the other side.
 
 Works on iOS 15 and later (a small stand-in covers the canvas `roundRect` that
 iOS 15 lacks). Held sideways, the game pauses and asks to be turned upright.
+
+## Cloud service
+
+`cloud/` is a small Cloudflare Worker with one KV namespace, at
+https://ivy-cottage.rahbek.workers.dev. No accounts:
+a random cloud code (sent in the `X-Ivy-Code` header) is the key to a save;
+a friends list has its own short code and only shows nicknames and numbers.
+Uploads happen at most every two minutes while playing and when the app is
+put away; half-done jobs stay on the phone. Deploy from `cloud/` with
+`wrangler deploy` (an API token for the account in `CLOUDFLARE_API_TOKEN`).
 
 ## Run locally
 
