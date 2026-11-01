@@ -55,6 +55,13 @@ const ENGINE = (() => {
   }
   const toScreen = (x, y) => ({ x: ox + x * scale, y: oy + y * scale });
 
+  // iOS Safari caps total canvas memory and frees it lazily, so give the
+  // backing stores of layers we are done with back straight away
+  function release(layers) {
+    if (!layers) return;
+    for (const k of Object.keys(layers)) { const l = layers[k]; if (l && l.c) { l.c.width = 1; l.c.height = 1; } }
+  }
+
   function paintLayers(keepClean) {
     const old = L;
     L = { decor: layer(), clean: layer(), dirt: layer(), comp: layer() };
@@ -73,6 +80,7 @@ const ENGINE = (() => {
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
     if (scene.depth) L.shadow = layer();
     L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
+    release(old);
     maskDirty = true;
   }
 
@@ -600,6 +608,7 @@ const ENGINE = (() => {
   }
   function stop() {
     running = false; cancelAnimationFrame(raf);
+    release(L); L = null;
     // pay out coins still in flight
     for (const k of coins) cb.onCoinArrive && cb.onCoinArrive(k.v);
     coins = [];
