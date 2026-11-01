@@ -161,9 +161,14 @@ const SCENES = (() => {
       c.fillStyle = '#fff6'; c.beginPath(); c.arc(fx - 0.7, fy - 0.7, 1, 0, 7); c.fill();
     }
   }
+  // Shadow only: the shape itself is drawn far off-canvas and its shadow is
+  // offset back into place (shadow offsets ignore the transform).
   function softShadow(c, path, blur, alpha, dx = 0, dy = 3) {
+    const k = c.getTransform().a, FAR = 4000;
     c.save();
-    c.shadowColor = `rgba(40,30,20,${alpha})`; c.shadowBlur = blur; c.shadowOffsetX = dx; c.shadowOffsetY = dy;
+    c.shadowColor = `rgba(40,30,20,${alpha})`; c.shadowBlur = blur * k;
+    c.shadowOffsetX = (FAR + dx) * k; c.shadowOffsetY = dy * k;
+    c.translate(-FAR, 0);
     c.fillStyle = '#000'; c.fill(path, 'evenodd');
     c.restore();
   }
