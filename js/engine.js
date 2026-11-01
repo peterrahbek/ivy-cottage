@@ -620,14 +620,15 @@ const ENGINE = (() => {
   const progress = () => (total ? cleaned / total : 0);
 
   // test hook: sweep the board in rows with the current tool
-  function debugSweep(rows = 40) {
+  function debugSweep(mode) {
     const rch = TOOLS.reach(tier);
-    for (let pass = 0; pass < 3; pass++) {
-      for (let y = 0; y <= H; y += Math.max(4, rch)) {
-        sweep(0, y, W, y, 0, tier, false);
-        if (y > rows * 1000) break;
-      }
+    if (mode === 'stripes') {
+      // up and down in columns, like a real mower
+      let dir = -1;
+      for (let x = rch * 0.9; x <= W; x += rch * 1.8) { sweep(x, dir < 0 ? H : 0, x, dir < 0 ? 0 : H, dir * Math.PI / 2, tier, false); dir = -dir; }
+      return;
     }
+    for (let pass = 0; pass < 3; pass++) for (let y = 0; y <= H; y += Math.max(4, rch)) sweep(0, y, W, y, 0, tier, false);
   }
 
   // ------------------------------------------------------- half-done jobs

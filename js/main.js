@@ -155,6 +155,9 @@
     if (fam === 'mow') return t.id === 'shears' ? 'mow' : 'mower';
     if (fam === 'scrub') return t.id === 'washer' || t.id === 'turbo' ? 'washer' : 'scrub';
     if (fam === 'dust' && t.id === 'vacuum') return 'vacuum';
+    if (fam === 'snow' && t.id === 'blower') return 'snowblower';
+    if (fam === 'rake' && t.id === 'blower') return 'washer';
+    if (fam === 'rake' && t.id === 'leafvac') return 'vacuum';
     return fam;
   }
   function setupBottom() {

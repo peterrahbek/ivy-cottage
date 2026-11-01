@@ -54,19 +54,19 @@ const AUDIO = (() => {
 
   // ------------------------------------------------------------ work sound
   const WORK = {
-    mow: { type: 'bandpass', f: 2600, q: 1.4, vol: 0.18 },
-    mower: { type: 'lowpass', f: 900, q: 0.7, vol: 0.22, engine: 58 },
-    scrub: { type: 'bandpass', f: 1700, q: 1.1, vol: 0.32 },
-    washer: { type: 'highpass', f: 1800, q: 0.5, vol: 0.2 },
-    paint: { type: 'lowpass', f: 650, q: 0.8, vol: 0.4 },
-    wash: { type: 'bandpass', f: 2300, q: 2.2, vol: 0.25 },
-    weed: { type: 'bandpass', f: 1100, q: 1.2, vol: 0.32 },
-    skim: { type: 'lowpass', f: 800, q: 1.5, vol: 0.38 },
-    dust: { type: 'highpass', f: 2600, q: 0.6, vol: 0.18 },
-    rake: { type: 'bandpass', f: 1400, q: 0.9, vol: 0.3 },
-    vacuum: { type: 'bandpass', f: 900, q: 0.8, vol: 0.2, engine: 120 },
-    snow: { type: 'bandpass', f: 1000, q: 0.7, vol: 0.34 },
-    snowblower: { type: 'bandpass', f: 1400, q: 0.6, vol: 0.2, engine: 70 },
+    mow: { type: 'bandpass', f: 2600, q: 1.4, vol: 0.117 },
+    mower: { type: 'lowpass', f: 900, q: 0.7, vol: 0.143, engine: 58 },
+    scrub: { type: 'bandpass', f: 1700, q: 1.1, vol: 0.208 },
+    washer: { type: 'highpass', f: 1800, q: 0.5, vol: 0.13 },
+    paint: { type: 'lowpass', f: 650, q: 0.8, vol: 0.26 },
+    wash: { type: 'bandpass', f: 2300, q: 2.2, vol: 0.163 },
+    weed: { type: 'bandpass', f: 1100, q: 1.2, vol: 0.208 },
+    skim: { type: 'lowpass', f: 800, q: 1.5, vol: 0.247 },
+    dust: { type: 'highpass', f: 2600, q: 0.6, vol: 0.117 },
+    rake: { type: 'bandpass', f: 1400, q: 0.9, vol: 0.195 },
+    vacuum: { type: 'bandpass', f: 900, q: 0.8, vol: 0.13, engine: 120 },
+    snow: { type: 'bandpass', f: 1000, q: 0.7, vol: 0.221 },
+    snowblower: { type: 'bandpass', f: 1400, q: 0.6, vol: 0.13, engine: 70 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;
