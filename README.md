@@ -4,7 +4,9 @@ A calm little browser game: a forgotten cottage needs some love. Mow the lawn,
 scrub the path, pull weeds, paint the fence, the door and the walls in your own
 colours, wash the windows, skim the pond, scrub moss off the roof and dust the
 attic. Every finished job restores a piece of the cottage and earns coins;
-coins buy better tools, little helper robots and decorations.
+coins buy better tools, little helper robots, decorations and, once the
+cottage is restored, a second place: a little corner café to bring back to
+life with some light building and planting.
 
 No timers, no losing, no ads, no accounts. Works offline once opened.
 
@@ -24,12 +26,21 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   collects them.
 - **The cottage.** 20 jobs restore the whole house. Painted colours carry over
   to the cottage picture.
-- **Seasons.** After the restoration the year turns: summer regrowth, autumn
-  leaves to rake, winter snow to shovel and frost on the windows, spring
-  repainting (pick new colours). It loops forever, paying a little more each
-  season.
+- **Places.** Once the cottage is restored, Marigold Café is for sale (9,000
+  coins). Its 14 jobs: sweep the floor, wash the shop window, scrub the
+  terrace, wipe the tables, polish the coffee machine, clean the awning, paint
+  the sign and the door, and new kinds of job: lay a deck, rebuild a brick
+  wall, tile behind the counter (pieces click into place as you work), and
+  plant planter boxes, a herb box and flower pots (plants spring up).
+- **Seasons.** After the restoration the year turns. Each season picks a few
+  jobs per restored place from a bigger pool (autumn leaves, snow, frost,
+  regrowth, plus seasonal planting and building: sunflowers, tulip bulbs, a
+  vegetable patch, window boxes, firewood, a jetty, a brick path). Never more
+  than one mowing job a season, and last year's picks are pushed to the back.
 - **Decorate.** Sixteen things to buy for the cottage, from a garden gnome to a
-  hot-air balloon.
+  hot-air balloon, and twelve for the café.
+- **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
+  new places take a while to save up for.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
   your cottage, save or share a picture of it (camera button).
 
@@ -61,14 +72,19 @@ then open http://localhost:8790.
 - `js/scenes2.js` fence, windows (rooms behind the glass), door, wall
 - `js/scenes3.js` flower beds, pond with koi, roof, shutters, attic, round window
 - `js/scenes4.js` seasonal mess laid over any scene: leaves, snow, frost
+- `js/scenes5.js` café scenes: floor, awning, sign, tables, coffee machine
+- `js/scenes6.js` planting and building: jobs made of pieces (plants, planks,
+  bricks, tiles, logs) that pop into place once the ground under them is worked
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
+- `js/cafe.js` the café overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
-- `js/data.js` jobs, seasons, finds, decorations, prices
+- `js/data.js` places, jobs, season pools, finds, decorations, prices
 - `js/audio.js` synthesised sound and generative music (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
 
 Bump `CACHE` in `sw.js` whenever a file changes.
 
-Test hooks in the browser console: `__ivy.startChore(i)`,
-`__ivy.ENGINE.debugFinish()`, `__ivy.reset()`.
+Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`,
+`__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
+`__ivy.goPlace('cafe')`, `__ivy.reset()`.

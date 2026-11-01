@@ -91,6 +91,24 @@ const TOOLS = (() => {
         { id: 'blower', name: 'Snow blower', shape: 'rect', w: 76, h: 28, power: 1.9, speed: 255, sprite: 'snowblower' },
       ],
     },
+    plant: {
+      name: 'Planting', job: 'Planting', icon: 'trowel',
+      tiers: [
+        { id: 'trowel', name: 'Trowel', shape: 'circle', r: 11, power: 1.0, speed: 160, sprite: 'trowel' },
+        { id: 'can', name: 'Watering can', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'wateringcan' },
+        { id: 'tray', name: 'Seedling tray', shape: 'rect', w: 44, h: 16, power: 1.35, speed: 215, sprite: 'seedtray' },
+        { id: 'cart', name: 'Planting cart', shape: 'rect', w: 66, h: 24, power: 1.7, speed: 240, sprite: 'plantcart' },
+      ],
+    },
+    build: {
+      name: 'Building', job: 'Building', icon: 'hammer',
+      tiers: [
+        { id: 'hammer', name: 'Hammer', shape: 'circle', r: 11, power: 1.0, speed: 160, sprite: 'hammer' },
+        { id: 'mallet', name: 'Rubber mallet', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'mallet' },
+        { id: 'nailgun', name: 'Nail gun', shape: 'rect', w: 44, h: 16, power: 1.35, speed: 215, sprite: 'nailgun' },
+        { id: 'robo', name: 'Robo-builder', shape: 'rect', w: 66, h: 26, power: 1.7, speed: 240, sprite: 'robobuilder' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -364,6 +382,87 @@ const TOOLS = (() => {
       c.fillStyle = '#2f2b28'; rr(c, h * 0.15, -w / 2, h * 0.45, w, 4); c.fill();
       c.fillStyle = '#e0e4e8'; rr(c, h * 0.2, -w / 2 + 3, h * 0.3, w - 6, 3); c.fill();
       c.strokeStyle = '#2f2b28'; c.lineWidth = 3; c.beginPath(); c.moveTo(-h * 0.2, w * 0.15); c.quadraticCurveTo(-h * 0.2, w * 0.5, -h * 0.9, w * 0.55); c.stroke();
+    },
+    trowel(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.7, -r * 2.3, 5, '#5f9b4f');
+      c.fillStyle = '#9aa3ad'; rr(c, -r * 0.75, -1.5, r * 0.5, 3, 1); c.fill();
+      c.fillStyle = '#b9c0c8'; c.beginPath(); c.moveTo(-r * 0.4, -r * 0.55); c.quadraticCurveTo(r * 0.7, -r * 0.6, r * 1.15, 0); c.quadraticCurveTo(r * 0.7, r * 0.6, -r * 0.4, r * 0.55); c.closePath(); c.fill();
+      c.fillStyle = '#e1e5ea'; c.beginPath(); c.moveTo(-r * 0.3, -r * 0.35); c.quadraticCurveTo(r * 0.5, -r * 0.4, r * 0.9, -r * 0.05); c.lineTo(-r * 0.3, -r * 0.05); c.closePath(); c.fill();
+      c.fillStyle = '#6b4a32'; disc(c, r * 0.65, r * 0.15, 1.6); c.fill();
+    },
+    wateringcan(c, t) {
+      const r = t.r;
+      c.fillStyle = U.rgba('#bfe6f5', 0.35); disc(c, r * 0.35, 0, r * 0.75); c.fill();
+      c.strokeStyle = '#3f8a6a'; c.lineWidth = 3; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-r * 0.2, 0); c.lineTo(r * 0.6, 0); c.stroke();
+      c.fillStyle = '#4f9d7a'; disc(c, r * 0.75, 0, r * 0.22); c.fill();
+      c.fillStyle = '#e8f4ee'; for (let i = 0; i < 5; i++) { disc(c, r * 0.75 + Math.cos(i * 1.26) * r * 0.1, Math.sin(i * 1.26) * r * 0.1, 0.8); c.fill(); }
+      c.fillStyle = '#3f8a6a'; rr(c, -r * 1.25, -r * 0.6, r * 1.05, r * 1.2, 5); c.fill();
+      c.fillStyle = '#5cb58e'; rr(c, -r * 1.2, -r * 0.55, r * 0.95, r * 1.1, 5); c.fill();
+      c.strokeStyle = '#2f6e52'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(-r * 1.05, -r * 0.45); c.quadraticCurveTo(-r * 0.7, -r * 0.95, -r * 0.35, -r * 0.45); c.stroke();
+      c.fillStyle = '#ffffff55'; rr(c, -r * 1.1, -r * 0.45, r * 0.3, r * 0.9, 3); c.fill();
+    },
+    seedtray(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.5, -h * 2.4, 3, '#d9a066');
+      c.fillStyle = '#2f2b28'; rr(c, -h / 2, -w / 2, h, w, 3); c.fill();
+      c.fillStyle = '#3d3834'; rr(c, -h / 2 + 1, -w / 2 + 1, h - 2, w - 2, 2); c.fill();
+      const cols = Math.max(4, Math.round(w / 8)), rows = 2;
+      for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+        const x = -h / 2 + (h * (j + 0.5)) / rows, y = -w / 2 + (w * (i + 0.5)) / cols;
+        c.fillStyle = '#5a3d28'; disc(c, x, y, Math.min(h / 4, w / cols / 2) - 0.4); c.fill();
+        c.fillStyle = (i + j) % 3 ? '#7bc25a' : '#9ad46e'; disc(c, x - 0.6, y, 1.8); c.fill(); disc(c, x + 0.8, y + 0.6, 1.4); c.fill();
+      }
+    },
+    plantcart(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.55, -h * 1.7, 2.6, '#9aa3ad');
+      wheel(c, -h * 0.25, -w / 2 + 1, 9, 5); wheel(c, -h * 0.25, w / 2 - 1, 9, 5);
+      c.fillStyle = '#8a5a3c'; rr(c, -h / 2, -w / 2 + 3, h, w - 6, 4); c.fill();
+      c.fillStyle = '#a77b56'; rr(c, -h / 2 + 2, -w / 2 + 5, h - 4, w - 10, 3); c.fill();
+      const n = Math.round((w - 12) / 9);
+      for (let i = 0; i < n; i++) {
+        const y = -w / 2 + 8 + i * ((w - 16) / (n - 1 || 1));
+        for (const x of [-h * 0.2, h * 0.2]) {
+          c.fillStyle = '#5a3d28'; disc(c, x, y, 3.2); c.fill();
+          c.fillStyle = ['#ef8aa6', '#f7c548', '#7bc25a', '#bba9df'][(i + (x > 0 ? 1 : 0)) % 4]; disc(c, x, y, 2.2); c.fill();
+        }
+      }
+    },
+    hammer(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.2, -r * 2.4, 4.2, '#c98a55');
+      c.fillStyle = '#5b636d'; rr(c, -r * 0.35, -r * 0.95, r * 0.7, r * 1.9, 3); c.fill();
+      c.fillStyle = '#8b939d'; rr(c, -r * 0.3, -r * 0.9, r * 0.3, r * 1.8, 2); c.fill();
+      c.fillStyle = '#3f464e'; rr(c, -r * 0.4, -r * 1.2, r * 0.8, r * 0.4, 2); c.fill();
+      c.fillStyle = '#c62f3a'; rr(c, -r * 2.5, -3, r * 0.9, 6, 3); c.fill();
+    },
+    mallet(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.2, -r * 2.2, 4, '#e6c17d');
+      c.fillStyle = '#2b2b30'; rr(c, -r * 0.55, -r * 0.95, r * 1.1, r * 1.9, r * 0.35); c.fill();
+      c.fillStyle = '#4a4a52'; rr(c, -r * 0.45, -r * 0.85, r * 0.4, r * 1.7, r * 0.2); c.fill();
+      c.fillStyle = '#ffffff22'; rr(c, -r * 0.4, -r * 0.6, r * 0.2, r * 1.2, 2); c.fill();
+    },
+    nailgun(c, t) {
+      const w = t.w, h = t.h;
+      c.fillStyle = '#2f2b28'; rr(c, -h * 0.5, -w / 2, h * 0.7, w, 3); c.fill();
+      c.fillStyle = '#9aa3ad'; rr(c, h * 0.1, -w / 2 + 2, h * 0.35, w - 4, 2); c.fill();
+      c.fillStyle = '#f2b531'; rr(c, -h * 1.6, -w * 0.18, h * 1.2, w * 0.36, 5); c.fill();
+      c.fillStyle = '#ffd56a'; rr(c, -h * 1.5, -w * 0.14, h * 0.5, w * 0.12, 3); c.fill();
+      c.fillStyle = '#2f2b28'; rr(c, -h * 2.6, -4, h * 1.1, 8, 3); c.fill();
+    },
+    robobuilder(c, t) {
+      const w = t.w, h = t.h;
+      wheel(c, -h * 0.3, -w / 2 + 2, 12, 6); wheel(c, -h * 0.3, w / 2 - 2, 12, 6);
+      c.fillStyle = '#c99a5a'; rr(c, h * 0.05, -w / 2, h * 0.5, w, 3); c.fill();
+      c.strokeStyle = '#8a6a3a'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(h * 0.3, -w / 2 + 2); c.lineTo(h * 0.3, w / 2 - 2); c.stroke();
+      c.fillStyle = '#3f9b8b'; rr(c, -h * 0.75, -w * 0.3, h * 0.9, w * 0.6, 8); c.fill();
+      c.fillStyle = '#6fd0bf'; rr(c, -h * 0.65, -w * 0.24, h * 0.5, w * 0.48, 6); c.fill();
+      c.fillStyle = '#f2c230'; disc(c, -h * 0.35, 0, h * 0.32); c.fill();
+      c.fillStyle = '#ffde6e'; disc(c, -h * 0.42, -h * 0.08, h * 0.16); c.fill();
+      c.fillStyle = '#2b3a3f'; disc(c, -h * 0.05, -w * 0.08, 1.6); c.fill(); disc(c, -h * 0.05, w * 0.08, 1.6); c.fill();
     },
   };
 

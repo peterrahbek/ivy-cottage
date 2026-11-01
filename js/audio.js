@@ -67,6 +67,8 @@ const AUDIO = (() => {
     vacuum: { type: 'bandpass', f: 900, q: 0.8, vol: 0.13, engine: 120 },
     snow: { type: 'bandpass', f: 1000, q: 0.7, vol: 0.221 },
     snowblower: { type: 'bandpass', f: 1400, q: 0.6, vol: 0.13, engine: 70 },
+    plant: { type: 'lowpass', f: 700, q: 1.0, vol: 0.2 },
+    build: { type: 'bandpass', f: 1300, q: 1.0, vol: 0.1 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;
@@ -121,6 +123,36 @@ const AUDIO = (() => {
     tone(f * 2.01, now, 0.12, 'sine', 0.02, sfx, 0.1);
   }
   function pop() { if (!ac) return; const t = ac.currentTime; tone(660, t, 0.09, 'sine', 0.08, sfx, 0.1); tone(990, t + 0.03, 0.08, 'sine', 0.05, sfx, 0.1); }
+  // a piece clicks into place: a wooden knock when building, a soft bloop
+  // when a plant springs up; both climb the scale so a run makes a tune
+  let unitStep = 0, lastUnit = 0;
+  function unit(kind) {
+    if (!ac || !on.sfx) return;
+    const now = ac.currentTime;
+    if (now - lastUnit < 0.05) return;
+    if (now - lastUnit > 1.2) unitStep = 0;
+    lastUnit = now;
+    const semi = PENTA[unitStep % PENTA.length];
+    unitStep++;
+    if (kind === 'build') {
+      const f = 196 * Math.pow(2, semi / 12);
+      tone(f, now, 0.16, 'triangle', 0.16, sfx, 0.12);
+      tone(f * 2.76, now, 0.05, 'sine', 0.05, sfx, 0);
+      const src = ac.createBufferSource(), g = ac.createGain(), bp = ac.createBiquadFilter();
+      src.buffer = noiseBuf; bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 2;
+      g.gain.setValueAtTime(0.12, now); g.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      src.connect(bp); bp.connect(g); g.connect(sfx);
+      src.start(now, Math.random()); src.stop(now + 0.05);
+    } else {
+      const f = 392 * Math.pow(2, semi / 12);
+      const o = ac.createOscillator(), g = ac.createGain(), w = ac.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(f * 0.75, now); o.frequency.exponentialRampToValueAtTime(f, now + 0.08);
+      g.gain.setValueAtTime(0, now); g.gain.linearRampToValueAtTime(0.09, now + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+      w.gain.value = 0.3;
+      o.connect(g); g.connect(sfx); g.connect(w); w.connect(verb);
+      o.start(now); o.stop(now + 0.35);
+    }
+  }
   function soft() { if (!ac) return; tone(520, ac.currentTime, 0.12, 'triangle', 0.05, sfx, 0.15); }
   function buy() {
     if (!ac) return;
@@ -214,5 +246,5 @@ const AUDIO = (() => {
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, buy, chime, shimmer, suspend, resume, birds };
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, unit, buy, chime, shimmer, suspend, resume, birds };
 })();

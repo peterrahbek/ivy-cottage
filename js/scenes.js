@@ -249,6 +249,27 @@ const SCENES = (() => {
   }
 
   // ----------------------------------------------------------------- STONES
+  // round the café terrace: cobbles, the café front above, the kerb below
+  function terraceSurround(c, r, nz, bleed) {
+    c.fillStyle = '#7d776d'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, bleed.y1 - bleed.y0);
+    for (let row = 0, y = bleed.y0; y < bleed.y1; y += 12, row++) {
+      for (let x = bleed.x0 - (row % 2 ? 7 : 0); x < bleed.x1; x += 14) {
+        c.fillStyle = U.shade(U.pick(r, ['#a49d92', '#9a9489', '#b0a99d', '#928c82']), (nz.n2(x * 0.05, y * 0.05) - 0.5) * 0.2);
+        c.beginPath(); c.roundRect(x + 1, y + 1, 12, 10, 3.5); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.15)'; c.fillRect(x + 3, y + 2, 7, 2);
+      }
+    }
+    // the café front: a green panelled plinth with a stone step at the door
+    c.fillStyle = '#2f4f45'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, 40 - bleed.y0);
+    c.fillStyle = '#3e6457';
+    for (let x = 8; x < 340; x += 58) c.fillRect(x, bleed.y0, 48, 32 - bleed.y0);
+    c.fillStyle = '#1f3630'; c.fillRect(bleed.x0, 34, bleed.x1 - bleed.x0, 6);
+    c.fillStyle = '#c9c1b2'; c.fillRect(140, 30, 80, 18); c.fillStyle = '#a99f8f'; c.fillRect(140, 44, 80, 4);
+    // the kerb
+    c.fillStyle = '#c4beb2'; c.fillRect(bleed.x0, 590, bleed.x1 - bleed.x0, 10);
+    c.fillStyle = '#9d978b'; c.fillRect(bleed.x0, 598, bleed.x1 - bleed.x0, 3);
+  }
+
   function stonesScene(S) {
     const { r, nz, opts, bleed } = S;
     const region = new Path2D();
@@ -260,6 +281,18 @@ const SCENES = (() => {
         const s = { x, y, rx: 40 + r() * 8, ry: 30 + r() * 6, rot: (r() - 0.5) * 0.5 };
         pavers.push(s);
         region.moveTo(x + s.rx, y); region.ellipse(x, y, s.rx, s.ry, s.rot, 0, Math.PI * 2);
+      }
+    } else if (opts.shape === 'terrace') {
+      // a café terrace of big flags laid in staggered rows
+      rrPath(region, 12, 52, 336, 532, 10);
+      for (let y = 52, row = 0; y < 584; row++) {
+        const h = 52 + r() * 14;
+        for (let x = 12 - (row % 2 ? 34 : 0); x < 348;) {
+          const w = 62 + r() * 30;
+          pavers.push({ x: x + 2.5, y: y + 2.5, w: w - 5, h: h - 5 });
+          x += w;
+        }
+        y += h;
       }
     } else {
       // a gently winding path of rectangular flags
@@ -292,8 +325,11 @@ const SCENES = (() => {
         return 1.5;
       },
       decor(c) {
-        mowedLawn(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, true);
-        grassGrain(c, r, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 6, 0.2);
+        if (opts.shape === 'terrace') terraceSurround(c, r, nz, bleed);
+        else {
+          mowedLawn(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, true);
+          grassGrain(c, r, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 6, 0.2);
+        }
         softShadow(c, region, 8, 0.35);
       },
       clean(c) {

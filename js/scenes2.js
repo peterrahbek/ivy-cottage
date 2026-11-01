@@ -274,6 +274,87 @@
       for (let y = 370; y < y1; y += 24) for (let x = x0 + 60; x < x1 - 10; x += 24) { c.fillStyle = U.pick(r, qc); c.fillRect(x, y, 23, 23); }
       glow(c, x0 + 40, 360, 120, 'rgba(255,214,140,0.35)');
     },
+    cafe(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      c.fillStyle = '#2f5547'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let i = 0; i < 500; i++) { c.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)'; c.fillRect(x0 + r() * w, y0 + r() * (y1 - y0), 2, 2); }
+      // chalkboard menu
+      c.fillStyle = '#8a5a3c'; c.fillRect(x0 + 10, 150, 112, 134);
+      c.fillStyle = '#262e2a'; c.fillRect(x0 + 16, 156, 100, 122);
+      c.fillStyle = 'rgba(255,255,255,0.06)'; c.fillRect(x0 + 20, 164, 60, 30);
+      c.fillStyle = 'rgba(255,255,255,0.88)'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+      c.font = '700 17px "Chalkboard SE", "Comic Sans MS", cursive'; c.fillText('Menu', x0 + 66, 180);
+      c.font = '400 11px "Chalkboard SE", "Comic Sans MS", cursive'; c.textAlign = 'left';
+      [['Coffee', '3'], ['Cocoa', '3'], ['Cake', '4'], ['Scones', '2']].forEach(([a, b], i) => { c.fillText(a, x0 + 26, 204 + i * 18); c.fillText(b, x0 + 98, 204 + i * 18); });
+      c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x0 + 40, 186); c.lineTo(x0 + 92, 186); c.stroke();
+      // shelves of cups and jars, with a trailing plant
+      for (const sy of [176, 238]) {
+        c.fillStyle = '#7a5236'; c.fillRect(x1 - 122, sy, 116, 6);
+        for (let x = x1 - 112; x < x1 - 14; x += 20) {
+          if (r() < 0.5) { c.fillStyle = U.pick(r, ['#f7f3ea', '#efb4ae', '#a6d3d4', '#f2d88a']); c.beginPath(); c.moveTo(x - 7, sy - 15); c.lineTo(x + 7, sy - 15); c.lineTo(x + 5, sy); c.lineTo(x - 5, sy); c.closePath(); c.fill(); }
+          else { c.fillStyle = 'rgba(255,255,255,0.45)'; c.fillRect(x - 7, sy - 24, 14, 24); c.fillStyle = U.pick(r, ['#6b4022', '#c98e5a', '#e7c27a']); c.fillRect(x - 6, sy - 16, 12, 15); }
+        }
+      }
+      for (let i = 0; i < 14; i++) { const x = x1 - 28 + (r() - 0.5) * 16, y = 182 + i * 7; c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042', '#7bb553']); c.beginPath(); c.ellipse(x, y, 6, 3.5, r() * 3, 0, 7); c.fill(); }
+      // string lights and two brass pendant lamps
+      c.strokeStyle = '#3b3226'; c.lineWidth = 1; c.beginPath();
+      for (let x = x0; x <= x1; x += 4) c.lineTo(x, 104 + Math.sin(((x - x0) / w) * Math.PI) * 16);
+      c.stroke();
+      for (let x = x0 + 12; x < x1; x += 22) { const y = 108 + Math.sin(((x - x0) / w) * Math.PI) * 16; glow(c, x, y, 14, 'rgba(255,220,140,0.7)'); c.fillStyle = '#fff1c4'; c.beginPath(); c.arc(x, y, 2.6, 0, 7); c.fill(); }
+      for (const lx of [x0 + 74, x1 - 70]) {
+        c.strokeStyle = '#1e1e1e'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(lx, y0); c.lineTo(lx, 132); c.stroke();
+        c.fillStyle = '#c9a24a'; c.beginPath(); c.ellipse(lx, 146, 20, 15, 0, Math.PI, 0); c.fill();
+        c.fillStyle = '#fff3c8'; c.beginPath(); c.ellipse(lx, 146, 13, 4, 0, 0, Math.PI); c.fill();
+        glow(c, lx, 156, 130, 'rgba(255,206,130,0.42)');
+      }
+      // the counter: marble top, wooden front
+      c.fillStyle = '#7a5236'; c.fillRect(x0, 388, w, y1 - 388);
+      c.strokeStyle = 'rgba(40,24,14,0.4)'; c.lineWidth = 1.5;
+      for (let x = x0 + 8; x < x1; x += 16) { c.beginPath(); c.moveTo(x, 392); c.lineTo(x, y1); c.stroke(); }
+      c.fillStyle = '#ece6da'; c.fillRect(x0, 378, w, 12);
+      c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(x0, 390, w, 4);
+      // cakes under glass domes, croissants, a little espresso machine
+      const dome = (x, cake) => {
+        c.fillStyle = '#d9cbb0'; c.fillRect(x - 22, 374, 44, 4); c.fillRect(x - 2, 362, 4, 12);
+        c.fillStyle = '#efe6d6'; c.fillRect(x - 24, 358, 48, 4);
+        cake(x);
+        c.fillStyle = 'rgba(220,240,255,0.16)'; c.beginPath(); c.arc(x, 358, 30, Math.PI, 0); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 1.4; c.beginPath(); c.arc(x, 358, 30, Math.PI, 0); c.stroke();
+        c.beginPath(); c.arc(x, 358, 24, Math.PI * 1.15, Math.PI * 1.4); c.stroke();
+        c.fillStyle = 'rgba(255,255,255,0.8)'; c.beginPath(); c.arc(x, 326, 3, 0, 7); c.fill();
+      };
+      dome(x0 + 40, (x) => {
+        c.fillStyle = '#efb4ae'; c.fillRect(x - 18, 334, 36, 24);
+        c.fillStyle = '#fff3ea'; c.fillRect(x - 18, 344, 36, 3); c.fillRect(x - 18, 332, 36, 4);
+        c.fillStyle = '#c9474f'; for (const dx of [-12, -4, 4, 12]) { c.beginPath(); c.arc(x + dx, 330, 2.6, 0, 7); c.fill(); }
+      });
+      dome(x0 + 108, (x) => {
+        c.fillStyle = '#e0b060'; c.beginPath(); c.moveTo(x - 20, 358); c.lineTo(x + 20, 358); c.lineTo(x + 17, 346); c.lineTo(x - 17, 346); c.closePath(); c.fill();
+        c.fillStyle = '#f7d94a'; c.beginPath(); c.ellipse(x, 346, 17, 4, 0, 0, 7); c.fill();
+        c.strokeStyle = '#fff8e0'; c.lineWidth = 1.4; c.beginPath(); c.arc(x - 6, 346, 3, 0, 7); c.arc(x + 6, 346, 3, 0, 7); c.stroke();
+      });
+      for (let k = 0; k < 4; k++) {
+        const x = x1 - 132 + k * 13 + (k % 2) * 3, y = 372 - (k % 2) * 6;
+        c.fillStyle = '#d99a4e'; c.beginPath(); c.ellipse(x, y, 10, 6, (k % 2 ? 0.3 : -0.3), Math.PI, 0); c.fill();
+        c.strokeStyle = '#b8742f'; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 4, y - 5); c.lineTo(x - 2, y); c.moveTo(x + 3, y - 5); c.lineTo(x + 2, y); c.stroke();
+      }
+      c.fillStyle = '#9aa3ad'; c.fillRect(x1 - 66, 336, 46, 42);
+      c.fillStyle = '#d9e0e6'; c.fillRect(x1 - 58, 336, 10, 42);
+      c.fillStyle = '#c87a45'; c.beginPath(); c.ellipse(x1 - 43, 336, 19, 15, 0, Math.PI, 0); c.fill();
+      c.fillStyle = '#26221f'; c.fillRect(x1 - 54, 360, 20, 4);
+      c.fillStyle = '#f9f6ef'; c.fillRect(x1 - 50, 368, 9, 9);
+      // a big leafy plant in the corner
+      c.fillStyle = '#c8763f'; c.beginPath(); c.moveTo(x0 + 8, 450); c.lineTo(x0 + 52, 450); c.lineTo(x0 + 46, y1); c.lineTo(x0 + 14, y1); c.closePath(); c.fill();
+      for (let i = 0; i < 10; i++) {
+        const a = -Math.PI / 2 + (r() - 0.5) * 2.4, len = 40 + r() * 40;
+        c.save(); c.translate(x0 + 30, 452); c.rotate(a);
+        c.fillStyle = U.pick(r, ['#3f7a3a', '#4f8a3c', '#5d9644']);
+        c.beginPath(); c.ellipse(len * 0.6, 0, len * 0.45, 12 + r() * 6, 0, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(len * 0.2, 0); c.lineTo(len, 0); c.stroke();
+        c.restore();
+      }
+      glow(c, (x0 + x1) / 2, 300, 200, 'rgba(255,200,120,0.12)');
+    },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);
@@ -386,13 +467,15 @@
     const { r, nz, opts, bleed } = S;
     const x0 = 80, x1 = 280, yTop = 150, y1 = 540, cx = 180, R = 100;
     const fan = 66;
+    // the café door has a big glass pane and a push handle instead
+    const cafe = !!opts.cafe, glass = [104, 186, 152, 140], bar = [234, 350, 10, 84];
     const region = new Path2D();
     region.moveTo(x0, y1); region.lineTo(x0, yTop); region.arc(cx, yTop, R, Math.PI, 0); region.lineTo(x1, y1); region.closePath();
     // fanlight, knob and letterbox are holes
     region.moveTo(cx - fan, yTop); region.arc(cx, yTop, fan, Math.PI, 0); region.closePath();
-    region.moveTo(252, 360); region.arc(244, 360, 8, 0, Math.PI * 2);
-    region.rect(150, 300, 60, 14);
-    const panels = [[100, 190, 64, 120], [196, 190, 64, 120], [100, 340, 64, 170], [196, 340, 64, 170]];
+    if (cafe) { region.rect(...glass); region.rect(...bar); }
+    else { region.moveTo(252, 360); region.arc(244, 360, 8, 0, Math.PI * 2); region.rect(150, 300, 60, 14); }
+    const panels = cafe ? [[100, 350, 64, 160], [196, 350, 64, 160]] : [[100, 190, 64, 120], [196, 190, 64, 120], [100, 340, 64, 170], [196, 340, 64, 170]];
     return {
       family: 'paint', particle: 'paint', region,
       tough: (x, y) => (y > 480 ? 1.35 : 1),
@@ -422,6 +505,18 @@
           shrub(c, r, px, 440, 34, '#4f8a3c');
           for (let i = 0; i < 7; i++) { c.fillStyle = U.pick(r, ['#f7b6c8', '#ffffff', '#efb4ae']); c.beginPath(); c.arc(px + (r() - 0.5) * 40, 430 + (r() - 0.5) * 30, 3, 0, 7); c.fill(); }
         }
+        if (cafe) {
+          // through the glass: warm light and an OPEN sign on a string
+          const [gx, gy, gw, gh] = glass, mx = gx + gw / 2;
+          const g = c.createLinearGradient(0, gy, 0, gy + gh); g.addColorStop(0, '#34493f'); g.addColorStop(1, '#5d4a3a');
+          c.fillStyle = g; c.fillRect(gx, gy, gw, gh);
+          glow(c, gx + 40, gy + 26, 80, 'rgba(255,206,130,0.6)');
+          c.fillStyle = '#c9a24a'; c.beginPath(); c.ellipse(gx + 40, gy + 22, 14, 10, 0, Math.PI, 0); c.fill();
+          c.fillStyle = '#7a5236'; c.fillRect(gx, gy + 104, gw, gh - 104); c.fillStyle = '#ece6da'; c.fillRect(gx, gy + 100, gw, 6);
+          c.strokeStyle = '#3d3d42'; c.lineWidth = 1; c.beginPath(); c.moveTo(mx - 26, gy); c.lineTo(mx, gy + 40); c.lineTo(mx + 26, gy); c.stroke();
+          c.fillStyle = '#f4ecdc'; c.beginPath(); c.roundRect(mx - 34, gy + 40, 68, 26, 4); c.fill();
+          c.fillStyle = '#c9474f'; c.font = 'bold 15px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('OPEN', mx, gy + 54);
+        }
       },
       clean(c, paint) { c.fillStyle = paint; c.fillRect(0, 0, W, H); },
       cleanOver(c) {
@@ -449,6 +544,17 @@
         c.fillStyle = 'rgba(80,65,45,0.35)'; c.fillRect(80, 520, 200, 20);
       },
       top(c) {
+        if (cafe) {
+          const [gx, gy, gw, gh] = glass;
+          c.strokeStyle = 'rgba(40,30,20,0.5)'; c.lineWidth = 3; c.strokeRect(gx - 1.5, gy - 1.5, gw + 3, gh + 3);
+          c.fillStyle = 'rgba(255,255,255,0.13)'; c.beginPath(); c.moveTo(gx + 20, gy + gh); c.lineTo(gx + 50, gy + gh); c.lineTo(gx + 104, gy); c.lineTo(gx + 74, gy); c.closePath(); c.fill();
+          c.fillStyle = '#e2b850'; c.font = 'italic bold 20px Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('Café', gx + gw / 2, gy + gh - 18);
+          const [hx, hy, hw, hh] = bar;
+          c.fillStyle = '#8a6a26'; c.fillRect(hx - 3, hy + 6, hw + 6, 5); c.fillRect(hx - 3, hy + hh - 11, hw + 6, 5);
+          c.fillStyle = '#c9a24a'; c.beginPath(); c.roundRect(hx, hy, hw, hh, 5); c.fill();
+          c.fillStyle = '#f2d88a'; c.fillRect(hx + 2, hy + 6, 3, hh - 12);
+          return;
+        }
         c.fillStyle = '#d9b35a'; c.beginPath(); c.arc(244, 360, 8, 0, 7); c.fill();
         c.fillStyle = '#f2d88a'; c.beginPath(); c.arc(242, 358, 4, 0, 7); c.fill();
         c.fillStyle = '#c9a24a'; c.beginPath(); c.roundRect(150, 300, 60, 14, 3); c.fill();
@@ -515,4 +621,6 @@
   }
 
   Object.assign(SCENES.KINDS, { fence, window: windowScene, door, wall });
+  // painters the café scenes reuse
+  Object.assign(SCENES, { paintStamp, peelingPaint, grime, weatheredWood });
 })();

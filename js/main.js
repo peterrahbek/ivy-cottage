@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, started: Date.now() };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -16,6 +16,10 @@
     if (s.wip && s.wip.id && !s.wips) out.wips = { [s.wip.id]: s.wip.grid };
     delete out.wip;
     out.wips = out.wips || {};
+    out.owned = Object.assign({ cottage: 1 }, s.owned);
+    if (!out.owned[out.place]) out.place = 'cottage';
+    // seasons used to be one fixed list of eight; the varied ones start afresh
+    if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
     out.coins = Math.max(0, Math.round(out.coins)); out.earned = Math.round(out.earned || 0);
     return out;
   }
@@ -35,17 +39,48 @@
 
   const tierIdx = (fam) => S.tiers[fam] || 0;
   const tierOf = (fam) => TOOLS.FAM[fam].tiers[tierIdx(fam)];
-  const seasonJobs = () => DATA.seasonJobs(S.seasonNo);
-  const nextChore = () => DATA.CHORES.find((c) => !S.done[c.id]) || (S.seasonNo > 0 ? seasonJobs().find((j) => !S.sdone[j.id]) : undefined);
-  const doneCount = () => DATA.CHORES.filter((c) => S.done[c.id]).length;
+
+  // ---------------------------------------------------------------- places
+  // Each place has its own chores, picture and decorations; coins, tools,
+  // helpers and the turning year are shared.
+  const here = () => DATA.placeOf(S.place);
+  const owned = (id) => !!S.owned[id];
+  const doneCount = (pl = S.place) => DATA.placeOf(pl).chores.filter((c) => S.done[c.id]).length;
+  const totalDone = () => DATA.PLACES.reduce((n, p) => n + doneCount(p.id), 0);
+  const restored = (pl) => doneCount(pl) === DATA.placeOf(pl).chores.length;
+  const restoredPlaces = () => DATA.PLACES.filter((p) => owned(p.id) && restored(p.id)).map((p) => p.id);
+  const placeName = (pl = S.place) => (pl === 'cottage' ? cottageName() : DATA.placeOf(pl).name);
+  const seasonJobs = () => DATA.seasonJobs(S.seasonNo, restoredPlaces());
+  const jobsAt = (pl) => seasonJobs().filter((j) => j.place === pl);
+  const nextRestore = (pl) => DATA.placeOf(pl).chores.find((c) => !S.done[c.id]);
+  const nextChore = (pl = S.place) => nextRestore(pl) || (S.seasonNo > 0 ? jobsAt(pl).find((j) => !S.sdone[j.id]) : undefined);
   const seasonName = () => (S.seasonNo ? DATA.seasonOf(S.seasonNo) : 'spring');
   const famUnlocked = (fam) => {
-    if (DATA.FAMILY_SEASON[fam]) return S.seasonNo >= DATA.FAMILY_SEASON[fam];
-    if (S.seasonNo > 0) return true;
-    const n = nextChore();
-    const reach = n ? n.index : DATA.CHORES.length;
-    return DATA.intro[fam] !== undefined && DATA.intro[fam] <= reach;
+    if (DATA.FAMILY_SEASON[fam] && S.seasonNo >= DATA.FAMILY_SEASON[fam]) return true;
+    if (seasonJobs().some((j) => j.family === fam)) return true;
+    return DATA.PLACES.some((p) => {
+      if (!owned(p.id)) return false;
+      const n = nextRestore(p.id), reach = n ? n.index : p.chores.length;
+      return p.chores.some((c) => c.family === fam && c.index <= reach);
+    });
   };
+  function placeOffer() {
+    return DATA.PLACES.find((p) => !owned(p.id) && (!p.needs || restored(p.needs)));
+  }
+  function renderPlace(id, st, opts) {
+    if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
+    return HOUSE.render(st, S.colours, opts);
+  }
+  function partsDone(pl) {
+    const st = {};
+    for (const c of DATA.placeOf(pl).chores) if (S.done[c.id]) st[c.part] = true;
+    return st;
+  }
+  function pendingAt(pl) {
+    const pending = {};
+    for (const j of jobsAt(pl)) if (!S.sdone[j.id] && j.part) pending[j.part] = j.pending;
+    return pending;
+  }
   function nextUpgrade(fam) {
     const t = tierIdx(fam), tiers = TOOLS.FAM[fam].tiers;
     if (t + 1 >= tiers.length) return null;
@@ -59,10 +94,10 @@
     }
     const h = helperOffer();
     if (h && S.coins >= h.cost) return true;
-    return doneCount() >= DATA.DECOR_UNLOCK && DATA.DECOR.some((d) => !S.decor[d.id] && S.coins >= d.cost);
+    return doneCount() >= DATA.DECOR_UNLOCK && here().decor.some((d) => !S.decor[d.id] && S.coins >= d.cost);
   }
   function helperOffer() {
-    if (doneCount() < DATA.HELPER_UNLOCK) return null;
+    if (totalDone() < DATA.HELPER_UNLOCK) return null;
     if (S.helpers >= DATA.HELPER_COSTS.length) return null;
     return { cost: DATA.HELPER_COSTS[S.helpers] };
   }
@@ -80,23 +115,24 @@
   // ---------------------------------------------------------------- home
   let freshPart = null;
   function renderHome() {
-    const st = {}, pending = {};
-    for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
-    for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
-    const pct = doneCount() / DATA.CHORES.length;
-    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor, night: isEvening() });
-    $('#brandName').textContent = cottageName();
+    const pl = here();
+    const st = partsDone(pl.id), pending = pendingAt(pl.id);
+    const pct = doneCount() / pl.chores.length;
+    $('#scene').innerHTML = renderPlace(pl.id, st, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor, night: isEvening() });
+    $('#brandName').textContent = placeName();
+    $('#brandChev').hidden = DATA.PLACES.filter((p) => owned(p.id)).length < 2;
     if (freshPart) {
       const g = $('#scene').querySelectorAll(`[data-part="${freshPart}"]`);
       g.forEach((el) => el.classList.add('fresh'));
     }
     freshPart = null;
     $('#homeCoins').innerHTML = coinHtml(S.coins);
-    if (S.seasonNo === 0) {
+    const jobs = jobsAt(pl.id);
+    if (!restored(pl.id) || S.seasonNo === 0 || !jobs.length) {
       $('#restoredBar').style.width = (pct * 100).toFixed(1) + '%';
-      $('#restoredTxt').textContent = pct >= 1 ? 'Ivy Cottage is restored' : `${doneCount()} of ${DATA.CHORES.length} jobs done`;
+      $('#restoredTxt').textContent = pct >= 1 ? `${placeName()} is restored` : `${doneCount()} of ${pl.chores.length} jobs done`;
     } else {
-      const jobs = seasonJobs(), d = jobs.filter((j) => S.sdone[j.id]).length;
+      const d = jobs.filter((j) => S.sdone[j.id]).length;
       $('#restoredBar').style.width = ((d / jobs.length) * 100).toFixed(1) + '%';
       $('#restoredTxt').textContent = `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)} · ${d} of ${jobs.length}`;
     }
@@ -104,6 +140,8 @@
     AUDIO.birds((seasonName() === 'spring' || seasonName() === 'summer') && !isEvening());
     const n = nextChore();
     const card = $('#nextCard');
+    // season jobs still waiting somewhere else
+    const elsewhere = S.seasonNo > 0 && DATA.PLACES.find((p) => p.id !== pl.id && owned(p.id) && nextChore(p.id));
     if (n) {
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
@@ -112,9 +150,14 @@
         <div class="nextIcon"></div><button class="go" id="goBtn">Start</button>`;
       card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
+    } else if (elsewhere) {
+      const what = nextRestore(elsewhere.id) ? 'Jobs are waiting' : `${DATA.SEASON_NAMES[seasonName()]} jobs are waiting`;
+      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">All tidy here</div><div class="nextName">${what} at ${placeName(elsewhere.id)}</div>
+        <div class="nextMeta">Everything here is done for now.</div></div><button class="go" id="goBtn">Go there</button>`;
+      $('#goBtn').onclick = () => { AUDIO.pop(); goPlace(elsewhere.id); };
     } else {
       const upcoming = DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)];
-      const title = S.seasonNo === 0 ? 'The cottage is lovely again' : `${DATA.SEASON_NAMES[seasonName()]} is all tidy`;
+      const title = S.seasonNo === 0 ? pl.done : `${DATA.SEASON_NAMES[seasonName()]} is all tidy`;
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${S.seasonNo === 0 ? 'All restored' : 'Season done'}</div><div class="nextName">${title}</div>
         <div class="nextMeta">${upcoming} is on its way, with new jobs.</div></div><button class="go" id="goBtn">${upcoming}</button>`;
       $('#goBtn').onclick = () => {
@@ -125,14 +168,23 @@
       };
     }
     $('#btnShed').classList.toggle('alert', affordableSomething());
+    const offer = placeOffer();
+    $('#btnPlaces').classList.toggle('alert', !!offer && S.coins >= offer.price);
     $('#scene').querySelectorAll('[data-part]').forEach((el) => {
       el.addEventListener('click', () => {
         const part = el.dataset.part;
-        const sj = seasonJobs().find((j) => j.part === part && !S.sdone[j.id]);
-        const c = sj || DATA.CHORES.find((x) => x.part === part);
+        const sj = jobsAt(pl.id).find((j) => j.part === part && !S.sdone[j.id]);
+        const c = sj || pl.chores.find((x) => x.part === part);
         if (c && (sj || S.done[c.id])) { AUDIO.soft(); openJobs(c.id); }
       });
     });
+  }
+  function goPlace(id, bought) {
+    S.place = id; save();
+    $('#sheet').classList.remove('on');
+    renderHome();
+    if (bought) { AUDIO.chime(); seasonCard(DATA.placeOf(id).name, 'It is yours!'); }
+    else AUDIO.shimmer();
   }
 
   // ---------------------------------------------------------------- play
@@ -157,7 +209,7 @@
     if (!resume) for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
     const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
-    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, S.done.wall ? { wallColor: S.colours.wall } : {}) });
+    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}) });
     ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures, resume });
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
@@ -243,7 +295,8 @@
     if (first) freshPart = cur.part;
     AUDIO.chime(); AUDIO.activity(0, false);
     const o = $('#doneOverlay');
-    $('#doneTitle').textContent = U.pick(Math.random, ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
+    $('#doneTitle').textContent = U.pick(Math.random, cur.family === 'plant' ? ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'] : cur.family === 'build' ? ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'] : ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
+    $('#doneBtn').textContent = S.place === 'cafe' ? 'Back to the café' : 'Back to the cottage';
     $('#doneName').textContent = cur.name;
     $('#doneEarn').innerHTML = coinHtml(earnedThis);
     $('#doneBonus').innerHTML = coinHtml(bonus);
@@ -286,6 +339,7 @@
     onProgress: setProgress,
     onActivity: (lvl, down) => AUDIO.activity(lvl, down),
     onAutoFinish() { AUDIO.shimmer(); },
+    onUnit(kind) { AUDIO.unit(kind); },
     onTouch() {
       if ($('#hint').classList.contains('on')) { $('#hint').classList.remove('on'); S.touched++; save(); }
     },
@@ -313,23 +367,24 @@
       c.fillStyle = '#f6efe3'; c.fillRect(0, 0, W, H + band);
       c.drawImage(img, 0, 0, W, H);
       c.fillStyle = '#46623f'; c.font = '900 64px ui-rounded, "SF Pro Rounded", system-ui, sans-serif'; c.textAlign = 'center';
-      c.fillText(cottageName(), W / 2, H + 92);
+      c.fillText(placeName(), W / 2, H + 92);
       c.fillStyle = '#a89c8b'; c.font = '700 30px ui-rounded, system-ui, sans-serif';
-      c.fillText(S.seasonNo ? `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)}` : `${doneCount()} of ${DATA.CHORES.length} jobs done`, W / 2, H + 132);
+      c.fillText(S.seasonNo && restored(S.place) ? `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)}` : `${doneCount()} of ${here().chores.length} jobs done`, W / 2, H + 132);
       const blob = await new Promise((res) => cv.toBlob(res, 'image/png'));
-      const file = new File([blob], 'my-cottage.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: cottageName() });
-      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-cottage.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+      const fname = S.place === 'cafe' ? 'my-cafe.png' : 'my-cottage.png';
+      const file = new File([blob], fname, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: placeName() });
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
     } catch (e) { if (e && e.name !== 'AbortError') toast('Could not make the picture'); }
   }
   const bind = (sel, fn) => { const el = $(sel); if (el) el.onclick = fn; };
   bind('#btnPhoto', () => { AUDIO.soft(); photo(); });
 
-  function seasonCard(name) {
+  function seasonCard(name, small) {
     const el = $('#seasonCard');
-    el.dataset.season = name.toLowerCase();
+    el.dataset.season = small ? seasonName() : name.toLowerCase();
     el.querySelector('b').textContent = name;
-    el.querySelector('small').textContent = `Year ${1 + Math.floor(S.seasonNo / 4)}`;
+    el.querySelector('small').textContent = small || `Year ${1 + Math.floor(S.seasonNo / 4)}`;
     el.classList.remove('on'); void el.offsetWidth; el.classList.add('on');
     setTimeout(() => el.classList.remove('on'), 2600);
   }
@@ -343,12 +398,17 @@
     clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2600);
   }
   function openFinds() {
-    const all = DATA.CHORES.filter((c) => DATA.FINDS[c.id]);
-    const got = all.filter((c) => S.finds[c.id]).length;
-    const cells = all.map((c) => {
-      const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
-      return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : 'Hidden in ' + c.name.replace(/^The /, 'the ')}</span></div>`;
-    }).join('');
+    let places = '';
+    for (const p of DATA.PLACES) {
+      if (!owned(p.id)) continue;
+      const all = p.chores.filter((c) => DATA.FINDS[c.id]);
+      const got = all.filter((c) => S.finds[c.id]).length;
+      const cells = all.map((c) => {
+        const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
+        return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : 'Hidden in ' + c.name.replace(/^The /, 'the ')}</span></div>`;
+      }).join('');
+      places += `<div class="findsHead">${placeName(p.id)} · ${got} of ${all.length}</div><div class="findsGrid">${cells}</div>`;
+    }
     let seasons = '';
     if (S.seasonNo > 0) {
       for (const sn of DATA.SEASON_ORDER) {
@@ -358,7 +418,7 @@
           list.map(([e, nm], i) => { const has = !!S.finds[`${sn}-${i}`]; return `<div class="find${has ? ' has' : ''}"><i>${has ? e : '?'}</i><span>${has ? nm : 'A ' + sn + ' secret'}</span></div>`; }).join('') + '</div>';
       }
     }
-    openSheet('Finds', `<div class="findsHead">The cottage · ${got} of ${all.length}</div><div class="findsGrid">${cells}</div>${seasons}
+    openSheet('Finds', `${places}${seasons}
       <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins. Each season has its own secrets.</div>`);
   }
 
@@ -392,7 +452,7 @@
         ${u ? `<button class="buy${S.coins >= u.cost ? ' can' : ''}" data-fam="${fam}"><span>${u.tier.name}</span><span class="price">${coinHtml(u.cost)}</span></button>` : '<div class="maxed">Best tool</div>'}</div>`);
     }
     const h = helperOffer();
-    if (doneCount() >= DATA.HELPER_UNLOCK) {
+    if (totalDone() >= DATA.HELPER_UNLOCK) {
       rows.push(`<div class="shedRow helperRow"><div class="ic bot"></div><div class="sInfo"><div class="eyebrow">Helpers</div><div class="sName">${S.helpers ? S.helpers + ' tidy-bot' + (S.helpers > 1 ? 's' : '') : 'No helpers yet'}</div><div class="sub">They tidy alongside you on every job</div></div>
         ${h ? `<button class="buy${S.coins >= h.cost ? ' can' : ''}" data-helper="1"><span>${S.helpers ? 'Another' : 'Hire one'}</span><span class="price">${coinHtml(h.cost)}</span></button>` : '<div class="maxed">Full team</div>'}</div>`);
     }
@@ -412,15 +472,16 @@
     });
   }
   function openDecor() {
-    const rows = DATA.DECOR.map((d) => {
+    const at = S.place === 'cafe' ? 'the café' : 'the cottage';
+    const rows = here().decor.map((d) => {
       const has = !!S.decor[d.id];
-      return `<div class="shedRow"><div class="ic emo">${d.icon}</div><div class="sInfo"><div class="sName">${d.name}</div><div class="sub">${has ? 'At the cottage' : 'Appears at the cottage'}</div></div>
+      return `<div class="shedRow"><div class="ic emo">${d.icon}</div><div class="sInfo"><div class="sName">${d.name}</div><div class="sub">${has ? 'At ' + at : 'Appears at ' + at}</div></div>
         ${has ? '<div class="maxed">Yours ✓</div>' : `<button class="buy${S.coins >= d.cost ? ' can' : ''}" data-decor="${d.id}"><span>Buy</span><span class="price">${coinHtml(d.cost)}</span></button>`}</div>`;
     }).join('');
     openSheet('The shed', `<div class="tabs"><button class="tab" id="tabTools">Tools</button><button class="tab on">Decorate</button></div><div class="shedCoins">${coinHtml(S.coins)}</div>${rows}`, (body) => {
       body.querySelector('#tabTools').onclick = () => { AUDIO.soft(); openShed(); };
       body.querySelectorAll('[data-decor]').forEach((b) => b.onclick = () => {
-        const d = DATA.DECOR.find((x) => x.id === b.dataset.decor);
+        const d = here().decor.find((x) => x.id === b.dataset.decor);
         if (S.coins < d.cost) return nope(b);
         S.coins -= d.cost; S.decor[d.id] = Date.now(); save(); AUDIO.buy();
         closeSheet(); toast(`${d.name} added`);
@@ -440,18 +501,18 @@
         <div class="jName">${c.name}<div class="sub">${TOOLS.FAM[c.family].job}${done ? ' · done' + (doneN > 1 ? ' ×' + doneN : '') : ''}</div></div>
         ${locked ? '<div class="lock">Later</div>' : `<button class="jGo" data-id="${c.id}">${done ? 'Again' : 'Start'} ${coinHtml(v)}</button>`}</div>`;
     };
-    const sj = seasonJobs();
+    const sj = jobsAt(S.place), list = here().chores;
     if (sj.length) {
       html += `<div class="jobArea">${DATA.SEASON_NAMES[seasonName()]}</div>`;
       for (const j of sj) html += row(j, S.sdone[j.id]);
     }
-    for (const c of DATA.CHORES) {
+    for (const c of list) {
       if (c.area !== lastArea) { html += `<div class="jobArea">${DATA.AREAS[c.area]}</div>`; lastArea = c.area; }
       html += row(c, S.done[c.id]);
     }
-    openSheet('Jobs', html, (body) => {
+    openSheet(`Jobs · ${placeName()}`, html, (body) => {
       body.querySelectorAll('.jGo').forEach((b) => b.onclick = () => {
-        const c = DATA.CHORES.find((x) => x.id === b.dataset.id) || sj.find((x) => x.id === b.dataset.id);
+        const c = list.find((x) => x.id === b.dataset.id) || sj.find((x) => x.id === b.dataset.id);
         $('#sheet').classList.remove('on'); AUDIO.pop();
         startChore(c, !!(S.done[c.id] || S.sdone[c.id]));
       });
@@ -498,17 +559,50 @@
     });
   }
 
+  // ---------------------------------------------------------------- places
+  function placePic(id, st, opts) {
+    const svg = renderPlace(id, st, opts).replace('<svg ', '<svg width="400" height="540" ');
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+  function openPlaces() {
+    const cards = DATA.PLACES.map((p) => {
+      const own = owned(p.id), isHere = S.place === p.id;
+      const pic = placePic(p.id, own ? partsDone(p.id) : {}, { season: seasonName(), pending: own ? pendingAt(p.id) : {}, decor: own ? S.decor : {}, pct: own ? doneCount(p.id) / p.chores.length : 0, forSale: !own, uid: 'p' });
+      const n = p.chores.length, d = doneCount(p.id);
+      let sub, action;
+      if (own) {
+        const waiting = jobsAt(p.id).filter((j) => !S.sdone[j.id]).length;
+        sub = d < n ? `${d} of ${n} jobs done` : waiting ? `Restored · ${waiting} ${DATA.SEASON_NAMES[seasonName()].toLowerCase()} job${waiting > 1 ? 's' : ''} waiting` : 'Restored and tidy';
+        action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
+      } else {
+        const ready = !p.needs || restored(p.needs);
+        sub = ready ? p.blurb : `${p.blurb} For sale once ${placeName(p.needs)} is restored.`;
+        action = ready ? `<button class="buy${S.coins >= p.price ? ' can' : ''}" data-buy="${p.id}"><span>Buy</span><span class="price">${coinHtml(p.price)}</span></button>` : '<div class="lock">Later</div>';
+      }
+      return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}"><div class="pic"><img alt="" src="${pic}"></div>
+        <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
+    }).join('');
+    openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, keepsakes and decorations. Your coins, tools and helpers come along everywhere.</div>`, (body) => {
+      body.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => goPlace(b.dataset.go));
+      body.querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => {
+        const p = DATA.placeOf(b.dataset.buy);
+        if (owned(p.id) || S.coins < p.price) return nope(b);
+        S.coins -= p.price; S.owned[p.id] = Date.now(); save(); AUDIO.buy();
+        goPlace(p.id, true);
+      });
+    });
+  }
+
   $('#btnShed').onclick = () => { AUDIO.pop(); openShed(); };
   $('#btnJobs').onclick = () => { AUDIO.pop(); openJobs(); };
+  $('#btnPlaces').onclick = () => { AUDIO.pop(); openPlaces(); };
+  $('#home .brand').onclick = () => { AUDIO.pop(); openPlaces(); };
   $('#btnSettings').onclick = () => { AUDIO.pop(); openSettings(); };
   bind('#btnFinds', () => { AUDIO.pop(); openFinds(); });
 
   // ----------------------------------------------------------------- boot
   function renderTitle() {
-    const st = {}, pending = {};
-    for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
-    for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
-    $('#titleScene').innerHTML = HOUSE.render(st, S.colours, { season: seasonName(), pending, decor: S.decor, pct: doneCount() / DATA.CHORES.length, night: isEvening() });
+    $('#titleScene').innerHTML = HOUSE.render(partsDone('cottage'), S.colours, { season: seasonName(), pending: pendingAt('cottage'), decor: S.decor, pct: doneCount('cottage') / DATA.CHORES.length, night: isEvening() });
     if (S.name) $('#title .logo span').textContent = S.name;
     if (S.earned > 0) $('#title .tap').textContent = 'Back to the cottage';
     const standalone = navigator.standalone || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
@@ -537,5 +631,8 @@
   }
 
   // test hooks
-  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startJob: (c) => startChore(c, false), render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish() };
+  window.__ivy = {
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startJob: (c) => startChore(c, false),
+    render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
+  };
 })();

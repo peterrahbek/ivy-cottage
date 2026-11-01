@@ -4,7 +4,8 @@
 //
 // Layers (all full-screen canvases at device resolution, same transform):
 //   decor -> clean -> cleanOver -> live (per frame) -> dirt masked by grid
-//   -> top -> helpers/particles/tool (per frame) -> flying coins (screen space)
+//   -> finished pieces (planks, plants) -> top -> helpers/particles/tool
+//   (per frame) -> flying coins (screen space)
 
 const ENGINE = (() => {
   const W = SCENES.W, H = SCENES.H, CELL = 3;
@@ -79,6 +80,7 @@ const ENGINE = (() => {
     L.dirt.x.save(); L.dirt.x.clip(scene.region, 'evenodd'); scene.dirt(L.dirt.x); L.dirt.x.restore();
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
     if (scene.depth) L.shadow = layer();
+    if (units.length) { L.units = layer(); for (const u of units) if (u.done && !growing.includes(u)) scene.drawUnit(L.units.x, u, 1); }
     L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
     release(old);
     maskDirty = true;
@@ -127,6 +129,7 @@ const ENGINE = (() => {
   }
 
   function setCell(k, v) {
+    if (cellUnit && cellUnit[k] >= 0) unitHp[cellUnit[k]] += v - hp[k];
     hp[k] = v;
     maskImg.data[k * 4 + 3] = Math.round(v * 255);
     maskDirty = true;
@@ -191,10 +194,79 @@ const ENGINE = (() => {
         removed += Math.min(before, dec);
         if (after <= 0.06) clearCell(idx);
         else setCell(idx, after);
+        if (cellUnit) { const u = cellUnit[idx]; if (u >= 0 && !touchedMark[u]) { touchedMark[u] = 1; touched.push(u); } }
       }
     }
+    if (touched.length) checkUnits();
     if (scene.stamp) { scene.stamp(L.clean.x, x, y, a, t, paint, isHelper); stamped = true; }
     return removed;
+  }
+
+  // ------------------------------------------------------------------ units
+  // Some jobs are made of pieces: planks, bricks and tiles that click into
+  // place, plants that spring up. Each piece owns the cells under it; once
+  // enough of them are worked it completes itself and pops in.
+  let units = [], growing = [], cellUnit = null, unitHp = null, unitN = null;
+  let touched = [], touchedMark = new Uint8Array(0);
+  const unitDur = () => scene.unitDur || 0.45;
+  function setupUnits() {
+    units = scene.units || [];
+    growing = []; touched = [];
+    cellUnit = null;
+    if (!units.length) return;
+    cellUnit = new Int16Array(GW * GH).fill(-1);
+    unitHp = new Float32Array(units.length); unitN = new Uint16Array(units.length);
+    touchedMark = new Uint8Array(units.length);
+    units.forEach((u, ui) => {
+      const circle = u.shape === 'circle';
+      const bx0 = circle ? u.x - u.r : u.x, by0 = circle ? u.y - u.r : u.y;
+      const bx1 = circle ? u.x + u.r : u.x + u.w, by1 = circle ? u.y + u.r : u.y + u.h;
+      u.cx = (bx0 + bx1) / 2; u.cy = (by0 + by1) / 2; u.sw = bx1 - bx0; u.sh = by1 - by0;
+      u.cells = [];
+      for (let j = Math.max(0, Math.floor(by0 / CELL)); j <= Math.min(GH - 1, Math.floor(by1 / CELL)); j++) {
+        for (let i = Math.max(0, Math.floor(bx0 / CELL)); i <= Math.min(GW - 1, Math.floor(bx1 / CELL)); i++) {
+          const k = j * GW + i;
+          if (!inReg[k] || cellUnit[k] >= 0) continue;
+          const x = (i + 0.5) * CELL, y = (j + 0.5) * CELL;
+          if (circle ? Math.hypot(x - u.x, y - u.y) > u.r : x < bx0 || x > bx1 || y < by0 || y > by1) continue;
+          cellUnit[k] = ui; u.cells.push(k); unitHp[ui] += hp[k];
+        }
+      }
+      unitN[ui] = u.cells.length;
+      // nothing left to do here (or a half-done job being picked up again)
+      u.done = !u.cells.length || unitHp[ui] <= 0.001;
+      u.t = 0;
+    });
+  }
+  function checkUnits() {
+    const need = scene.unitThreshold || 0.45;
+    for (const ui of touched) {
+      touchedMark[ui] = 0;
+      if (!units[ui].done && 1 - unitHp[ui] / unitN[ui] >= need) completeUnit(ui, false);
+    }
+    touched.length = 0;
+  }
+  function completeUnit(ui, quiet) {
+    const u = units[ui];
+    if (u.done) return;
+    u.done = true;
+    for (const k of u.cells) if (hp[k] > 0) clearCell(k);
+    if (quiet) { if (L && L.units) scene.drawUnit(L.units.x, u, 1); return; }
+    u.t = 0; growing.push(u);
+    cb.onUnit && cb.onUnit(scene.unitKind || 'build');
+    const kind = scene.unitParticle || 'dust', cols = PCOL[kind] || PCOL.dust;
+    for (let i = 0; i < 7; i++) {
+      if (parts.length > 300) parts.shift();
+      parts.push({ x: u.cx + (Math.random() - 0.5) * u.sw * 0.8, y: u.cy + (Math.random() - 0.5) * u.sh * 0.8, vx: (Math.random() - 0.5) * 70, vy: -25 - Math.random() * 45, life: 0, max: 0.45 + Math.random() * 0.4, kind, rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 10, s: kind === 'dust' ? 3 + Math.random() * 4 : 1 + Math.random() * 1.4, col: cols[(Math.random() * cols.length) | 0] });
+    }
+    if (scene.unitKind === 'plant') for (let i = 0; i < 4; i++) sparkle(u.cx + (Math.random() - 0.5) * u.sw, u.cy + (Math.random() - 0.5) * u.sh);
+  }
+  function stepUnits(dt) {
+    for (let i = growing.length - 1; i >= 0; i--) {
+      const u = growing[i];
+      u.t += dt;
+      if (u.t >= unitDur()) { growing.splice(i, 1); if (L && L.units) scene.drawUnit(L.units.x, u, 1); }
+    }
   }
 
   function sweep(x0, y0, x1, y1, a, t, isHelper) {
@@ -245,6 +317,8 @@ const ENGINE = (() => {
     suds: ['#ffffff'],
     water: ['#bfe6f5'],
     snow: ['#ffffff', '#eef6fb', '#dfeaf3'],
+    soil: ['#6b4a32', '#5a3d28', '#7d5a3e', '#8a6a4a'],
+    chips: ['#e3c99a', '#d4b483', '#c9a56e', '#b98f5a'],
   };
   function spawn(kind, x, y, a, amount, t) {
     const n = Math.min(5, amount * 0.9 + (Math.random() < amount * 0.9 % 1 ? 1 : 0));
@@ -522,12 +596,16 @@ const ENGINE = (() => {
       if (hp[k] <= 0) continue;
       const x = ((k % GW) + 0.5) * CELL, y = (((k / GW) | 0) + 0.5) * CELL;
       clearCell(k);
+      if (cellUnit && cellUnit[k] >= 0 && !touchedMark[cellUnit[k]]) { touchedMark[cellUnit[k]] = 1; touched.push(cellUnit[k]); }
       if (scene.stamp) scene.stamp(L.clean.x, x, y, -Math.PI / 2, dot, paint, true);
       if (Math.random() < 0.25) sparkle(x, y);
     }
+    if (touched.length) checkUnits();
+    // the last pieces drop in as the final cells go
+    if (f.t >= f.dur) for (let i = 0; i < units.length; i++) if (!units[i].done) completeUnit(i, false);
     if (f.t >= f.dur) {
       f.hold += dt;
-      if (f.hold > 0.45 && !done) { done = true; tool.down = false; tool.pid = null; flushEarn(); cb.onDone && cb.onDone(); }
+      if (f.hold > Math.max(0.45, growing.length ? unitDur() : 0) && !done) { done = true; tool.down = false; tool.pid = null; flushEarn(); cb.onDone && cb.onDone(); }
     }
   }
 
@@ -559,6 +637,7 @@ const ENGINE = (() => {
       else if (cleaned / total > 0.85) hintLeftovers(dt);
     } else stepFinish(dt);
     stepGems(dt);
+    if (growing.length) stepUnits(dt);
     stepParts(dt); stepCoins(dt);
     smoothAct += (Math.min(1, activity / 6) - smoothAct) * Math.min(1, dt * 10);
     cb.onActivity && cb.onActivity(tool.down ? smoothAct : 0, tool.down);
@@ -601,6 +680,14 @@ const ENGINE = (() => {
     }
     if (L.shadow) ctx.drawImage(L.shadow.c, 1.2 * S, 2.4 * S);
     ctx.drawImage(L.comp.c, 0, 0);
+    if (L.units) {
+      ctx.drawImage(L.units.c, 0, 0);
+      if (growing.length) {
+        ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
+        for (const u of growing) scene.drawUnit(ctx, u, Math.min(1, u.t / unitDur()));
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+      }
+    }
     if (L.top) ctx.drawImage(L.top.c, 0, 0);
     ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
     if (scene.liveTop) scene.liveTop(ctx, clock);
@@ -620,6 +707,7 @@ const ENGINE = (() => {
     scene = SCENES.build(def.scene, def.opts, def.seed, bleed());
     buildGrid();
     if (o.resume) restoreGrid(o.resume);
+    setupUnits();
     paintLayers(false);
     valuePerCell = o.value / total;
     coinUnit = Math.max(1, o.value / 36);
@@ -657,6 +745,9 @@ const ENGINE = (() => {
     for (let pass = 0; pass < 3; pass++) for (let y = 0; y <= H; y += Math.max(4, rch)) sweep(0, y, W, y, 0, tier, false);
   }
 
+  // test hook: one straight stroke with the current tool, in board units
+  function debugStroke(x0, y0, x1, y1) { sweep(x0, y0, x1, y1, Math.atan2(y1 - y0, x1 - x0), tier, false); }
+
   // ------------------------------------------------------- half-done jobs
   // The dirt grid packed as one hex digit per cell, so a job left halfway can
   // pick up where it was.
@@ -683,9 +774,10 @@ const ENGINE = (() => {
   // test hook: finish at once without waiting for animation frames
   function debugFinish() {
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
+    for (let i = 0; i < units.length; i++) if (!units[i].done) completeUnit(i, true);
     stepGems(0);
     if (!done) { done = true; flushEarn(); cb.onDone && cb.onDone(); }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugFinish, snapshot, get scale() { return scale; }, get total() { return total; } };
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugStroke, debugFinish, snapshot, get scale() { return scale; }, get total() { return total; } };
 })();
