@@ -34,7 +34,7 @@
     const bigWeeds = [];
     for (let i = 0; i < 14; i++) { const x = 40 + r() * 280, y = 80 + r() * 440; if (inside(region, x, y)) bigWeeds.push([x, y, 16 + r() * 10]); }
     return {
-      family: 'weed', particle: 'weed', region,
+      family: 'weed', particle: 'weed', region, depth: true,
       tough(x, y) { for (const [wx, wy, s] of bigWeeds) if (Math.hypot(x - wx, y - wy) < s * 0.6) return 1.6; return 1; },
       decor(c) {
         lawnAround(c, r, nz, bleed);
@@ -116,7 +116,7 @@
       { col: '#e0485a', spot: '#ffffff', ph: 1, sp: 0.15, rx: 60, ry: 90 },
     ];
     return {
-      family: 'skim', particle: 'water', region,
+      family: 'skim', particle: 'water', region, depth: true,
       tough: (x, y) => (nz.n2(x * 0.03, y * 0.03) > 0.7 ? 1.5 : 1),
       decor(c) {
         lawnAround(c, r, nz, bleed);
@@ -219,7 +219,7 @@
     if (chim) region.rect(chim[0], chim[1], chim[2], chim[3]);
     if (skylight) region.rect(skylight[0], skylight[1], skylight[2], skylight[3]);
     return {
-      family: 'scrub', particle: 'moss', region,
+      family: 'scrub', particle: 'moss', region, depth: true,
       tough: (x, y) => (nz.fbm(x * 0.025 + 7, y * 0.025, 3) > 0.58 ? 1.6 : 1),
       decor(c) {
         const g = c.createLinearGradient(0, bleed.y0, 0, 80);
@@ -252,14 +252,19 @@
         const g = ramp(['#4a5a28', '#5b6d2e', '#6d8236', '#7d8f40', '#8a8a52']);
         field(c, 0, 60, W, 545, 2, (x, y) => g(nz.fbm(x * 0.04, y * 0.04, 5)));
         // moss cushions, bigger where the dirt is tough
-        for (let i = 0; i < 520; i++) {
+        for (let i = 0; i < 360; i++) {
           const x = r() * W, y = 70 + r() * 470;
           const big = nz.fbm(x * 0.025 + 7, y * 0.025, 3) > 0.58;
-          const s = big ? 7 + r() * 9 : 3 + r() * 5;
-          c.fillStyle = U.pick(r, big ? ['#5f8a2e', '#6f9a36', '#7fa83e'] : ['#5c7a2e', '#6f9037', '#4b6626', '#86a646']);
-          c.beginPath(); c.arc(x, y, s, 0, 7); c.fill();
-          c.fillStyle = 'rgba(255,255,220,0.2)'; c.beginPath(); c.arc(x - s * 0.3, y - s * 0.35, s * 0.45, 0, 7); c.fill();
-          c.fillStyle = 'rgba(20,30,10,0.18)'; c.beginPath(); c.arc(x + s * 0.2, y + s * 0.4, s * 0.6, 0, 3.14); c.fill();
+          const s = big ? 8 + r() * 9 : 4 + r() * 5;
+          const base = U.pick(r, big ? ['#5f8a2e', '#6f9a36', '#7fa83e'] : ['#5c7a2e', '#6f9037', '#4b6626', '#86a646']);
+          c.fillStyle = 'rgba(20,30,10,0.22)'; c.beginPath(); c.ellipse(x + s * 0.15, y + s * 0.35, s, s * 0.75, 0, 0, 7); c.fill();
+          for (let k = 0; k < 10; k++) {
+            const a = r() * 6.283, d = r() * s * 0.6;
+            c.fillStyle = U.shade(base, (r() - 0.45) * 0.3);
+            c.beginPath(); c.arc(x + Math.cos(a) * d, y + Math.sin(a) * d * 0.8, s * (0.22 + r() * 0.22), 0, 7); c.fill();
+          }
+          c.fillStyle = 'rgba(230,245,170,0.35)';
+          for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x - s * 0.3 + r() * s * 0.4, y - s * 0.35 + r() * s * 0.3, 0.9, 0, 7); c.fill(); }
         }
         for (let i = 0; i < 60; i++) {
           const x = r() * W, y = 70 + r() * 470, s = 3 + r() * 6;

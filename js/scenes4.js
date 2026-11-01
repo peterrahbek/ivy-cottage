@@ -48,6 +48,7 @@
     const baseDecor = scene.decor;
 
     if (kind === 'leaves') {
+      scene.depth = true;
       scene.decor = (c) => {
         baseDecor(c);
         for (let i = 0; i < 160; i++) {
@@ -72,6 +73,7 @@
         scene.dirt = (c) => leafLayer(c, r, nz, 0, 0, W, H, 2600);
       }
     } else if (kind === 'snow') {
+      scene.depth = true;
       scene.decor = (c) => {
         baseDecor(c);
         // everything outside the job is snowed over too
@@ -99,6 +101,7 @@
         }
       };
     } else if (kind === 'frost') {
+      scene.depth = false;
       scene.family = 'wash'; scene.particle = 'snow';
       scene.tough = (x, y) => (nz.n2(x * 0.03, y * 0.03) > 0.7 ? 1.5 : 1);
       scene.dirt = (c) => {

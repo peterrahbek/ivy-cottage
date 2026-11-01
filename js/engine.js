@@ -31,7 +31,8 @@ const ENGINE = (() => {
     cv.addEventListener('pointerup', onUp);
     cv.addEventListener('pointercancel', onUp);
     cv.addEventListener('lostpointercapture', onUp);
-    window.addEventListener('resize', () => { if (running) relayout(); });
+    let rt = 0;
+    window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (running) relayout(); }, 150); });
   }
 
   // -------------------------------------------------------------- geometry
@@ -70,6 +71,7 @@ const ENGINE = (() => {
     if (scene.cleanOver) { L.over = layer(); L.over.x.save(); L.over.x.clip(scene.region, 'evenodd'); scene.cleanOver(L.over.x); L.over.x.restore(); }
     L.dirt.x.save(); L.dirt.x.clip(scene.region, 'evenodd'); scene.dirt(L.dirt.x); L.dirt.x.restore();
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
+    if (scene.depth) L.shadow = layer();
     L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
     maskDirty = true;
   }
@@ -551,8 +553,19 @@ const ENGINE = (() => {
       cx.imageSmoothingEnabled = true; cx.imageSmoothingQuality = 'high';
       cx.drawImage(maskCv, 0, 0, GW, GH, ox * dpr, oy * dpr, W * S, H * S);
       cx.restore();
+      if (L.shadow) {
+        // thick mess (tall grass, moss, leaves, snow) casts a soft shadow
+        const sx = L.shadow.x;
+        sx.save(); sx.setTransform(1, 0, 0, 1, 0, 0);
+        sx.clearRect(0, 0, L.shadow.c.width, L.shadow.c.height);
+        sx.drawImage(L.comp.c, 0, 0);
+        sx.globalCompositeOperation = 'source-in';
+        sx.fillStyle = 'rgba(25,30,15,0.4)'; sx.fillRect(0, 0, L.shadow.c.width, L.shadow.c.height);
+        sx.restore();
+      }
       maskDirty = false;
     }
+    if (L.shadow) ctx.drawImage(L.shadow.c, 1.2 * S, 2.4 * S);
     ctx.drawImage(L.comp.c, 0, 0);
     if (L.top) ctx.drawImage(L.top.c, 0, 0);
     ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);

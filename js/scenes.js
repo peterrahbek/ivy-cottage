@@ -194,7 +194,7 @@ const SCENES = (() => {
     for (const h of holes) h(region);
 
     return {
-      family: 'mow', particle: 'grass', region,
+      family: 'mow', particle: 'grass', region, depth: true,
       decor(c) {
         mulch(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1);
         // shrubs and flowers wherever there is no lawn
@@ -285,7 +285,7 @@ const SCENES = (() => {
     }
     const stoneCols = ['#cfc6b8', '#bdb3a3', '#d8d0c2', '#c4b8a5', '#b9b1a6', '#d2c3ad'];
     return {
-      family: 'scrub', particle: 'moss', region,
+      family: 'scrub', particle: 'moss', region, depth: true,
       tough(x, y) {
         if (opts.shape === 'stepping') return 1;
         for (const p of pavers) if (x > p.x && x < p.x + p.w && y > p.y && y < p.y + p.h) return 1;

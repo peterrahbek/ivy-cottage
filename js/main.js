@@ -388,6 +388,14 @@
   $('#btnFinds').onclick = () => { AUDIO.pop(); openFinds(); };
 
   // ----------------------------------------------------------------- boot
+  function renderTitle() {
+    const st = {}, pending = {};
+    for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
+    for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
+    $('#titleScene').innerHTML = HOUSE.render(st, S.colours, { season: seasonName(), pending, decor: S.decor, pct: doneCount() / DATA.CHORES.length });
+    if (S.earned > 0) $('#title .tap').textContent = 'Back to the cottage';
+  }
+  renderTitle();
   $('#title').addEventListener('click', () => {
     AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
     AUDIO.pop();
