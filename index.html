@@ -171,6 +171,22 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .find.has span{color:var(--ink);font-size:11.5px}
 .find.has i{background:#fbf2d5}
 
+.tabs{display:flex;gap:6px;background:var(--paper2);padding:4px;border-radius:14px;margin:0 0 12px}
+.tab{flex:1;padding:9px;border-radius:11px;font-weight:800;font-size:14px;color:var(--ink2)}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+.shedRow .ic.emo{font-size:30px}
+#scene .bulb{animation:twinkle 1.8s ease-in-out infinite alternate}
+#scene .bulb:nth-child(3n){animation-delay:.6s}#scene .bulb:nth-child(3n+1){animation-delay:1.2s}
+@keyframes twinkle{to{opacity:.45}}
+#scene .balloon{animation:float 7s ease-in-out infinite alternate}
+@keyframes float{to{transform:translate(18px,-8px)}}
+#scene .swing{animation:swing 3s ease-in-out infinite alternate;transform-origin:85px 318px}
+@keyframes swing{from{transform:rotate(-6deg)}to{transform:rotate(6deg)}}
+#scene .bee{animation:bee 2s linear infinite}
+@keyframes bee{25%{transform:translate(5px,-4px)}50%{transform:translate(-3px,-7px)}75%{transform:translate(-6px,-1px)}}
+#scene.newdecor svg{animation:newdecor .6s ease}
+@keyframes newdecor{40%{filter:brightness(1.25)}}
+
 /* ---------------------------------------------------------------- sheet */
 #sheet{position:fixed;inset:0;background:rgba(40,30,20,.3);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 #sheet.on{opacity:1;pointer-events:auto}
@@ -193,7 +209,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .tiers i.on{background:var(--sage-d)}
 .buy{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper2);border:1.5px solid var(--line);border-radius:14px;padding:7px 10px;font-weight:800;font-size:12px;min-width:96px}
 .buy span{display:flex;align-items:center}
-.buy .coin + span{font-size:15px}
+.buy .price{display:flex;align-items:center;font-size:15px}
 .buy.can{background:var(--sage-d);color:#fff;border-color:#3f6b3c;box-shadow:0 3px 0 #3f6b3c}
 .maxed{font-size:12px;font-weight:800;color:var(--sage-d)}
 .jobArea{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:12px 4px 6px}

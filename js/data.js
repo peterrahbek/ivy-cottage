@@ -122,5 +122,26 @@ const DATA = (() => {
   // what you do in each kind of job, for the first-time hint
   const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel' };
 
-  return { AREAS, CHORES, FINDS, VERBS, SEASON_NAMES, seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
+  // decorations for the cottage, bought in the shed once a few jobs are done
+  const DECOR = [
+    { id: 'gnome', name: 'Garden gnome', icon: '🧙', cost: 120 },
+    { id: 'pots', name: 'Flower pots by the door', icon: '🌸', cost: 220 },
+    { id: 'mailbox', name: 'A red mailbox', icon: '📮', cost: 350 },
+    { id: 'birdhouse', name: 'A bird house', icon: '🐦', cost: 500 },
+    { id: 'lantern', name: 'Lantern by the door', icon: '🏮', cost: 700 },
+    { id: 'windowboxes', name: 'Window boxes', icon: '🌺', cost: 950 },
+    { id: 'bench', name: 'A garden bench', icon: '🪑', cost: 1300 },
+    { id: 'cat2', name: 'A second cat', icon: '🐈', cost: 1700 },
+    { id: 'wreath', name: 'A wreath for the door', icon: '💚', cost: 2200 },
+    { id: 'lights', name: 'String lights on the fence', icon: '✨', cost: 2800 },
+    { id: 'picnic', name: 'A picnic blanket', icon: '🧺', cost: 3600 },
+    { id: 'beehive', name: 'A beehive', icon: '🐝', cost: 4600 },
+    { id: 'bicycle', name: 'A bicycle with a basket', icon: '🚲', cost: 6000 },
+    { id: 'swing', name: 'A swing on the old tree', icon: '🌳', cost: 8000 },
+    { id: 'vane', name: 'A weather vane', icon: '🐓', cost: 10500 },
+    { id: 'balloon', name: 'A hot-air balloon', icon: '🎈', cost: 15000 },
+  ];
+  const DECOR_UNLOCK = 6;
+
+  return { AREAS, CHORES, FINDS, VERBS, DECOR, DECOR_UNLOCK, SEASON_NAMES, seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
 })();

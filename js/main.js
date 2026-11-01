@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, started: Date.now() };
   }
   function load() {
     try {
@@ -44,7 +44,8 @@
       if (u && S.coins >= u.cost) return true;
     }
     const h = helperOffer();
-    return !!(h && S.coins >= h.cost);
+    if (h && S.coins >= h.cost) return true;
+    return doneCount() >= DATA.DECOR_UNLOCK && DATA.DECOR.some((d) => !S.decor[d.id] && S.coins >= d.cost);
   }
   function helperOffer() {
     if (doneCount() < DATA.HELPER_UNLOCK) return null;
@@ -66,7 +67,7 @@
     for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
     for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
     const pct = doneCount() / DATA.CHORES.length;
-    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending });
+    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending, decor: S.decor });
     if (freshPart) {
       const g = $('#scene').querySelectorAll(`[data-part="${freshPart}"]`);
       g.forEach((el) => el.classList.add('fresh'));
@@ -295,14 +296,16 @@
       const t = tierOf(fam), u = nextUpgrade(fam);
       const dots = F.tiers.map((_, i) => `<i class="${i <= tierIdx(fam) ? 'on' : ''}"></i>`).join('');
       rows.push(`<div class="shedRow" data-fam="${fam}"><div class="ic"></div><div class="sInfo"><div class="eyebrow">${F.name}</div><div class="sName">${t.name}</div><div class="tiers">${dots}</div></div>
-        ${u ? `<button class="buy${S.coins >= u.cost ? ' can' : ''}" data-fam="${fam}"><span>${u.tier.name}</span>${coinHtml(u.cost)}</button>` : '<div class="maxed">Best tool</div>'}</div>`);
+        ${u ? `<button class="buy${S.coins >= u.cost ? ' can' : ''}" data-fam="${fam}"><span>${u.tier.name}</span><span class="price">${coinHtml(u.cost)}</span></button>` : '<div class="maxed">Best tool</div>'}</div>`);
     }
     const h = helperOffer();
     if (doneCount() >= DATA.HELPER_UNLOCK) {
       rows.push(`<div class="shedRow helperRow"><div class="ic bot"></div><div class="sInfo"><div class="eyebrow">Helpers</div><div class="sName">${S.helpers ? S.helpers + ' tidy-bot' + (S.helpers > 1 ? 's' : '') : 'No helpers yet'}</div><div class="sub">They tidy alongside you on every job</div></div>
-        ${h ? `<button class="buy${S.coins >= h.cost ? ' can' : ''}" data-helper="1"><span>${S.helpers ? 'Another' : 'Hire one'}</span>${coinHtml(h.cost)}</button>` : '<div class="maxed">Full team</div>'}</div>`);
+        ${h ? `<button class="buy${S.coins >= h.cost ? ' can' : ''}" data-helper="1"><span>${S.helpers ? 'Another' : 'Hire one'}</span><span class="price">${coinHtml(h.cost)}</span></button>` : '<div class="maxed">Full team</div>'}</div>`);
     }
-    openSheet('The shed', `<div class="shedCoins">${coinHtml(S.coins)}</div>` + rows.join(''), (body) => {
+    const tabs = doneCount() >= DATA.DECOR_UNLOCK ? `<div class="tabs"><button class="tab on">Tools</button><button class="tab" id="tabDecor">Decorate</button></div>` : '';
+    openSheet('The shed', tabs + `<div class="shedCoins">${coinHtml(S.coins)}</div>` + rows.join(''), (body) => {
+      const td = body.querySelector('#tabDecor'); if (td) td.onclick = () => { AUDIO.soft(); openDecor(); };
       body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(tierOf(row.dataset.fam), 52)));
       body.querySelectorAll('.buy').forEach((b) => b.onclick = () => {
         if (b.dataset.helper) {
@@ -312,6 +315,23 @@
         const fam = b.dataset.fam, u = nextUpgrade(fam);
         if (!u || S.coins < u.cost) return nope(b);
         S.coins -= u.cost; S.tiers[fam] = tierIdx(fam) + 1; save(); AUDIO.buy(); toast(`${u.tier.name}!`); openShed();
+      });
+    });
+  }
+  function openDecor() {
+    const rows = DATA.DECOR.map((d) => {
+      const has = !!S.decor[d.id];
+      return `<div class="shedRow"><div class="ic emo">${d.icon}</div><div class="sInfo"><div class="sName">${d.name}</div><div class="sub">${has ? 'At the cottage' : 'Appears at the cottage'}</div></div>
+        ${has ? '<div class="maxed">Yours ✓</div>' : `<button class="buy${S.coins >= d.cost ? ' can' : ''}" data-decor="${d.id}"><span>Buy</span><span class="price">${coinHtml(d.cost)}</span></button>`}</div>`;
+    }).join('');
+    openSheet('The shed', `<div class="tabs"><button class="tab" id="tabTools">Tools</button><button class="tab on">Decorate</button></div><div class="shedCoins">${coinHtml(S.coins)}</div>${rows}`, (body) => {
+      body.querySelector('#tabTools').onclick = () => { AUDIO.soft(); openShed(); };
+      body.querySelectorAll('[data-decor]').forEach((b) => b.onclick = () => {
+        const d = DATA.DECOR.find((x) => x.id === b.dataset.decor);
+        if (S.coins < d.cost) return nope(b);
+        S.coins -= d.cost; S.decor[d.id] = Date.now(); save(); AUDIO.buy();
+        closeSheet(); toast(`${d.name} added`);
+        const sc = $('#scene'); sc.classList.remove('newdecor'); void sc.offsetWidth; sc.classList.add('newdecor');
       });
     });
   }

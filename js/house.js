@@ -305,6 +305,49 @@ const HOUSE = (() => {
       + `<rect x="160" y="488" width="6" height="46" rx="1" fill="#8d7a64"/><rect x="234" y="488" width="6" height="46" rx="1" fill="#8d7a64"/>`;
   }
 
+  // ------------------------------------------------------------ decorations
+  // Bought in the shed; each one is a small drawing at a fixed spot.
+  const DECOR = {
+    gnome: () => `<g><ellipse cx="296" cy="366" rx="7" ry="2" fill="#00000022"/><path d="M290 366 l2 -12 h8 l2 12z" fill="#3d5a86"/><circle cx="296" cy="351" r="4" fill="#f2c9a0"/>
+      <path d="M296 357 q-5 4 -3 9 h6 q2 -5 -3 -9z" fill="#fff"/><path d="M290.5 349 L296 333 L301.5 349z" fill="#d9534f"/></g>`,
+    pots: () => [170, 230].map((x) => `<path d="M${x - 6} 334 h12 l-2 9 h-8z" fill="#c8763f"/><circle cx="${x - 3}" cy="330" r="3.6" fill="#ef8aa6"/><circle cx="${x + 3}" cy="331" r="3.4" fill="#f7c548"/><circle cx="${x}" cy="327" r="3" fill="#bba9df"/>`).join(''),
+    mailbox: () => `<g><rect x="247" y="470" width="3" height="22" fill="#6b4a32"/><path d="M241 462 h15 v10 h-15z M241 462 q7.5 -8 15 0" fill="#c9474f"/><rect x="254" y="459" width="2" height="7" fill="#f2c230"/></g>`,
+    lantern: () => `<g><rect x="232" y="268" width="2" height="8" fill="#3d3d42"/><rect x="228.5" y="276" width="9" height="13" rx="2" fill="#3d3d42"/><rect x="230.5" y="278" width="5" height="9" fill="#ffe08a"/>
+      <circle cx="233" cy="283" r="14" fill="#ffe08a" opacity="0.18"/></g>`,
+    birdhouse: () => `<g><rect x="56" y="350" width="12" height="13" fill="#d98b63"/><path d="M54 351 l8 -7 l8 7z" fill="#8e4430"/><circle cx="62" cy="357" r="2.2" fill="#3d2a1e"/><rect x="61" y="363" width="2" height="3" fill="#6b4a32"/></g>`,
+    windowboxes: () => [[122, 299, 40], [238, 299, 40], [134, 223, 34], [232, 223, 34]].map(([x, y, w]) => `<rect x="${x}" y="${y + 6}" width="${w}" height="5" rx="1" fill="#8a5a3c"/>` +
+      Array.from({ length: 6 }, (_, i) => `<circle cx="${x + 4 + i * (w - 8) / 5}" cy="${y + 5}" r="2.4" fill="${['#e0485a', '#f7c548', '#ef8aa6'][i % 3]}"/>`).join('')).join(''),
+    wreath: () => `<g><circle cx="200" cy="290" r="8" fill="none" stroke="#4f8a3c" stroke-width="4"/><circle cx="194" cy="286" r="1.4" fill="#d9534f"/><circle cx="205" cy="293" r="1.4" fill="#d9534f"/><path d="M196 297 l4 -3 l4 3 l-4 2z" fill="#d9534f"/></g>`,
+    bench: () => `<g><ellipse cx="128" cy="438" rx="24" ry="3" fill="#00000022"/><rect x="108" y="420" width="40" height="5" rx="1.5" fill="#a77b56"/><rect x="108" y="426" width="40" height="4" rx="1.5" fill="#8a6142"/>
+      <rect x="110" y="430" width="3" height="8" fill="#3d3d42"/><rect x="143" y="430" width="3" height="8" fill="#3d3d42"/><rect x="108" y="412" width="40" height="4" rx="1.5" fill="#a77b56"/></g>`,
+    lights: () => {
+      const seg = (x0, x1) => { let d = `<path d="M${x0} 488 ${Array.from({ length: Math.round((x1 - x0) / 20) }, (_, i) => `Q${x0 + i * 20 + 10} 496 ${x0 + (i + 1) * 20} 488`).join(' ')}" stroke="#4a4a50" stroke-width="0.8" fill="none"/>`;
+        for (let x = x0 + 10; x < x1; x += 20) d += `<circle class="bulb" cx="${x}" cy="493" r="2.2" fill="${['#ffe08a', '#ffb3c1', '#b3e5ff', '#c8f2b0'][(x / 20 | 0) % 4]}"/>`;
+        return d; };
+      return `<g>${seg(0, 160)}${seg(240, 400)}</g>`;
+    },
+    picnic: () => `<g><path d="M236 430 l44 -6 l10 20 l-46 7z" fill="#e05b5b"/><path d="M247 428 l10 21 M258 427 l10 21 M269 425 l10 21 M240 437 l46 -6 M243 444 l45 -6" stroke="#fff" stroke-width="2" opacity="0.6"/>
+      <rect x="262" y="428" width="13" height="9" rx="2" fill="#c98a50"/><path d="M263 428 q5.5 -7 11 0" stroke="#8a5a3c" stroke-width="1.4" fill="none"/></g>`,
+    beehive: () => `<g><rect x="366" y="430" width="3" height="10" fill="#6b4a32"/><ellipse cx="368" cy="420" rx="11" ry="12" fill="#f2c230"/>
+      <path d="M357.5 414 h21 M357 420 h22 M357.5 426 h21" stroke="#c9952a" stroke-width="1.4"/><ellipse cx="368" cy="428" rx="3" ry="2" fill="#5a3e1a"/>
+      <circle class="bee" cx="380" cy="410" r="1.6" fill="#3d3d42"/></g>`,
+    bicycle: () => `<g><circle cx="292" cy="520" r="9" fill="none" stroke="#3d3d42" stroke-width="2"/><circle cx="318" cy="520" r="9" fill="none" stroke="#3d3d42" stroke-width="2"/>
+      <path d="M292 520 l10 -14 h12 l4 14 M302 506 l-3 14 h-7 M314 506 l-2 -5 h-4 M302 506 l-2 -4 h6" stroke="#5aa6a0" stroke-width="2.4" fill="none"/>
+      <path d="M311 499 h10 v6 h-10z" fill="#c98a50"/><circle cx="313" cy="498" r="2" fill="#ef8aa6"/><circle cx="318" cy="497" r="2" fill="#f7c548"/></g>`,
+    swing: () => `<g class="swing"><path d="M74 318 V392 M96 318 V392" stroke="#8a6142" stroke-width="1.4"/><rect x="70" y="390" width="30" height="5" rx="2" fill="#a77b56"/></g>`,
+    vane: () => `<g><rect x="199" y="56" width="2" height="20" fill="#3d3d42"/><path d="M190 62 h20" stroke="#3d3d42" stroke-width="1.2"/>
+      <path d="M195 56 q3 -8 9 -5 q4 2 3 6 q-1 3 -4 3 h-7 q-2 0 -1 -4z" fill="#3d3d42"/><circle cx="200" cy="76" r="2" fill="#3d3d42"/></g>`,
+    cat2: () => `<g><ellipse cx="152" cy="303" rx="7" ry="4.5" fill="#6d6d78"/><circle cx="146" cy="299" r="3.8" fill="#6d6d78"/><path d="M143.5 296.5 l0.5 -3.5 l2 2.6 M147 295.5 l2 -2.8 l0.8 3.6" fill="#6d6d78"/><path d="M159 304 q5 0 4 -6" stroke="#6d6d78" stroke-width="2" fill="none"/></g>`,
+    balloon: () => `<g class="balloon"><path d="M80 70 q-24 0 -24 -28 q0 -24 24 -24 q24 0 24 24 q0 28 -24 28z" fill="#ef8aa6"/>
+      <path d="M80 70 q-10 0 -10 -28 q0 -24 10 -24 q10 0 10 24 q0 28 -10 28z" fill="#f7c548"/><path d="M76 70 l-3 10 M84 70 l3 10" stroke="#8a6142" stroke-width="0.8"/><rect x="72" y="80" width="16" height="9" rx="2" fill="#a77b56"/></g>`,
+  };
+
+  function decorations(owned) {
+    let s = '';
+    for (const id of Object.keys(DECOR)) if (owned[id]) s += DECOR[id]();
+    return s;
+  }
+
   function life(st, pct) {
     let s = '';
     if (pct > 0.15) s += `<g class="bfly b1"><path d="M0 0 q-5 -6 -7 0 q2 5 7 0 q5 -6 7 0 q-2 5 -7 0" fill="#f2a7b8"/></g>`;
@@ -371,9 +414,9 @@ const HOUSE = (() => {
       ${windowSvg(134, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}${windowSvg(232, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}
       ${windowSvg(122, 248, 40, 50, st.winKitchen, 'winKitchen', 'kitchen')}${windowSvg(238, 248, 40, 50, st.winLiving, 'winLiving', 'living')}
       ${shutters(st, cols.shutters || '#4e7b5b')}${door(s, cols.door)}${ivy(st)}${beds(st)}
-      ${tree(st)}${fence(st, cols.fence)}${faded()}${life(st, pct)}${weather()}${sparkles(opts.fresh)}
+      ${tree(st)}${fence(st, cols.fence)}${faded()}${decorations(opts.decor || {})}${life(st, pct)}${weather()}${sparkles(opts.fresh)}
     </svg>`;
   }
 
-  return { render };
+  return { render, DECOR };
 })();
