@@ -355,6 +355,70 @@
       }
       glow(c, (x0 + x1) / 2, 300, 200, 'rgba(255,200,120,0.12)');
     },
+    // inside a beach hut: painted boards, bunting, a deckchair, towels on
+    // hooks, a kettle on a little stove and a shelf of beach finds
+    hut(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      c.fillStyle = '#dcefee'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let x = x0 + 22; x < x1; x += 22) { c.fillStyle = 'rgba(80,120,120,0.2)'; c.fillRect(x, y0, 1.5, y1 - y0); c.fillStyle = 'rgba(255,255,255,0.55)'; c.fillRect(x + 1.5, y0, 1, y1 - y0); }
+      // floorboards
+      c.fillStyle = '#c9a77a'; c.fillRect(x0, 452, w, y1 - 452);
+      c.fillStyle = 'rgba(90,60,30,0.3)'; for (let y = 462; y < y1; y += 12) c.fillRect(x0, y, w, 1.5);
+      c.fillStyle = 'rgba(60,40,20,0.25)'; c.fillRect(x0, 452, w, 5);
+      // bunting across the top
+      c.strokeStyle = '#7a6a58'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(x0, 104); c.quadraticCurveTo((x0 + x1) / 2, 132, x1, 104); c.stroke();
+      const bc = ['#e2574c', '#f2c230', '#3d86c6', '#5cae5a', '#ef8aa6', '#f7f3ea'];
+      for (let i = 0; i < 12; i++) {
+        const t = (i + 0.5) / 12, x = x0 + w * t, y = 104 + 4 * 28 * t * (1 - t) * 0.5 + 1;
+        c.fillStyle = bc[i % bc.length]; c.beginPath(); c.moveTo(x - 9, y); c.lineTo(x + 9, y); c.lineTo(x, y + 18); c.closePath(); c.fill();
+      }
+      // a shelf of shells and a jar of sea glass
+      c.fillStyle = '#a77b56'; c.fillRect(x0 + 6, 206, 114, 7);
+      c.fillStyle = 'rgba(40,30,20,0.2)'; c.fillRect(x0 + 6, 213, 114, 4);
+      c.fillStyle = '#f2cfc1'; c.beginPath(); c.moveTo(x0 + 24, 206); c.arc(x0 + 24, 206, 13, Math.PI, 0); c.closePath(); c.fill();
+      c.strokeStyle = '#d4a090'; c.lineWidth = 0.8; for (let k = 1; k < 6; k++) { const a = Math.PI + (k / 6) * Math.PI; c.beginPath(); c.moveTo(x0 + 24, 206); c.lineTo(x0 + 24 + Math.cos(a) * 13, 206 + Math.sin(a) * 13); c.stroke(); }
+      c.fillStyle = '#efe0c8'; c.beginPath(); c.ellipse(x0 + 52, 194, 7, 12, 0.3, 0, 7); c.fill();
+      c.strokeStyle = '#c8b090'; c.beginPath(); c.ellipse(x0 + 52, 196, 5, 3, 0.3, 0, Math.PI); c.stroke();
+      c.fillStyle = '#ee8a4f'; c.beginPath();
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + (k / 10) * 6.283, rr = k % 2 ? 4 : 10; c.lineTo(x0 + 76 + Math.cos(a) * rr, 196 + Math.sin(a) * rr); }
+      c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x0 + 92, 172, 24, 34);
+      for (let k = 0; k < 14; k++) { c.fillStyle = U.pick(r, ['#7fc8b0', '#9fd0ea', '#bfe6d0', '#5ea88e', '#ffffff']); c.beginPath(); c.arc(x0 + 96 + r() * 16, 186 + r() * 18, 3, 0, 7); c.fill(); }
+      c.fillStyle = '#c9a06a'; c.fillRect(x0 + 94, 166, 20, 7);
+      // a little picture of the sea
+      c.fillStyle = '#f7f3ea'; c.fillRect(x1 - 108, 150, 90, 72);
+      const sg = c.createLinearGradient(0, 158, 0, 214); sg.addColorStop(0, '#9fd0ea'); sg.addColorStop(0.55, '#e9f4f2'); sg.addColorStop(0.56, '#3d8fae'); sg.addColorStop(1, '#2f7390');
+      c.fillStyle = sg; c.fillRect(x1 - 100, 158, 74, 56);
+      c.fillStyle = '#f7f3ea'; c.beginPath(); c.moveTo(x1 - 64, 186); c.lineTo(x1 - 64, 168); c.lineTo(x1 - 54, 186); c.closePath(); c.fill();
+      c.fillStyle = '#c9474f'; c.fillRect(x1 - 70, 186, 20, 4);
+      // towels on hooks
+      for (const [x, a, b] of [[x1 - 96, '#ef8aa6', '#f7f3ea'], [x1 - 56, '#f2c230', '#3d86c6']]) {
+        c.fillStyle = '#8a8f96'; c.beginPath(); c.arc(x + 15, 314, 3, 0, 7); c.fill();
+        c.fillStyle = a; c.beginPath(); c.moveTo(x + 2, 318); c.lineTo(x + 28, 318); c.lineTo(x + 30, 382); c.lineTo(x, 382); c.closePath(); c.fill();
+        c.fillStyle = b; for (let y = 328; y < 380; y += 14) c.fillRect(x + 1, y, 29, 5);
+        c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(x + 22, 318, 6, 64);
+      }
+      // a kettle on a camping stove, on a little table
+      c.fillStyle = '#a77b56'; c.fillRect(x1 - 110, 400, 96, 8);
+      c.fillStyle = '#8a6142'; c.fillRect(x1 - 104, 408, 6, 44); c.fillRect(x1 - 26, 408, 6, 44);
+      c.fillStyle = '#6b7178'; c.fillRect(x1 - 84, 386, 46, 14);
+      c.fillStyle = '#3d4148'; c.fillRect(x1 - 80, 383, 38, 4);
+      c.fillStyle = '#3f9b8b'; c.beginPath(); c.ellipse(x1 - 61, 370, 20, 15, 0, Math.PI, 0); c.fill(); c.fillRect(x1 - 81, 369, 40, 15);
+      c.strokeStyle = '#3f9b8b'; c.lineWidth = 4; c.beginPath(); c.moveTo(x1 - 80, 376); c.lineTo(x1 - 92, 362); c.stroke();
+      c.strokeStyle = '#2b2b30'; c.lineWidth = 2.5; c.beginPath(); c.arc(x1 - 61, 358, 13, Math.PI * 1.1, Math.PI * 1.9); c.stroke();
+      c.fillStyle = '#2b2b30'; c.beginPath(); c.arc(x1 - 61, 354, 3, 0, 7); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(x1 - 76, 362, 6, 18);
+      for (let k = 0; k < 4; k++) { c.fillStyle = `rgba(255,255,255,${0.5 - k * 0.1})`; c.beginPath(); c.arc(x1 - 95 - k * 3, 350 - k * 12, 4 + k * 2, 0, 7); c.fill(); }
+      // a striped deckchair
+      c.strokeStyle = '#8a6142'; c.lineWidth = 4; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(x0 + 22, 470); c.lineTo(x0 + 40, 342); c.moveTo(x0 + 108, 470); c.lineTo(x0 + 92, 342); c.moveTo(x0 + 38, 344); c.lineTo(x0 + 94, 344); c.moveTo(x0 + 26, 446); c.lineTo(x0 + 104, 446); c.stroke();
+      c.save(); c.beginPath(); c.moveTo(x0 + 42, 348); c.lineTo(x0 + 90, 348); c.lineTo(x0 + 98, 420); c.quadraticCurveTo(x0 + 66, 444, x0 + 34, 420); c.closePath(); c.clip();
+      for (let k = 0; k < 7; k++) { c.fillStyle = ['#e2574c', '#f7f3ea', '#3d86c6'][k % 3]; c.fillRect(x0 + 34 + k * 9.5, 340, 9.5, 110); }
+      c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(x0 + 30, 404, 80, 40);
+      c.restore();
+      glow(c, (x0 + x1) / 2, 260, 220, 'rgba(255,236,200,0.14)');
+    },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);

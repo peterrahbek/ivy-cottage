@@ -8,7 +8,7 @@ const AUDIO = (() => {
   const on = { sfx: true, music: true };
   let work = null, kind = '', engine = null;
   let coinStep = 0, lastCoin = 0;
-  let musicTimer = 0, chordIdx = 0, beat = 0;
+  let musicTimer = 0;
 
   function unlock() {
     if (!ac) {
@@ -18,7 +18,7 @@ const AUDIO = (() => {
       ac = new AC();
       master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
       sfx = ac.createGain(); sfx.gain.value = on.sfx ? 1 : 0; sfx.connect(master);
-      music = ac.createGain(); music.gain.value = on.music ? 0.5 : 0; music.connect(master);
+      music = ac.createGain(); music.gain.value = on.music ? musicVol : 0; music.connect(master);
       noiseBuf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
       const d = noiseBuf.getChannelData(0);
       let b = 0;
@@ -37,7 +37,7 @@ const AUDIO = (() => {
     on[which] = val;
     if (!ac) return;
     const g = which === 'sfx' ? sfx : music;
-    g.gain.setTargetAtTime(val ? (which === 'sfx' ? 1 : 0.5) : 0, ac.currentTime, 0.1);
+    g.gain.setTargetAtTime(val ? (which === 'sfx' ? 1 : musicVol) : 0, ac.currentTime, 0.1);
   }
 
   function tone(freq, t0, dur, type = 'sine', vol = 0.2, dest = sfx, wet = 0.4, attack = 0.005) {
@@ -188,41 +188,165 @@ const AUDIO = (() => {
   }
 
   // ----------------------------------------------------------------- music
-  // Slow chords and sparse notes; nothing loops exactly.
-  const CHORDS = [
-    [48, 55, 64, 71], [45, 52, 60, 67], [41, 48, 57, 64], [43, 50, 59, 66],
-    [48, 52, 59, 67], [40, 47, 55, 62], [41, 48, 55, 64], [43, 50, 57, 62],
-  ];
+  // Three quiet tunes of our own (so there are no rights to worry about), one
+  // per place, each a 16-bar loop: a soft pad, a felt-piano arpeggio, a music
+  // box melody and a little bass. The season picks the key, the evening slows
+  // it down, and every pass round the loop is arranged a little differently
+  // (an intro without melody, a pass an octave up, a sparse one to breathe).
+  const MAJOR = [0, 2, 4, 5, 7, 9, 11];
   const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
-  function startMusic() {
-    clearInterval(musicTimer);
-    beat = 0;
-    musicTimer = setInterval(musicTick, 850);
+  // chords as [scale degree of the root, add the seventh?]
+  const TUNES = {
+    cottage: {
+      chords: [[1], [5], [6], [4], [1], [4], [2], [5], [4], [1], [6], [5], [4], [1], [2], [5]],
+      melody: [
+        [[0, 3, 1], [1, 5, 1], [2, 8, 2]], [[0, 7, 1.5], [1.5, 6, 0.5], [2, 5, 2]], [[0, 6, 1], [1, 5, 1], [2, 3, 2]], [[0, 4, 1], [1, 3, 1], [2, 2, 2]],
+        [[0, 3, 1], [1, 5, 1], [2, 8, 1], [3, 9, 1]], [[0, 10, 2], [2, 8, 2]], [[0, 9, 1], [1, 8, 1], [2, 6, 2]], [[0, 5, 3]],
+        [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 1], [1, 8, 1], [2, 5, 2]], [[0, 6, 1], [1, 8, 1], [2, 9, 1], [3, 8, 1]], [[0, 7, 2], [2, 5, 2]],
+        [[0, 4, 1], [1, 6, 1], [2, 8, 2]], [[0, 10, 1.5], [1.5, 9, 0.5], [2, 8, 2]], [[0, 9, 1], [1, 7, 1], [2, 5, 2]], [[0, 8, 4]],
+      ],
+    },
+    cafe: {
+      chords: [[1, 1], [6, 1], [2, 1], [5, 1], [1, 1], [4, 1], [3, 1], [6, 1], [2, 1], [5, 1], [1, 1], [4, 1], [2, 1], [5, 1], [1, 1], [5, 1]],
+      melody: [
+        [[0, 5, 1], [1, 6, 1], [2, 7, 2]], [[0, 8, 1.5], [1.5, 7, 0.5], [2, 6, 2]], [[0, 4, 1], [1, 6, 1], [2, 8, 1], [3, 6, 1]], [[0, 7, 3]],
+        [[0, 3, 1], [1, 5, 1], [2, 7, 1], [3, 9, 1]], [[0, 8, 2], [2, 6, 2]], [[0, 7, 1], [1, 5, 1], [2, 3, 2]], [[0, 6, 3]],
+        [[0, 6, 1], [1, 8, 1], [2, 9, 2]], [[0, 8, 1], [1, 7, 1], [2, 5, 2]], [[0, 7, 1], [1, 5, 1], [2, 3, 1], [3, 5, 1]], [[0, 6, 4]],
+        [[0, 4, 1], [1, 6, 1], [2, 8, 2]], [[0, 7, 1.5], [1.5, 6, 0.5], [2, 4, 2]], [[0, 3, 1], [1, 5, 1], [2, 8, 2]], [[0, 7, 2], [2, 5, 2]],
+      ],
+    },
+    cove: {
+      chords: [[1, 1], [4, 1], [1, 1], [4, 1], [6, 1], [4, 1], [2, 1], [5], [4, 1], [5], [6, 1], [3, 1], [4, 1], [1], [2, 1], [5]],
+      melody: [
+        [[0, 5, 2], [2, 3, 2]], [[0, 6, 2], [2, 4, 2]], [[0, 5, 1], [1, 7, 1], [2, 8, 2]], [[0, 6, 4]],
+        [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 2], [2, 8, 2]], [[0, 6, 2], [2, 4, 2]], [[0, 5, 4]],
+        [[0, 8, 2], [2, 10, 2]], [[0, 9, 2], [2, 7, 2]], [[0, 8, 1], [1, 6, 1], [2, 5, 2]], [[0, 7, 4]],
+        [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 12, 2], [2, 10, 2]], [[0, 9, 2], [2, 6, 2]], [[0, 5, 4]],
+      ],
+    },
+  };
+  const KEY = { spring: 65, summer: 60, autumn: 62, winter: 67 };
+  let theme = { place: 'cottage', season: 'spring', night: false }, nextTheme = null;
+  let musicVol = 0.45, nextBar = 0, bar = 0, cycle = 0;
+
+  const note = (tonic, deg) => tonic + 12 * Math.floor((deg - 1) / 7) + MAJOR[(deg - 1) % 7];
+  function out(g, wet) {
+    g.connect(music);
+    if (wet > 0) { const w = ac.createGain(); w.gain.value = wet; g.connect(w); w.connect(verb); }
+  }
+  // felt piano: a sine and a quiet octave through a closing low-pass
+  function keys(f, t, dur, vol) {
+    const o = ac.createOscillator(), o2 = ac.createOscillator(), g2 = ac.createGain(), lp = ac.createBiquadFilter(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f; o2.type = 'triangle'; o2.frequency.value = f * 2; g2.gain.value = 0.16;
+    lp.type = 'lowpass'; lp.Q.value = 0.3; lp.frequency.setValueAtTime(2200, t); lp.frequency.exponentialRampToValueAtTime(600, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); out(g, 0.35);
+    o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  }
+  // music box: a pure tone with a faint, quickly fading bell partial
+  function box(f, t, vol) {
+    tone(f, t, 1.8, 'sine', vol, music, 0.55, 0.006);
+    tone(f * 3.01, t, 0.35, 'sine', vol * 0.12, music, 0.4, 0.004);
+  }
+  // pad: two slightly detuned triangles per note, slow in and out
+  function pad(freqs, t, dur, vol) {
+    const lp = ac.createBiquadFilter(), g = ac.createGain();
+    lp.type = 'lowpass'; lp.frequency.value = 850; lp.Q.value = 0.2;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 1.1); g.gain.setValueAtTime(vol, t + dur - 0.4); g.gain.linearRampToValueAtTime(0.0001, t + dur + 1.4);
+    for (const f of freqs) for (const d of [-5, 5]) {
+      const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = f; o.detune.value = d;
+      o.connect(lp); o.start(t); o.stop(t + dur + 1.5);
+    }
+    lp.connect(g); out(g, 0.5);
+  }
+  function bass(f, t, dur, vol) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); out(g, 0.1); o.start(t); o.stop(t + dur + 0.05);
+  }
+
+  function playBar(t, beat) {
+    const tune = TUNES[theme.place] || TUNES.cottage, tonic = KEY[theme.season] || 60;
+    const i = bar % 16, [deg, seventh] = tune.chords[i];
+    const r = U.rng(cycle * 97 + i * 13 + 1);
+    // how this pass round the loop is arranged
+    const pass = cycle % 4, quiet = theme.night || pass === 3;
+    const chord = [deg, deg + 2, deg + 4].concat(seventh ? [deg + 6] : []).map((d) => note(tonic - 12, d));
+    pad(chord.slice(0, 3).map(midi), t, beat * 4, 0.016);
+    if (pass !== 0) bass(midi(note(tonic - 24, deg)), t, beat * 2.2, 0.055);
+    if (pass !== 0 && !quiet) bass(midi(note(tonic - 24, deg + (r() < 0.5 ? 4 : 0))), t + beat * 2, beat * 2, 0.04);
+    // a gentle broken chord, sparser on quiet passes
+    const arp = [0, 1, 2, 3, 2, 1, 3, 1];
+    const tones = chord.length > 3 ? chord : chord.concat([chord[0] + 12]);
+    for (let k = 0; k < 8; k++) {
+      if ((quiet || pass === 2) && k % 2) continue;
+      if (pass === 0 && k % 4 === 3) continue;
+      keys(midi(tones[arp[k]] + (k === 0 ? -12 : 0)), t + k * beat * 0.5, beat * 2.6, k === 0 ? 0.05 : 0.032 + r() * 0.01);
+    }
+    // the tune itself, missing on the intro pass and only every other bar when breathing
+    if (pass !== 0 && !(pass === 3 && i % 2)) {
+      const up = pass === 2 ? 12 : 0;
+      for (const [at, d, len] of tune.melody[i]) {
+        if (theme.night && r() < 0.25) continue;
+        box(midi(note(tonic + 12 + up, d)), t + at * beat, 0.07 * (len >= 2 ? 1 : 0.85));
+      }
+    }
   }
   function musicTick() {
-    if (!ac || ac.state !== 'running' || !on.music) return;
-    const t = ac.currentTime + 0.05;
-    const chord = CHORDS[chordIdx % CHORDS.length];
-    if (beat % 8 === 0) {
-      chord.forEach((m, i) => {
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.type = i === 0 ? 'triangle' : 'sine'; o.frequency.value = midi(m - (i === 0 ? 12 : 0));
-        g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(i === 0 ? 0.05 : 0.025, t + 1.6);
-        g.gain.linearRampToValueAtTime(0.0001, t + 7.2);
-        o.connect(g); g.connect(music);
-        const w = ac.createGain(); w.gain.value = 0.6; g.connect(w); w.connect(verb);
-        o.start(t); o.stop(t + 7.4);
-      });
+    if (!ac || ac.state !== 'running' || !on.music) { if (ac) nextBar = Math.max(nextBar, ac.currentTime + 0.1); return; }
+    const beat = 60 / (theme.night ? 64 : 72);
+    if (nextBar < ac.currentTime) nextBar = ac.currentTime + 0.1;
+    while (nextBar < ac.currentTime + 0.6) {
+      if (nextTheme && (bar % 8 === 0 || nextTheme.place !== theme.place)) {
+        const fresh = nextTheme.place !== theme.place || nextTheme.season !== theme.season;
+        theme = nextTheme; nextTheme = null;
+        if (fresh) { bar = 0; cycle = 0; }
+      }
+      playBar(nextBar, beat);
+      nextBar += beat * 4;
+      bar++;
+      if (bar % 16 === 0) cycle++;
     }
-    if (Math.random() < (beat % 2 === 0 ? 0.55 : 0.25)) {
-      const scale = [0, 2, 4, 7, 9];
-      const root = chord[0] + 24;
-      const m = root + scale[(Math.random() * scale.length) | 0] + (Math.random() < 0.3 ? 12 : 0);
-      tone(midi(m), t, 2.2, 'sine', 0.045, music, 0.8, 0.01);
-      tone(midi(m) * 2, t, 0.6, 'sine', 0.008, music, 0.5, 0.01);
-    }
-    beat++;
-    if (beat % 8 === 0) chordIdx++;
+  }
+  function startMusic() {
+    clearInterval(musicTimer);
+    nextBar = ac.currentTime + 0.3;
+    musicTimer = setInterval(musicTick, 200);
+  }
+  // which tune: the place you are at, in its season, slower in the evening
+  function music_(o) {
+    const t = { place: o.place || 'cottage', season: o.season || 'spring', night: !!o.night };
+    if (t.place === theme.place && t.season === theme.season && t.night === theme.night) { nextTheme = null; return; }
+    nextTheme = t;
+  }
+  // test hook: render a stretch of music offline (no speakers needed) and
+  // report how loud it is, next to a few coin tinks for comparison
+  async function debugRender(o = {}, secs = 16) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const keep = { ac, music, verb, sfx, theme, bar, cycle };
+    const off = new OAC(1, 22050 * secs, 22050);
+    try {
+      ac = off;
+      music = off.createGain(); music.gain.value = musicVol; music.connect(off.destination);
+      sfx = off.createGain(); sfx.gain.value = 0;
+      verb = off.createConvolver();
+      const len = 22050 * 2, ir = off.createBuffer(1, len, 22050), x = ir.getChannelData(0);
+      for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+      verb.buffer = ir; const vg = off.createGain(); vg.gain.value = 0.35; verb.connect(vg); vg.connect(off.destination);
+      theme = { place: o.place || 'cottage', season: o.season || 'spring', night: !!o.night }; bar = 0; cycle = o.cycle == null ? 1 : o.cycle;
+      const beat = 60 / (theme.night ? 64 : 72);
+      for (let t = 0.1; t < secs - 3; t += beat * 4) { playBar(t, beat); bar++; if (bar % 16 === 0) cycle++; }
+      if (o.coins) { sfx.gain.value = 1; sfx.connect(off.destination); music.gain.value = 0; for (let k = 0; k < 8; k++) tone(1046.5 * Math.pow(2, PENTA[k] / 12), 1 + k * 0.25, 0.25, 'sine', 0.07, sfx, 0.25); }
+      const data = (await off.startRendering()).getChannelData(0);
+      let peak = 0, sum = 0;
+      for (let i = 0; i < data.length; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; sum += v * v; }
+      return { peak: +peak.toFixed(4), rms: +Math.sqrt(sum / data.length).toFixed(4) };
+    } finally { Object.assign({}, keep); ac = keep.ac; music = keep.music; verb = keep.verb; sfx = keep.sfx; theme = keep.theme; bar = keep.bar; cycle = keep.cycle; }
+  }
+  function volume(v) {
+    musicVol = U.clamp(v, 0, 1);
+    if (ac) music.gain.setTargetAtTime(on.music ? musicVol : 0, ac.currentTime, 0.1);
   }
 
   // ------------------------------------------------------------ birdsong
@@ -260,5 +384,5 @@ const AUDIO = (() => {
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, unit, buy, chime, shimmer, suspend, resume, birds };
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, debugRender };
 })();

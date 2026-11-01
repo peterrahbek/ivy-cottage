@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, started: Date.now() };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -18,6 +18,7 @@
     out.wips = out.wips || {};
     out.owned = Object.assign({ cottage: 1 }, s.owned);
     out.use = out.use || {};
+    if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
     if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
@@ -147,6 +148,7 @@
       $('#restoredTxt').textContent = `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)} · ${d} of ${jobs.length}`;
     }
     document.body.dataset.season = seasonName();
+    AUDIO.theme({ place: S.place, season: seasonName(), night: isEvening() });
     AUDIO.birds((seasonName() === 'spring' || seasonName() === 'summer') && !isEvening());
     const n = nextChore();
     const card = $('#nextCard');
@@ -555,6 +557,7 @@
     openSheet('Settings', `
       <label class="setRow"><span>Sound effects</span><input type="checkbox" id="setSfx" ${S.sfx ? 'checked' : ''}></label>
       <label class="setRow"><span>Music</span><input type="checkbox" id="setMusic" ${S.music ? 'checked' : ''}></label>
+      <label class="setRow"><span>Music volume</span><input type="range" id="setMusicVol" min="0" max="100" step="5" value="${Math.round(S.musicVol * 100)}"></label>
       <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
       <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
       <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline. Safari and the Home Screen app keep separate saves; move yours with a save code.</div>
@@ -565,6 +568,7 @@
       <button class="danger" id="setReset">Start the cottage over</button>`, (body) => {
       body.querySelector('#setSfx').onchange = (e) => { S.sfx = e.target.checked; AUDIO.set('sfx', S.sfx); save(); };
       body.querySelector('#setMusic').onchange = (e) => { S.music = e.target.checked; AUDIO.set('music', S.music); save(); };
+      body.querySelector('#setMusicVol').oninput = (e) => { S.musicVol = e.target.value / 100; AUDIO.volume(S.musicVol); save(); };
       body.querySelector('#setName').oninput = (e) => { S.name = e.target.value.trim().slice(0, 22); save(); };
       body.querySelector('#setEvening').onchange = (e) => { S.evening = e.target.checked; save(); };
       const codeBox = body.querySelector('#setCode'), loadBtn = body.querySelector('#setLoad');
@@ -643,7 +647,7 @@
   }
   renderTitle();
   $('#title').addEventListener('click', () => {
-    AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
+    AUDIO.volume(S.musicVol); AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
     AUDIO.pop();
     $('#titleScene').innerHTML = '';
     show('home'); renderHome();

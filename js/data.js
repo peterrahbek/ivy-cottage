@@ -358,8 +358,8 @@ const DATA = (() => {
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
     { id: 'cafe', name: 'Marigold Café', short: 'the café', blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
-    { id: 'cove', name: 'Seashell Cove', short: 'the cove', blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns', soon: true },
-  ].filter((p) => !p.soon); // the cove stays hidden until its scenes and picture are in
+    { id: 'cove', name: 'Seashell Cove', short: 'the cove', blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
+  ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
