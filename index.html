@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ivy Cottage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#f6efe3">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Ivy Cottage">
+<meta name="description" content="A calm little game about bringing a forgotten cottage back to life, one chore at a time.">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png">
+<style>
+:root{
+  --paper:#f6efe3; --paper2:#efe5d3; --card:#fffaf1; --line:#e4d8c4;
+  --ink:#3b352e; --ink2:#7d7264; --ink3:#a89c8b;
+  --sage:#8fb08a; --sage-d:#5d8a59; --leaf:#4f8a3c; --butter:#f2d88a; --terra:#d98b63; --gold:#e0a526;
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", "Varela Round", system-ui, -apple-system, sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--font);
+  overscroll-behavior:none;-webkit-text-size-adjust:100%;user-select:none;-webkit-user-select:none;position:fixed;inset:0}
+button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+.screen{position:fixed;inset:0;display:none}
+.screen.on{display:flex}
+
+/* coins */
+.coin{display:inline-block;width:1.05em;height:1.05em;border-radius:50%;vertical-align:-0.16em;margin-right:0.3em;
+  background:radial-gradient(circle at 35% 32%,#fff3b8 0 16%,#f7cf4a 18% 62%,#e0a526 64%);box-shadow:0 1px 0 #b8841a}
+.coins{display:flex;align-items:center;font-weight:800;font-size:17px;background:var(--card);border:1.5px solid var(--line);
+  padding:6px 12px 6px 9px;border-radius:999px;box-shadow:0 2px 0 var(--line)}
+.coins.bump{animation:bump .25s ease}
+@keyframes bump{50%{transform:scale(1.12)}}
+
+/* ---------------------------------------------------------------- title */
+#title{flex-direction:column;align-items:center;justify-content:center;gap:10px;cursor:pointer;
+  background:radial-gradient(120% 80% at 50% 30%,#fbf6ec 0,#f3e8d4 60%,#e9dcc3 100%)}
+#title .logo{font-size:44px;font-weight:900;letter-spacing:-0.5px;color:#46623f;display:flex;align-items:center;gap:8px}
+#title .logo svg{width:44px;height:44px}
+#title .tag{color:var(--ink2);font-size:17px}
+#title .tap{margin-top:34px;font-weight:800;color:#fff;background:var(--sage-d);padding:14px 30px;border-radius:999px;
+  box-shadow:0 4px 0 #3f6b3c;animation:breathe 2.4s ease-in-out infinite}
+@keyframes breathe{50%{transform:translateY(-2px) scale(1.03)}}
+#title .leaves{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#title .leaves i{position:absolute;top:-20px;width:14px;height:9px;border-radius:0 100% 0 100%;background:#6aa04c;opacity:.7;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+
+/* ----------------------------------------------------------------- home */
+#home{flex-direction:column;padding-top:var(--safe-t);padding-bottom:var(--safe-b)}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px 6px}
+.brand{font-weight:900;font-size:22px;color:#46623f;display:flex;align-items:center;gap:6px}
+.brand svg{width:24px;height:24px}
+#sceneWrap{flex:1;min-height:0;position:relative;margin:4px 12px 0;border-radius:22px;overflow:hidden;background:#cfe7ef;
+  box-shadow:inset 0 0 0 1.5px rgba(0,0,0,.05),0 6px 18px rgba(80,60,30,.12)}
+#scene{position:absolute;inset:0}
+#scene svg{width:100%;height:100%;display:block}
+#scene [data-part]{cursor:pointer}
+#scene .fresh{animation:fresh 1.6s ease both}
+@keyframes fresh{0%{filter:brightness(1.9) saturate(.4)}100%{filter:none}}
+#scene .spark{transform-box:fill-box;transform-origin:center;animation:spark 1.4s ease both}
+@keyframes spark{0%{opacity:0;transform:scale(0)}35%{opacity:1;transform:scale(1.2)}100%{opacity:0;transform:scale(.4) rotate(90deg)}}
+#scene .cloud{animation:drift 60s linear infinite alternate}
+#scene .c2{animation-duration:80s}
+@keyframes drift{to{transform:translateX(40px)}}
+#scene .smoke circle{animation:smoke 4s ease-in infinite}
+#scene .smoke circle:nth-child(2){animation-delay:1.3s}#scene .smoke circle:nth-child(3){animation-delay:2.6s}
+@keyframes smoke{0%{transform:translate(0,20px);opacity:0}30%{opacity:.6}100%{transform:translate(8px,-20px);opacity:0}}
+#scene .bfly{animation:fly1 14s ease-in-out infinite}
+#scene .b2{animation:fly2 18s ease-in-out infinite}
+@keyframes fly1{0%{transform:translate(90px,380px)}25%{transform:translate(150px,345px)}50%{transform:translate(70px,330px)}75%{transform:translate(40px,390px)}100%{transform:translate(90px,380px)}}
+@keyframes fly2{0%{transform:translate(300px,330px)}30%{transform:translate(250px,300px)}60%{transform:translate(340px,350px)}100%{transform:translate(300px,330px)}}
+#scene .bfly path{animation:flap .25s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes flap{to{transform:scaleX(.35)}}
+#scene .koi{animation:koi 6s ease-in-out infinite alternate}
+@keyframes koi{to{transform:translateX(-14px)}}
+.restored{display:flex;align-items:center;gap:10px;padding:10px 20px 2px;font-size:13px;color:var(--ink2);font-weight:700}
+.restored .bar{flex:1;height:8px;border-radius:9px;background:var(--paper2);overflow:hidden}
+.restored .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8fc47a,#5d8a59);border-radius:9px;transition:width .8s ease}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:22px;box-shadow:0 3px 0 var(--line)}
+#nextCard{margin:10px 12px 0;padding:14px 14px 14px 16px;display:flex;align-items:center;gap:10px}
+.nextInfo{flex:1;min-width:0}
+.eyebrow{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.nextName{font-size:19px;font-weight:900;margin:2px 0 4px;line-height:1.15}
+.nextMeta{font-size:13px;color:var(--ink2);font-weight:700;display:flex;align-items:center;flex-wrap:wrap;gap:2px}
+.nextMeta .dot{margin:0 4px}
+.nextIcon{width:46px;height:46px;flex:none}
+.go{flex:none;background:var(--sage-d);color:#fff;font-weight:900;font-size:17px;padding:14px 20px;border-radius:16px;box-shadow:0 4px 0 #3f6b3c}
+.go:active{transform:translateY(3px);box-shadow:0 1px 0 #3f6b3c}
+.dock{display:flex;gap:10px;padding:10px 12px 12px}
+.dock button{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:11px 6px;font-weight:800;font-size:15px;
+  box-shadow:0 3px 0 var(--line);display:flex;align-items:center;justify-content:center;gap:7px;position:relative}
+.dock button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.dock button svg{width:20px;height:20px}
+.dock #btnSettings{flex:0 0 52px}
+.dock button.alert::after{content:'';position:absolute;top:7px;right:9px;width:10px;height:10px;border-radius:50%;background:var(--terra);
+  box-shadow:0 0 0 2px var(--card);animation:pulse 1.6s ease infinite}
+@keyframes pulse{50%{transform:scale(1.3)}}
+
+/* ----------------------------------------------------------------- play */
+#play{background:#3a3027}
+#cv{position:absolute;inset:0;touch-action:none}
+#hudTop{position:absolute;left:0;right:0;top:0;padding:calc(8px + var(--safe-t)) 12px 6px;display:flex;align-items:center;gap:10px;pointer-events:none}
+#hudTop > *{pointer-events:auto}
+.round{width:42px;height:42px;border-radius:50%;background:var(--card);border:1.5px solid var(--line);font-size:24px;font-weight:900;line-height:1;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 0 var(--line);flex:none}
+.prog{flex:1;min-width:0;height:42px;border-radius:999px;background:rgba(255,250,241,.92);border:1.5px solid var(--line);position:relative;overflow:hidden;box-shadow:0 2px 0 var(--line)}
+.prog .fill{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#a9d48f,#7fb86a);transition:width .15s linear}
+.prog .lbl{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-weight:800;font-size:14px}
+.prog .lbl b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px;font-weight:800}
+#hudBottom{position:absolute;left:0;right:0;bottom:0;padding:6px 12px calc(10px + var(--safe-b));display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#hudBottom > *{pointer-events:auto}
+.bottomRow{display:flex;gap:8px;align-items:stretch}
+#toolChip{display:flex;align-items:center;gap:6px;background:rgba(255,250,241,.95);border:1.5px solid var(--line);border-radius:16px;padding:4px 12px 4px 6px;font-weight:800;font-size:14px;box-shadow:0 2px 0 var(--line)}
+#upPill{flex:1;display:none;align-items:center;gap:6px;justify-content:space-between;border-radius:16px;padding:8px 12px;font-size:13px;font-weight:800;
+  background:linear-gradient(90deg,rgba(242,216,138,.95) calc(var(--p,0)*100%),rgba(255,250,241,.92) calc(var(--p,0)*100%));border:1.5px solid var(--line);box-shadow:0 2px 0 var(--line);min-height:48px}
+#upPill.on{display:flex}
+#upPill .up{color:var(--ink2);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+#upPill b{flex:1;text-align:left;font-weight:900;font-size:14px}
+#upPill .cost{display:flex;align-items:center}
+#upPill.can{background:var(--sage-d);color:#fff;border-color:#3f6b3c;box-shadow:0 3px 0 #3f6b3c;animation:canbuy 1.4s ease-in-out infinite}
+#upPill.can .up{color:#dff0d6}
+@keyframes canbuy{50%{transform:translateY(-2px)}}
+.nope{animation:nope .35s ease}
+@keyframes nope{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+#palette{display:none;gap:7px;overflow-x:auto;padding:6px 4px;background:rgba(255,250,241,.92);border:1.5px solid var(--line);border-radius:16px;scrollbar-width:none}
+#palette::-webkit-scrollbar{display:none}
+#palette.on{display:flex}
+#palette .sw{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 0 0 2px #fff;transition:transform .15s}
+#palette .sw.sel{transform:scale(1.12);box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 0 0 3px #fff,0 0 0 5px var(--ink)}
+#doneOverlay{position:absolute;inset:0;display:none;align-items:flex-end;justify-content:center;padding:0 0 calc(18px + var(--safe-b));background:linear-gradient(180deg,rgba(40,30,20,0) 45%,rgba(40,30,20,.35))}
+#doneOverlay.on{display:flex;animation:fadein .3s ease}
+@keyframes fadein{from{opacity:0}}
+.doneCard{width:min(340px,90vw);padding:18px 20px 16px;text-align:center;animation:popin .45s cubic-bezier(.2,1.4,.4,1)}
+@keyframes popin{from{transform:translateY(60px) scale(.9);opacity:0}}
+#doneTitle{font-size:32px;font-weight:900;color:#46623f}
+#doneName{color:var(--ink2);font-weight:700;margin:2px 0 14px}
+.doneRows{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;font-weight:700}
+.doneRows div{display:flex;justify-content:space-between;align-items:center;padding:0 6px}
+.doneRows .tot{border-top:1.5px dashed var(--line);padding-top:8px;font-size:20px;font-weight:900}
+.doneRows span{display:flex;align-items:center}
+#doneBtn{width:100%}
+#toast{position:fixed;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;font-weight:800;
+  padding:10px 18px;border-radius:999px;transition:all .25s ease;z-index:50}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------------------------------------------------------------- sheet */
+#sheet{position:fixed;inset:0;background:rgba(40,30,20,.3);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+#sheet.on{opacity:1;pointer-events:auto}
+.sheetCard{width:100%;max-width:520px;max-height:86vh;background:var(--paper);border-radius:26px 26px 0 0;padding:8px 16px calc(14px + var(--safe-b));
+  display:flex;flex-direction:column;transform:translateY(30px);transition:transform .25s cubic-bezier(.2,1.2,.4,1)}
+#sheet.on .sheetCard{transform:none}
+.grab{width:44px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 8px}
+.sheetHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sheetHead h2{margin:0;font-size:24px;font-weight:900}
+#sheetBody{overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+.shedCoins{display:flex;justify-content:center;font-weight:900;font-size:20px;margin:0 0 10px}
+.shedRow{display:flex;align-items:center;gap:12px;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:10px 12px;margin-bottom:9px}
+.shedRow .ic{width:52px;height:52px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--paper2);border-radius:14px}
+.shedRow .ic.bot::before{content:'';width:30px;height:30px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#8fdccd 0 35%,#5fb8a8 37%);box-shadow:0 2px 0 #3f8a7c}
+.sInfo{flex:1;min-width:0}
+.sName{font-weight:900;font-size:16px}
+.sub{font-size:12px;color:var(--ink2);font-weight:600}
+.tiers{display:flex;gap:4px;margin-top:5px}
+.tiers i{width:16px;height:6px;border-radius:4px;background:var(--line)}
+.tiers i.on{background:var(--sage-d)}
+.buy{display:flex;flex-direction:column;align-items:center;gap:2px;background:var(--paper2);border:1.5px solid var(--line);border-radius:14px;padding:7px 10px;font-weight:800;font-size:12px;min-width:96px}
+.buy span{display:flex;align-items:center}
+.buy .coin + span{font-size:15px}
+.buy.can{background:var(--sage-d);color:#fff;border-color:#3f6b3c;box-shadow:0 3px 0 #3f6b3c}
+.maxed{font-size:12px;font-weight:800;color:var(--sage-d)}
+.jobArea{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:12px 4px 6px}
+.jobRow{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 10px 10px 12px;margin-bottom:7px}
+.jobRow.locked{opacity:.5}
+.jobRow.focus{border-color:var(--sage-d);box-shadow:0 0 0 3px rgba(93,138,89,.2)}
+.jState{width:22px;font-weight:900;color:var(--sage-d);text-align:center;font-size:18px}
+.jName{flex:1;font-weight:800;font-size:15px}
+.jGo{display:flex;align-items:center;gap:6px;background:var(--sage-d);color:#fff;font-weight:800;font-size:13px;padding:8px 11px;border-radius:12px;box-shadow:0 3px 0 #3f6b3c}
+.jGo .coin{margin-left:2px}
+.lock{font-size:12px;font-weight:800;color:var(--ink3)}
+.setRow{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:8px;font-weight:800}
+.setRow input{width:22px;height:22px;accent-color:var(--sage-d)}
+.setNote{font-size:14px;color:var(--ink2);margin:12px 4px;line-height:1.4}
+.setStats{font-size:13px;color:var(--ink3);margin:0 4px 14px;font-weight:700}
+.danger{width:100%;padding:13px;border-radius:14px;border:1.5px solid #e2b4a6;color:#b2553b;font-weight:800;background:#fbeee8}
+.closeBtn{background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:8px 16px;font-weight:800}
+</style>
+</head>
+<body>
+
+<section id="title" class="screen on">
+  <div class="leaves"><i style="left:12%;animation-duration:9s"></i><i style="left:38%;animation-duration:12s;animation-delay:-4s"></i><i style="left:66%;animation-duration:10s;animation-delay:-7s"></i><i style="left:86%;animation-duration:13s;animation-delay:-2s"></i></div>
+  <div class="logo"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/><path d="M20 36 V18" stroke="#3f6b3c" stroke-width="2"/></svg>Ivy Cottage</div>
+  <div class="tag">a forgotten little house that needs some love</div>
+  <div class="tap">Tap to begin</div>
+</section>
+
+<section id="home" class="screen">
+  <header class="topbar">
+    <div class="brand"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/></svg>Ivy Cottage</div>
+    <div class="coins" id="homeCoins"></div>
+  </header>
+  <div id="sceneWrap"><div id="scene"></div></div>
+  <div class="restored"><div class="bar"><i id="restoredBar"></i></div><span id="restoredTxt"></span></div>
+  <div id="nextCard" class="card"></div>
+  <nav class="dock">
+    <button id="btnShed"><svg viewBox="0 0 24 24"><path d="M3 11 L12 4 L21 11 V20 H3Z" fill="#d98b63"/><rect x="9" y="13" width="6" height="7" fill="#8a5a3c"/><path d="M2 11.5 L12 3.5 L22 11.5" stroke="#8a4f36" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Shed</button>
+    <button id="btnJobs"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="3" fill="#f2d88a"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#8a6a2c" stroke-width="2" stroke-linecap="round"/></svg>Jobs</button>
+    <button id="btnSettings" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="#7d7264" stroke-width="3" stroke-dasharray="3.2 2.3"/><circle cx="12" cy="12" r="3" fill="#7d7264"/></svg></button>
+  </nav>
+</section>
+
+<section id="play" class="screen">
+  <canvas id="cv"></canvas>
+  <div id="hudTop">
+    <button class="round" id="btnBack" aria-label="Back to the cottage">‹</button>
+    <div class="prog"><div class="fill" id="progFill"></div><div class="lbl"><b id="playTitle"></b><span id="progTxt">0%</span></div></div>
+    <div class="coins" id="playCoins"></div>
+  </div>
+  <div id="hudBottom">
+    <div id="palette"></div>
+    <div class="bottomRow"><div id="toolChip"></div><button id="upPill"></button></div>
+  </div>
+  <div id="doneOverlay">
+    <div class="card doneCard">
+      <div id="doneTitle">Lovely!</div>
+      <div id="doneName"></div>
+      <div class="doneRows">
+        <div><span>Earned</span><span id="doneEarn"></span></div>
+        <div><span>Finishing bonus</span><span id="doneBonus"></span></div>
+        <div class="tot"><span>Total</span><span id="doneTotal"></span></div>
+      </div>
+      <button class="go" id="doneBtn">Back to the cottage</button>
+    </div>
+  </div>
+</section>
+
+<div id="sheet"><div class="sheetCard"><div class="grab"></div><div class="sheetHead"><h2 id="sheetTitle"></h2><button class="closeBtn" id="sheetClose">Done</button></div><div id="sheetBody"></div></div></div>
+<div id="toast"></div>
+
+<script src="js/util.js"></script>
+<script src="js/tools.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/data.js"></script>
+<script src="js/house.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

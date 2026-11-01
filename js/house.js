@@ -1,0 +1,293 @@
+'use strict';
+// The cottage overview, drawn as SVG. Each restorable part has a tired look
+// and a restored look; colours chosen while painting carry over here.
+
+const HOUSE = (() => {
+  const VB = { w: 400, h: 540 };
+
+  function seeded(seed) { return U.rng(seed); }
+
+  function defs() {
+    return `
+    <defs>
+      <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#bfe2ef"/><stop offset="0.75" stop-color="#e9f1e6"/><stop offset="1" stop-color="#f6eedd"/>
+      </linearGradient>
+      <radialGradient id="hSun" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0" stop-color="#fff6cf"/><stop offset="0.45" stop-color="#fde7a3"/><stop offset="1" stop-color="#fde7a3" stop-opacity="0"/>
+      </radialGradient>
+      <pattern id="pTall" width="14" height="12" patternUnits="userSpaceOnUse">
+        <rect width="14" height="12" fill="#6a9846"/>
+        <path d="M2 12 Q3 6 1 2 M5 12 Q6 7 7 3 M9 12 Q8 6 10 1 M12 12 Q13 8 12 4" stroke="#4f8034" stroke-width="1.2" fill="none"/>
+        <path d="M3.5 12 Q5 8 4 5 M10.5 12 Q11 9 13 6" stroke="#88b35c" stroke-width="1" fill="none"/>
+      </pattern>
+      <pattern id="pDandelion" width="46" height="38" patternUnits="userSpaceOnUse">
+        <circle cx="8" cy="9" r="1.8" fill="#f3cf3a"/><circle cx="31" cy="27" r="1.6" fill="#f3cf3a"/><circle cx="22" cy="6" r="1.4" fill="#fff"/>
+      </pattern>
+      <pattern id="pStripes" width="28" height="28" patternUnits="userSpaceOnUse">
+        <rect width="28" height="28" fill="#7cbb57"/><rect width="14" height="28" fill="#93cb6a"/>
+      </pattern>
+      <pattern id="pMoss" width="16" height="16" patternUnits="userSpaceOnUse">
+        <rect width="16" height="16" fill="#8d9466"/>
+        <circle cx="4" cy="5" r="3" fill="#6f8a3e"/><circle cx="12" cy="11" r="3.5" fill="#748f42"/><circle cx="11" cy="3" r="1.5" fill="#a5a86c"/>
+      </pattern>
+      <pattern id="pFlags" width="30" height="22" patternUnits="userSpaceOnUse">
+        <rect width="30" height="22" fill="#b9aa8d"/>
+        <rect x="1" y="1" width="16" height="9" rx="2" fill="#ddd3c0"/><rect x="19" y="1" width="10" height="9" rx="2" fill="#d2c6b0"/>
+        <rect x="1" y="12" width="9" height="9" rx="2" fill="#d6cbb7"/><rect x="12" y="12" width="17" height="9" rx="2" fill="#e2d9c8"/>
+      </pattern>
+      <pattern id="pTilesOld" width="14" height="10" patternUnits="userSpaceOnUse">
+        <rect width="14" height="10" fill="#7c6d55"/>
+        <path d="M0 9.5 H14" stroke="#5e5240" stroke-width="1"/><path d="M7 0 V9.5" stroke="#5e5240" stroke-width="0.8"/>
+        <circle cx="3" cy="4" r="2.6" fill="#6f8a3e"/><circle cx="11" cy="7" r="2" fill="#81974a"/>
+      </pattern>
+      <pattern id="pTiles" width="14" height="10" patternUnits="userSpaceOnUse">
+        <rect width="14" height="10" fill="#c96f4f"/>
+        <path d="M0 9.5 H14" stroke="#9e4f36" stroke-width="1.2"/><path d="M7 0 V9.5" stroke="#a9553a" stroke-width="0.8"/>
+        <rect x="1" y="1" width="5" height="2" rx="1" fill="#de8c69"/>
+      </pattern>
+      <pattern id="pStain" width="60" height="50" patternUnits="userSpaceOnUse">
+        <ellipse cx="14" cy="18" rx="12" ry="8" fill="#000" opacity="0.07"/><ellipse cx="44" cy="38" rx="10" ry="12" fill="#000" opacity="0.06"/>
+        <path d="M34 4 l3 6 l-2 5 l3 7" stroke="#6b5f4d" stroke-width="0.7" fill="none" opacity="0.6"/>
+      </pattern>
+      <pattern id="pPlaster" width="30" height="30" patternUnits="userSpaceOnUse">
+        <circle cx="5" cy="7" r="1" fill="#fff" opacity="0.18"/><circle cx="20" cy="22" r="1.2" fill="#000" opacity="0.05"/><circle cx="24" cy="6" r="0.8" fill="#000" opacity="0.06"/>
+      </pattern>
+      <linearGradient id="gRoom" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#ffe4a8"/><stop offset="1" stop-color="#f0a95f"/>
+      </linearGradient>
+      <linearGradient id="gGrime" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#7f7a69"/><stop offset="1" stop-color="#5f5a4e"/>
+      </linearGradient>
+      <linearGradient id="gPond" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7cc7d8"/><stop offset="1" stop-color="#3f8ea6"/>
+      </linearGradient>
+      <filter id="fSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
+    </defs>`;
+  }
+
+  // -------------------------------------------------------------- pieces
+  function sky() {
+    return `
+    <rect width="400" height="300" fill="url(#hSky)"/>
+    <circle cx="330" cy="62" r="46" fill="url(#hSun)"/>
+    <circle cx="330" cy="62" r="17" fill="#fff3c4"/>
+    <g class="cloud c1" fill="#ffffff" opacity="0.92">
+      <ellipse cx="70" cy="62" rx="26" ry="11"/><ellipse cx="90" cy="55" rx="18" ry="13"/><ellipse cx="108" cy="63" rx="20" ry="9"/>
+    </g>
+    <g class="cloud c2" fill="#ffffff" opacity="0.8">
+      <ellipse cx="240" cy="36" rx="20" ry="8"/><ellipse cx="256" cy="31" rx="14" ry="10"/><ellipse cx="271" cy="37" rx="15" ry="7"/>
+    </g>
+    <path d="M0 214 Q70 186 150 204 T300 196 T400 202 V300 H0Z" fill="#b6d2ad"/>
+    <path d="M0 238 Q90 214 190 232 T400 226 V300 H0Z" fill="#a0c493"/>
+    ${bgTree(26, 214, 30, '#6f9d5c')}${bgTree(84, 222, 24, '#7aa866')}${bgTree(352, 214, 32, '#6f9d5c')}${bgTree(386, 230, 22, '#7aa866')}`;
+  }
+  function bgTree(x, y, r, col) {
+    return `<g><rect x="${x - 2}" y="${y}" width="4" height="${r * 0.9}" fill="#6b5240"/>
+      <circle cx="${x}" cy="${y - r * 0.15}" r="${r * 0.62}" fill="${col}"/><circle cx="${x - r * 0.35}" cy="${y + r * 0.1}" r="${r * 0.45}" fill="${col}"/><circle cx="${x + r * 0.35}" cy="${y + r * 0.08}" r="${r * 0.48}" fill="${U.shade(col, -0.1)}"/>
+      <circle cx="${x - r * 0.15}" cy="${y - r * 0.35}" r="${r * 0.3}" fill="${U.shade(col, 0.15)}"/></g>`;
+  }
+
+  function lawnPart(id, pts, done) {
+    const d = 'M' + pts.map((p) => p.join(' ')).join(' L') + 'Z';
+    return done
+      ? `<g data-part="${id}"><path d="${d}" fill="url(#pStripes)"/></g>`
+      : `<g data-part="${id}"><path d="${d}" fill="url(#pTall)"/><path d="${d}" fill="url(#pDandelion)"/></g>`;
+  }
+
+  function roof(st) {
+    const left = 'M88 172 L200 76 L200 172 Z', right = 'M200 76 L312 172 L200 172 Z';
+    return `
+      <g data-part="roofLeft"><path d="${left}" fill="url(#${st.roofLeft ? 'pTiles' : 'pTilesOld'})"/></g>
+      <g data-part="roofRight"><path d="${right}" fill="url(#${st.roofRight ? 'pTiles' : 'pTilesOld'})"/></g>
+      <path d="M84 174 L200 72 L316 174" fill="none" stroke="${st.roofLeft && st.roofRight ? '#8e4430' : '#5d5243'}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="200" cy="134" r="13" fill="${st.attic ? 'url(#gRoom)' : 'url(#gGrime)'}" stroke="#efe6d4" stroke-width="3"/>
+      <path d="M200 121 V147 M187 134 H213" stroke="#efe6d4" stroke-width="2"/>`;
+  }
+
+  function chimney(st) {
+    const smoke = st.attic
+      ? `<g class="smoke" fill="#ffffff"><circle cx="252" cy="80" r="5" opacity="0.7"/><circle cx="256" cy="68" r="7" opacity="0.5"/><circle cx="252" cy="52" r="9" opacity="0.3"/></g>` : '';
+    return `${smoke}<rect x="240" y="88" width="22" height="56" fill="#b0715a"/><rect x="237" y="84" width="28" height="8" rx="2" fill="#8e5744"/>
+      <path d="M240 100 H262 M240 112 H262 M240 124 H262" stroke="#9a604b" stroke-width="1"/>`;
+  }
+
+  function wall(st, col) {
+    const fill = st.wall ? col : '#c9bea6';
+    return `<g data-part="wall"><rect x="108" y="168" width="184" height="168" fill="${fill}"/>
+      <rect x="108" y="168" width="184" height="168" fill="url(#${st.wall ? 'pPlaster' : 'pStain'})"/>
+      <rect x="108" y="168" width="184" height="10" fill="#000" opacity="0.12"/></g>`;
+  }
+
+  function windowSvg(x, y, w, h, clean, part, kind) {
+    const glass = clean ? 'url(#gRoom)' : 'url(#gGrime)';
+    const frame = clean ? '#fbf7ee' : '#b8b1a2';
+    let inside = '';
+    if (clean) {
+      const cur = kind === 'bed' ? '#c9a3d9' : kind === 'kitchen' ? '#e98a7c' : '#8fbfe6';
+      inside = `<path d="M${x + 2} ${y + 2} h${w * 0.22} q-2 ${h * 0.5} 2 ${h - 4} h-${w * 0.22 + 2}Z" fill="${cur}"/>
+        <path d="M${x + w - 2} ${y + 2} h-${w * 0.22} q2 ${h * 0.5} -2 ${h - 4} h${w * 0.22 + 2}Z" fill="${cur}"/>
+        <path d="M${x + w * 0.25} ${y + h - 3} l${w * 0.5} -${h * 0.85}" stroke="#fff" stroke-width="${w * 0.08}" opacity="0.28"/>`;
+      if (kind === 'living') inside += `<ellipse cx="${x + w * 0.5}" cy="${y + h - 6}" rx="${w * 0.16}" ry="4" fill="#5b4a42"/><circle cx="${x + w * 0.62}" cy="${y + h - 9}" r="3.5" fill="#5b4a42"/>`;
+      if (kind === 'kitchen') inside += `<rect x="${x + w * 0.4}" y="${y + h - 13}" width="${w * 0.2}" height="9" rx="2" fill="#6aa86a"/><circle cx="${x + w * 0.5}" cy="${y + h - 16}" r="5" fill="#5f9e55"/>`;
+    } else {
+      inside = `<path d="M${x + 4} ${y + 6} q${w * 0.3} 6 ${w * 0.6} -2" stroke="#4e4a40" stroke-width="3" opacity="0.4" fill="none"/>
+        <path d="M${x + w - 3} ${y + 3} l-8 0 l8 8 Z" fill="#ffffff" opacity="0.35"/>`;
+    }
+    return `<g data-part="${part}">
+      <rect x="${x - 3}" y="${y - 3}" width="${w + 6}" height="${h + 6}" rx="2" fill="${frame}"/>
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${glass}"/>${inside}
+      <path d="M${x + w / 2} ${y} V${y + h} M${x} ${y + h / 2} H${x + w}" stroke="${frame}" stroke-width="2.5"/>
+      <rect x="${x - 6}" y="${y + h + 2}" width="${w + 12}" height="5" rx="1.5" fill="${clean ? '#efe6d4' : '#a59e90'}"/>
+    </g>`;
+  }
+
+  function door(st, col) {
+    const c = st.door ? col : '#8a8170';
+    const dk = U.shade(c, -0.22);
+    return `<g data-part="door">
+      <path d="M178 337 V276 Q178 258 200 258 Q222 258 222 276 V337 Z" fill="${st.wall ? U.shade(st.wallCol, -0.25) : '#9c917b'}"/>
+      <path d="M181 336 V277 Q181 262 200 262 Q219 262 219 277 V336 Z" fill="${c}"/>
+      <rect x="185" y="282" width="12" height="20" rx="2" fill="none" stroke="${dk}" stroke-width="1.5"/>
+      <rect x="203" y="282" width="12" height="20" rx="2" fill="none" stroke="${dk}" stroke-width="1.5"/>
+      <rect x="185" y="308" width="12" height="22" rx="2" fill="none" stroke="${dk}" stroke-width="1.5"/>
+      <rect x="203" y="308" width="12" height="22" rx="2" fill="none" stroke="${dk}" stroke-width="1.5"/>
+      <path d="M186 275 Q200 264 214 275 Z" fill="${st.door ? 'url(#gRoom)' : '#6d675a'}"/>
+      <circle cx="214" cy="306" r="2.3" fill="${st.door ? '#e9c35a' : '#77705f'}"/>
+      ${st.door ? '' : '<path d="M190 300 l6 3 l-2 6 M206 318 l5 -2 l2 6" stroke="#b9b0a0" stroke-width="1.2" fill="none"/>'}
+    </g>
+    <rect x="172" y="336" width="56" height="7" rx="2" fill="#b7ada0"/>`;
+  }
+
+  function ivy(st) {
+    const r = seeded(77);
+    let s = '';
+    const n = st.wall ? 26 : 120;
+    for (let i = 0; i < n; i++) {
+      let x, y;
+      if (st.wall) { x = 110 + r() * 26; y = 210 + r() * 125; }
+      else { const side = r() < 0.6; x = side ? 108 + r() * 70 : 220 + r() * 72; y = (side ? 180 : 230) + r() * (side ? 155 : 105); }
+      const col = U.pick(r, ['#4f8a3c', '#5d9644', '#3f7531', '#6aa04c']);
+      s += `<ellipse cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" rx="${(3 + r() * 2.5).toFixed(1)}" ry="${(2.2 + r() * 1.6).toFixed(1)}" fill="${col}" transform="rotate(${(r() * 180) | 0} ${x.toFixed(1)} ${y.toFixed(1)})"/>`;
+    }
+    return `<g class="ivy">${s}</g>`;
+  }
+
+  function shutters(st, col) {
+    const c = st.shutters ? col : '#a8a191';
+    let s = '';
+    for (const [x, y] of [[111, 246], [164, 246], [227, 246], [280, 246]]) {
+      s += `<rect x="${x}" y="${y}" width="9" height="54" rx="1" fill="${c}"/>
+        <path d="M${x + 1.5} ${y + 8} h6 M${x + 1.5} ${y + 16} h6 M${x + 1.5} ${y + 24} h6 M${x + 1.5} ${y + 32} h6 M${x + 1.5} ${y + 40} h6 M${x + 1.5} ${y + 48} h6" stroke="${U.shade(c, -0.25)}" stroke-width="1"/>`;
+    }
+    return `<g data-part="shutters">${s}</g>`;
+  }
+
+  function beds(st) {
+    const r = seeded(91);
+    const bed = (id, x0, x1, done, cols) => {
+      let s = `<g data-part="${id}"><rect x="${x0}" y="338" width="${x1 - x0}" height="16" rx="5" fill="${done ? '#6b4a33' : '#7a6448'}"/>`;
+      for (let i = 0; i < 16; i++) {
+        const x = x0 + 4 + r() * (x1 - x0 - 8), y = 341 + r() * 10;
+        if (done) s += `<circle cx="${x.toFixed(1)}" cy="${(y + 3).toFixed(1)}" r="3" fill="#4f8a3a"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.6" fill="${U.pick(r, cols)}"/>`;
+        else s += `<path d="M${x.toFixed(1)} ${(y + 6).toFixed(1)} l-3 -7 M${x.toFixed(1)} ${(y + 6).toFixed(1)} l1 -9 M${x.toFixed(1)} ${(y + 6).toFixed(1)} l4 -6" stroke="${U.pick(r, ['#5f8a3a', '#7a9a44', '#4d7a32'])}" stroke-width="1.6"/>`;
+      }
+      return s + '</g>';
+    };
+    return bed('bedLeft', 110, 176, st.bedLeft, ['#ef8aa6', '#f5b3c4', '#e0607e']) + bed('bedRight', 224, 290, st.bedRight, ['#f7c548', '#f08a4b', '#ffffff']);
+  }
+
+  function path(st) {
+    return `<g data-part="path"><path d="M186 342 L214 342 L234 540 L166 540 Z" fill="url(#${st.path ? 'pFlags' : 'pMoss'})"/>
+      <path d="M186 342 L166 540 M214 342 L234 540" stroke="${st.path ? '#a8987b' : '#6d7448'}" stroke-width="1.5"/></g>`;
+  }
+
+  function steps(st) {
+    const pts = [[242, 392], [262, 410], [284, 426], [305, 440]];
+    return `<g data-part="steps">${pts.map(([x, y]) => `<ellipse cx="${x}" cy="${y + 1.5}" rx="9" ry="5" fill="#00000022"/><ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="${st.steps ? '#d8d0c2' : '#7f8a55'}"/>`).join('')}</g>`;
+  }
+
+  function pond(st) {
+    return `<g data-part="pond">
+      <ellipse cx="336" cy="380" rx="44" ry="16" fill="#9e9584"/>
+      <ellipse cx="336" cy="380" rx="40" ry="13.5" fill="${st.pond ? 'url(#gPond)' : '#5f7a3a'}"/>
+      ${st.pond
+        ? `<ellipse cx="322" cy="377" rx="6" ry="2.6" fill="#5fae5a"/><circle cx="324" cy="376" r="1.5" fill="#f7b6c8"/><ellipse cx="350" cy="384" rx="5" ry="2.2" fill="#6bb865"/>
+           <path class="koi" d="M330 383 q4 -3 8 0 q-4 3 -8 0 l-3 -2 v4z" fill="#f08a3c"/>`
+        : `<circle cx="318" cy="378" r="2" fill="#7f9a4a"/><circle cx="345" cy="383" r="2.5" fill="#86a04e"/><circle cx="335" cy="375" r="1.6" fill="#93a85a"/>`}
+    </g>`;
+  }
+
+  function tree(st) {
+    return `<g class="bigtree">
+      <path d="M44 410 Q48 360 40 320 L56 320 Q52 360 60 410 Z" fill="#6b4a32"/>
+      <circle cx="48" cy="290" r="42" fill="#5c8f45"/><circle cx="20" cy="306" r="26" fill="#558740"/><circle cx="78" cy="304" r="28" fill="#4f803c"/>
+      <circle cx="40" cy="268" r="24" fill="#6ca552"/><circle cx="64" cy="278" r="16" fill="#73ad58"/>
+    </g>`;
+  }
+
+  function fence(st, col) {
+    const half = (id, x0, x1, done) => {
+      const r = seeded(id === 'fenceLeft' ? 5 : 6);
+      const c = done ? col : '#a39d92', dk = U.shade(c, -0.28);
+      let s = `<g data-part="${id}"><rect x="${x0}" y="${500}" width="${x1 - x0}" height="4" fill="${dk}"/><rect x="${x0}" y="${520}" width="${x1 - x0}" height="4" fill="${dk}"/>`;
+      for (let x = x0 + 2; x < x1 - 6; x += 12) {
+        if (!done && r() < 0.12) continue;
+        const tilt = done ? 0 : (r() - 0.5) * 12;
+        s += `<path d="M${x} 532 V496 L${x + 4} 490 L${x + 8} 496 V532 Z" fill="${c}" stroke="${dk}" stroke-width="0.8" transform="rotate(${tilt.toFixed(1)} ${x + 4} 532)"/>`;
+      }
+      return s + '</g>';
+    };
+    return half('fenceLeft', 0, 164, st.fenceLeft) + half('fenceRight', 236, 400, st.fenceRight)
+      + `<rect x="160" y="488" width="6" height="46" rx="1" fill="#8d7a64"/><rect x="234" y="488" width="6" height="46" rx="1" fill="#8d7a64"/>`;
+  }
+
+  function life(st, pct) {
+    let s = '';
+    if (pct > 0.15) s += `<g class="bfly b1"><path d="M0 0 q-5 -6 -7 0 q2 5 7 0 q5 -6 7 0 q-2 5 -7 0" fill="#f2a7b8"/></g>`;
+    if (pct > 0.4) s += `<g class="bfly b2"><path d="M0 0 q-5 -6 -7 0 q2 5 7 0 q5 -6 7 0 q-2 5 -7 0" fill="#fbd85c"/></g>`;
+    if (pct > 0.3) s += `<g class="bird"><path d="M290 150 q4 -4 8 0 q4 -4 8 0" stroke="#4a4a50" stroke-width="1.5" fill="none"/></g>`;
+    if (st.door) s += `<g class="cat"><ellipse cx="232" cy="336" rx="8" ry="5" fill="#e0a86a"/><circle cx="238" cy="331" r="4.2" fill="#e0a86a"/>
+        <path d="M235 328 l1 -4 l2 3 M239 327 l2 -3 l1 4" fill="#e0a86a"/><path d="M224 338 q-6 0 -5 -6" stroke="#e0a86a" stroke-width="2.2" fill="none"/></g>`;
+    return s;
+  }
+
+  function sparkles(part) {
+    if (!part) return '';
+    const spots = {
+      lawnFront: [100, 505], lawnLeft: [120, 410], lawnRight: [300, 440], steps: [272, 415], path: [200, 440],
+      fenceLeft: [80, 510], fenceRight: [320, 510], winKitchen: [148, 272], winLiving: [252, 272], winBedroom: [200, 202],
+      door: [200, 300], wall: [200, 220], shutters: [200, 270], bedLeft: [143, 345], bedRight: [257, 345], pond: [336, 380],
+      roofLeft: [150, 140], roofRight: [250, 140], attic: [200, 134],
+    }[part] || [200, 300];
+    let s = '';
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2, d = 18 + (i % 3) * 10;
+      const x = spots[0] + Math.cos(a) * d, y = spots[1] + Math.sin(a) * d * 0.7;
+      s += `<path class="spark" style="animation-delay:${(i * 0.09).toFixed(2)}s" d="M${x} ${y - 6} L${x + 1.5} ${y - 1.5} L${x + 6} ${y} L${x + 1.5} ${y + 1.5} L${x} ${y + 6} L${x - 1.5} ${y + 1.5} L${x - 6} ${y} L${x - 1.5} ${y - 1.5}Z" fill="#fff7cc"/>`;
+    }
+    return `<g class="sparkles">${s}</g>`;
+  }
+
+  // st: map of restored part -> true; cols: chosen paint colours
+  function render(st, cols, opts = {}) {
+    const s = Object.assign({}, st, { wallCol: cols.wall });
+    const pct = opts.pct || 0;
+    return `<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" class="house">
+      ${defs()}${sky()}
+      <rect x="0" y="250" width="400" height="290" fill="#86a865"/>
+      ${lawnPart('lawnLeft', [[0, 300], [108, 300], [108, 356], [184, 356], [174, 470], [0, 470]], st.lawnLeft)}
+      ${lawnPart('lawnRight', [[400, 300], [292, 300], [292, 356], [216, 356], [226, 470], [400, 470]], st.lawnRight)}
+      ${lawnPart('lawnFront', [[0, 470], [174, 470], [167, 540], [0, 540]], st.lawnFront)}
+      ${lawnPart('lawnFront2', [[226, 470], [400, 470], [400, 540], [233, 540]], st.lawnFront)}
+      ${path(st)}${steps(st)}${pond(st)}
+      ${chimney(st)}${wall(s, cols.wall)}${roof(st)}
+      ${windowSvg(134, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}${windowSvg(232, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}
+      ${windowSvg(122, 248, 40, 50, st.winKitchen, 'winKitchen', 'kitchen')}${windowSvg(238, 248, 40, 50, st.winLiving, 'winLiving', 'living')}
+      ${shutters(st, cols.shutters || '#4e7b5b')}${door(s, cols.door)}${ivy(st)}${beds(st)}
+      ${tree(st)}${fence(st, cols.fence)}${life(st, pct)}${sparkles(opts.fresh)}
+    </svg>`;
+  }
+
+  return { render };
+})();
