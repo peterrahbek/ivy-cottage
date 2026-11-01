@@ -75,6 +75,10 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #scene .bfly path{animation:flap .25s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
 @keyframes flap{to{transform:scaleX(.35)}}
 #scene .koi{animation:koi 6s ease-in-out infinite alternate}
+#scene .flake{animation:snowfall linear infinite}
+@keyframes snowfall{to{transform:translate(-30px,560px)}}
+#scene .fleaf{animation:leaffall linear infinite;transform-box:fill-box;transform-origin:center}
+@keyframes leaffall{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(30px,280px) rotate(200deg)}100%{transform:translate(-10px,560px) rotate(400deg)}}
 @keyframes koi{to{transform:translateX(-14px)}}
 .restored{display:flex;align-items:center;gap:10px;padding:10px 20px 2px;font-size:13px;color:var(--ink2);font-weight:700}
 .restored .bar{flex:1;height:8px;border-radius:9px;background:var(--paper2);overflow:hidden}
@@ -269,6 +273,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 <script src="js/scenes.js"></script>
 <script src="js/scenes2.js"></script>
 <script src="js/scenes3.js"></script>
+<script src="js/scenes4.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/audio.js"></script>

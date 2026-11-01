@@ -360,7 +360,8 @@ const SCENES = (() => {
 
   function build(kind, opts, seed, bleed) {
     const S = { W, H, r: U.rng(seed), nz: U.noise(seed * 7 + 3), opts: opts || {}, bleed };
-    return KINDS[kind](S);
+    const sc = KINDS[kind](S);
+    return opts && opts.dirt && SCENES.overlay ? SCENES.overlay(sc, opts.dirt, S) : sc;
   }
 
   // shared helpers for later scene files

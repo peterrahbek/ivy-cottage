@@ -82,6 +82,15 @@ const TOOLS = (() => {
         { id: 'leafvac', name: 'Leaf vacuum', shape: 'circle', r: 44, power: 1.8, speed: 255, sprite: 'leafvac' },
       ],
     },
+    snow: {
+      name: 'Snow tools', job: 'Shovelling', icon: 'shovel',
+      tiers: [
+        { id: 'mittens', name: 'Warm mittens', shape: 'circle', r: 11, power: 1.0, speed: 160, sprite: 'mittens' },
+        { id: 'shovel', name: 'Snow shovel', shape: 'rect', w: 34, h: 14, power: 1.15, speed: 195, sprite: 'shovel' },
+        { id: 'wideshovel', name: 'Wide pusher', shape: 'rect', w: 54, h: 16, power: 1.45, speed: 225, sprite: 'wideshovel' },
+        { id: 'blower', name: 'Snow blower', shape: 'rect', w: 76, h: 28, power: 1.9, speed: 255, sprite: 'snowblower' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -330,6 +339,32 @@ const TOOLS = (() => {
       c.fillStyle = '#3c3c42'; rr(c, -r * 2.2, -7, 14, 14, 4); c.fill();
     },
     leafvac(c, t) { SPR.blower(c, t); },
+    mittens(c, t) {
+      const r = t.r;
+      c.fillStyle = '#d9534f'; rr(c, -r * 0.9, -r * 0.65, r * 1.7, r * 1.3, r * 0.6); c.fill();
+      rr(c, -r * 0.2, -r * 1.0, r * 0.55, r * 0.5, r * 0.25); c.fill();
+      c.fillStyle = '#fff'; rr(c, -r * 1.25, -r * 0.6, r * 0.45, r * 1.2, 3); c.fill();
+      c.fillStyle = '#f2a39f'; for (let i = 0; i < 3; i++) { disc(c, -r * 0.3 + i * r * 0.35, r * 0.1, 1.4); c.fill(); }
+    },
+    shovel(c, t, p, col = '#3d86c6') {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.4, -h * 3.6, 3.5, '#d9a066');
+      c.fillStyle = '#2f2b28'; rr(c, -h * 3.9, -w * 0.18, 5, w * 0.36, 2); c.fill();
+      c.fillStyle = U.shade(col, -0.25); rr(c, -h * 0.5, -w / 2, h, w, 3); c.fill();
+      c.fillStyle = col; rr(c, -h * 0.45, -w / 2 + 1.5, h * 0.8, w - 3, 3); c.fill();
+      c.fillStyle = '#c6ccd3'; rr(c, h * 0.35, -w / 2, h * 0.18, w, 1); c.fill();
+    },
+    wideshovel(c, t) { SPR.shovel(c, t, null, '#e2574c'); },
+    snowblower(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.4, -h * 1.8, 2.2, '#9aa3ad');
+      c.fillStyle = '#3a3633'; rr(c, -h * 1.9, -w * 0.28, 4, w * 0.56, 2); c.fill();
+      wheel(c, -h * 0.35, -w * 0.32, 10, 6); wheel(c, -h * 0.35, w * 0.32, 10, 6);
+      c.fillStyle = '#c94a3d'; rr(c, -h * 0.55, -w * 0.3, h * 0.8, w * 0.6, 6); c.fill();
+      c.fillStyle = '#2f2b28'; rr(c, h * 0.15, -w / 2, h * 0.45, w, 4); c.fill();
+      c.fillStyle = '#e0e4e8'; rr(c, h * 0.2, -w / 2 + 3, h * 0.3, w - 6, 3); c.fill();
+      c.strokeStyle = '#2f2b28'; c.lineWidth = 3; c.beginPath(); c.moveTo(-h * 0.2, w * 0.15); c.quadraticCurveTo(-h * 0.2, w * 0.5, -h * 0.9, w * 0.55); c.stroke();
+    },
   };
 
   function drawSprite(c, tier, paint) {

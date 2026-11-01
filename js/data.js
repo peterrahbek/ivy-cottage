@@ -43,8 +43,56 @@ const DATA = (() => {
   const intro = {};
   CHORES.forEach((c) => { if (!(c.family in intro)) intro[c.family] = c.index; });
 
+  // ---------------------------------------------------------------- seasons
+  // Once the cottage is restored the year turns. Each season brings back a
+  // handful of jobs, some with seasonal mess (leaves, snow, frost).
+  const SEASON_ORDER = ['summer', 'autumn', 'winter', 'spring'];
+  const SEASON_NAMES = { summer: 'Summer', autumn: 'Autumn', winter: 'Winter', spring: 'Spring' };
+  const SEASON_JOBS = {
+    summer: [
+      ['lawn-tree', 'The lawn has grown back'], ['pond', 'Algae is back in the pond'], ['win-kitchen', 'Summer dust on the kitchen window'],
+      ['lawn-stones', 'Long grass by the stones'], ['bed-roses', 'Weeds among the roses'], ['win-living', 'Pollen on the living room window'],
+      ['lawn-patch', 'The patch by the gate'], ['path-steps', 'Moss on the stepping stones'],
+    ],
+    autumn: [
+      ['lawn-tree', 'Leaves under the old tree', 'leaves'], ['path-front', 'Leaves on the path', 'leaves'], ['lawn-stones', 'Leaves all over the lawn', 'leaves'],
+      ['pond', 'Leaves in the pond', 'leaves'], ['win-bedroom', 'Rain spots on the bedroom windows'], ['lawn-patch', 'Leaves by the gate', 'leaves'],
+      ['roof-left', 'Moss creeping back on the roof'], ['path-steps', 'Leaves on the stepping stones', 'leaves'],
+    ],
+    winter: [
+      ['path-front', 'Snow on the path', 'snow'], ['win-kitchen', 'Frost on the kitchen window', 'frost'], ['path-steps', 'Snowy stepping stones', 'snow'],
+      ['win-living', 'Frost on the living room window', 'frost'], ['lawn-patch', 'A clear spot for the birds', 'snow'], ['win-bedroom', 'Frosty bedroom windows', 'frost'],
+      ['attic-window', 'Frost on the round window', 'frost'], ['attic-floor', 'Winter dusting in the attic'],
+    ],
+    spring: [
+      ['bed-roses', 'Spring weeds in the roses'], ['fence-left', 'Fresh paint for the fence'], ['bed-tulips', 'Spring weeds in the tulips'],
+      ['fence-right', 'More fresh paint for the fence'], ['shutters', 'A new colour for the shutters'], ['door', 'A new colour for the door'],
+      ['lawn-tree', 'The first mow of the year'], ['roof-right', 'Moss by the chimney'],
+    ],
+  };
+  const seasonOf = (n) => SEASON_ORDER[(n - 1) % 4];
+  function seasonValue(n, i) { return Math.round(choreValue(CHORES.length - 1) * 0.42 * Math.pow(1.12, n - 1) * (1 + i * 0.05)); }
+  function seasonJobs(n) {
+    if (n < 1) return [];
+    const season = seasonOf(n);
+    return SEASON_JOBS[season].map(([baseId, name, dirt], i) => {
+      const b = CHORES.find((c) => c.id === baseId);
+      const fam = dirt === 'leaves' ? (b.scene === 'pond' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family;
+      return Object.assign({}, b, {
+        id: `s${n}-${i}`, base: b.id, name, season, seasonNo: n, pending: dirt || 'grow',
+        opts: Object.assign({}, b.opts, dirt ? { dirt } : {}), seed: b.seed + n * 131 + i, family: fam, value: seasonValue(n, i),
+      });
+    });
+  }
+  // tool families that first appear in a season
+  const FAMILY_SEASON = { rake: 2, snow: 3 };
+
+  function famBase(fam) {
+    if (fam in intro) return choreValue(intro[fam]);
+    return seasonValue(FAMILY_SEASON[fam] || 1, 0);
+  }
   function toolCost(fam, tierIdx) {
-    const base = choreValue(intro[fam] || 0) * 1.3;
+    const base = famBase(fam) * 1.3;
     return Math.round(TOOLS.COST_MULT[tierIdx] * base / 5) * 5;
   }
 
@@ -72,7 +120,7 @@ const DATA = (() => {
   };
 
   // what you do in each kind of job, for the first-time hint
-  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake' };
+  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel' };
 
-  return { AREAS, CHORES, FINDS, VERBS, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
+  return { AREAS, CHORES, FINDS, VERBS, SEASON_NAMES, seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro };
 })();

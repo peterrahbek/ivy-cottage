@@ -7,11 +7,21 @@ const HOUSE = (() => {
 
   function seeded(seed) { return U.rng(seed); }
 
+  // set at the start of every render: the season and which parts have a
+  // seasonal job waiting (part -> 'grow' | 'leaves' | 'snow' | 'frost')
+  let SEASON = 'spring', PEND = {};
+  const SKY = {
+    spring: ['#bfe2ef', '#e9f1e6', '#f6eedd'], summer: ['#9fd6f0', '#e3f3ea', '#fbf1d8'],
+    autumn: ['#f0cfae', '#f6e2c6', '#f3e6d2'], winter: ['#c4d2e0', '#e3eaf1', '#f3f6f9'],
+  };
+  const HILLS = { spring: ['#b6d2ad', '#a0c493'], summer: ['#a9cf98', '#8fc27b'], autumn: ['#d4c08e', '#c6aa6c'], winter: ['#e6edf2', '#dbe4ea'] };
+  const CANOPY = { spring: ['#6f9d5c', '#7aa866'], summer: ['#5f9a4c', '#6aa858'], autumn: ['#d9822b', '#c9692f'], winter: null };
+
   function defs() {
     return `
     <defs>
       <linearGradient id="hSky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#bfe2ef"/><stop offset="0.75" stop-color="#e9f1e6"/><stop offset="1" stop-color="#f6eedd"/>
+        <stop offset="0" stop-color="${SKY[SEASON][0]}"/><stop offset="0.75" stop-color="${SKY[SEASON][1]}"/><stop offset="1" stop-color="${SKY[SEASON][2]}"/>
       </linearGradient>
       <radialGradient id="hSun" cx="0.5" cy="0.5" r="0.5">
         <stop offset="0" stop-color="#fff6cf"/><stop offset="0.45" stop-color="#fde7a3"/><stop offset="1" stop-color="#fde7a3" stop-opacity="0"/>
@@ -62,6 +72,21 @@ const HOUSE = (() => {
       <linearGradient id="gPond" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#7cc7d8"/><stop offset="1" stop-color="#3f8ea6"/>
       </linearGradient>
+      <pattern id="pSnow" width="30" height="24" patternUnits="userSpaceOnUse">
+        <rect width="30" height="24" fill="#f3f7fb"/><ellipse cx="8" cy="8" rx="7" ry="3" fill="#e2ebf3"/><ellipse cx="22" cy="18" rx="8" ry="3" fill="#e6eef5"/>
+        <circle cx="16" cy="5" r="0.9" fill="#fff"/><circle cx="4" cy="19" r="0.8" fill="#c9d8e6"/>
+      </pattern>
+      <pattern id="pLeaves" width="34" height="28" patternUnits="userSpaceOnUse">
+        <ellipse cx="6" cy="6" rx="4" ry="2" fill="#d9822b" transform="rotate(30 6 6)"/><ellipse cx="22" cy="10" rx="4.5" ry="2.2" fill="#c4462f" transform="rotate(-20 22 10)"/>
+        <ellipse cx="14" cy="21" rx="4" ry="2" fill="#e9b23c" transform="rotate(70 14 21)"/><ellipse cx="29" cy="24" rx="3.6" ry="1.8" fill="#9c5a2a"/>
+        <ellipse cx="3" cy="17" rx="3.4" ry="1.7" fill="#e06c3c" transform="rotate(-50 3 17)"/>
+      </pattern>
+      <linearGradient id="gFrost" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f4f9fc"/><stop offset="1" stop-color="#cadbe8"/>
+      </linearGradient>
+      <linearGradient id="gDusty" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#b9b19f"/><stop offset="1" stop-color="#d7c39a"/>
+      </linearGradient>
       <filter id="fSoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
     </defs>`;
   }
@@ -78,11 +103,17 @@ const HOUSE = (() => {
     <g class="cloud c2" fill="#ffffff" opacity="0.8">
       <ellipse cx="240" cy="36" rx="20" ry="8"/><ellipse cx="256" cy="31" rx="14" ry="10"/><ellipse cx="271" cy="37" rx="15" ry="7"/>
     </g>
-    <path d="M0 214 Q70 186 150 204 T300 196 T400 202 V300 H0Z" fill="#b6d2ad"/>
-    <path d="M0 238 Q90 214 190 232 T400 226 V300 H0Z" fill="#a0c493"/>
-    ${bgTree(26, 214, 30, '#6f9d5c')}${bgTree(84, 222, 24, '#7aa866')}${bgTree(352, 214, 32, '#6f9d5c')}${bgTree(386, 230, 22, '#7aa866')}`;
+    <path d="M0 214 Q70 186 150 204 T300 196 T400 202 V300 H0Z" fill="${HILLS[SEASON][0]}"/>
+    <path d="M0 238 Q90 214 190 232 T400 226 V300 H0Z" fill="${HILLS[SEASON][1]}"/>
+    ${bgTree(26, 214, 30, 0)}${bgTree(84, 222, 24, 1)}${bgTree(352, 214, 32, 0)}${bgTree(386, 230, 22, 1)}`;
   }
-  function bgTree(x, y, r, col) {
+  function bgTree(x, y, r, which) {
+    if (!CANOPY[SEASON]) {
+      return `<g stroke="#7a6252" stroke-linecap="round" fill="none"><path d="M${x} ${y + r * 0.9} V${y - r * 0.4}" stroke-width="3"/>
+        <path d="M${x} ${y} l-${r * 0.4} -${r * 0.4} M${x} ${y - r * 0.15} l${r * 0.45} -${r * 0.35} M${x} ${y - r * 0.3} l-${r * 0.2} -${r * 0.35}" stroke-width="1.6"/></g>
+        <ellipse cx="${x}" cy="${y + r * 0.92}" rx="${r * 0.5}" ry="2" fill="#fff"/>`;
+    }
+    const col = CANOPY[SEASON][which];
     return `<g><rect x="${x - 2}" y="${y}" width="4" height="${r * 0.9}" fill="#6b5240"/>
       <circle cx="${x}" cy="${y - r * 0.15}" r="${r * 0.62}" fill="${col}"/><circle cx="${x - r * 0.35}" cy="${y + r * 0.1}" r="${r * 0.45}" fill="${col}"/><circle cx="${x + r * 0.35}" cy="${y + r * 0.08}" r="${r * 0.48}" fill="${U.shade(col, -0.1)}"/>
       <circle cx="${x - r * 0.15}" cy="${y - r * 0.35}" r="${r * 0.3}" fill="${U.shade(col, 0.15)}"/></g>`;
@@ -90,18 +121,22 @@ const HOUSE = (() => {
 
   function lawnPart(id, pts, done) {
     const d = 'M' + pts.map((p) => p.join(' ')).join(' L') + 'Z';
-    return done
-      ? `<g data-part="${id}"><path d="${d}" fill="url(#pStripes)"/></g>`
-      : `<g data-part="${id}"><path d="${d}" fill="url(#pTall)"/><path d="${d}" fill="url(#pDandelion)"/></g>`;
+    const pend = PEND[id === 'lawnFront2' ? 'lawnFront' : id];
+    const tag = id === 'lawnFront2' ? 'lawnFront' : id;
+    if (!done || pend === 'grow') return `<g data-part="${tag}"><path d="${d}" fill="url(#pTall)"/><path d="${d}" fill="url(#pDandelion)"/></g>`;
+    if (pend === 'leaves') return `<g data-part="${tag}"><path d="${d}" fill="url(#pStripes)"/><path d="${d}" fill="url(#pLeaves)"/><path d="${d}" fill="url(#pLeaves)" transform="translate(11 7)"/></g>`;
+    if (SEASON === 'winter' || pend === 'snow') return `<g data-part="${tag}"><path d="${d}" fill="url(#pSnow)"/></g>`;
+    return `<g data-part="${tag}"><path d="${d}" fill="url(#pStripes)"/>${SEASON === 'autumn' ? `<path d="${d}" fill="url(#pLeaves)" opacity="0.35"/>` : ''}</g>`;
   }
 
   function roof(st) {
     const left = 'M88 172 L200 76 L200 172 Z', right = 'M200 76 L312 172 L200 172 Z';
     return `
-      <g data-part="roofLeft"><path d="${left}" fill="url(#${st.roofLeft ? 'pTiles' : 'pTilesOld'})"/></g>
-      <g data-part="roofRight"><path d="${right}" fill="url(#${st.roofRight ? 'pTiles' : 'pTilesOld'})"/></g>
+      <g data-part="roofLeft"><path d="${left}" fill="url(#${st.roofLeft && !PEND.roofLeft ? 'pTiles' : 'pTilesOld'})"/></g>
+      <g data-part="roofRight"><path d="${right}" fill="url(#${st.roofRight && !PEND.roofRight ? 'pTiles' : 'pTilesOld'})"/></g>
+      ${SEASON === 'winter' ? '<path d="M86 172 L200 74 L314 172 L300 172 Q290 160 278 168 Q262 150 246 158 L200 104 L154 158 Q138 150 122 168 Q110 160 100 172 Z" fill="#f4f8fb"/>' : ''}
       <path d="M84 174 L200 72 L316 174" fill="none" stroke="${st.roofLeft && st.roofRight ? '#8e4430' : '#5d5243'}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
-      <g data-part="atticWin"><circle cx="200" cy="134" r="13" fill="${st.atticWin ? 'url(#gRoom)' : 'url(#gGrime)'}" stroke="#efe6d4" stroke-width="3"/></g>
+      <g data-part="atticWin"><circle cx="200" cy="134" r="13" fill="${!st.atticWin ? 'url(#gGrime)' : PEND.atticWin === 'frost' ? 'url(#gFrost)' : 'url(#gRoom)'}" stroke="#efe6d4" stroke-width="3"/></g>
       <path d="M200 121 V147 M187 134 H213" stroke="#efe6d4" stroke-width="2"/>`;
   }
 
@@ -120,6 +155,15 @@ const HOUSE = (() => {
   }
 
   function windowSvg(x, y, w, h, clean, part, kind) {
+    const pend = clean && PEND[part];
+    if (pend === 'frost' || pend === 'grow') {
+      const g = pend === 'frost' ? 'url(#gFrost)' : 'url(#gDusty)';
+      return `<g data-part="${part}"><rect x="${x - 3}" y="${y - 3}" width="${w + 6}" height="${h + 6}" rx="2" fill="#fbf7ee"/>
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${g}"/>
+        ${pend === 'frost' ? `<path d="M${x} ${y + h * 0.3} q${w * 0.2} -4 ${w * 0.3} -${h * 0.3} M${x + w} ${y + h * 0.7} q-${w * 0.2} 4 -${w * 0.35} ${h * 0.3}" stroke="#fff" stroke-width="1.5" fill="none"/>` : ''}
+        <path d="M${x + w / 2} ${y} V${y + h} M${x} ${y + h / 2} H${x + w}" stroke="#fbf7ee" stroke-width="2.5"/>
+        <rect x="${x - 6}" y="${y + h + 2}" width="${w + 12}" height="5" rx="1.5" fill="${SEASON === 'winter' ? '#f4f8fb' : '#efe6d4'}"/></g>`;
+    }
     const glass = clean ? 'url(#gRoom)' : 'url(#gGrime)';
     const frame = clean ? '#fbf7ee' : '#b8b1a2';
     let inside = '';
@@ -186,6 +230,8 @@ const HOUSE = (() => {
   function beds(st) {
     const r = seeded(91);
     const bed = (id, x0, x1, done, cols) => {
+      done = done && PEND[id] !== 'grow';
+      if (SEASON === 'winter' && done) return `<g data-part="${id}"><rect x="${x0}" y="338" width="${x1 - x0}" height="16" rx="5" fill="#6b4a33"/><rect x="${x0}" y="338" width="${x1 - x0}" height="8" rx="4" fill="#f4f8fb"/></g>`;
       let s = `<g data-part="${id}"><rect x="${x0}" y="338" width="${x1 - x0}" height="16" rx="5" fill="${done ? '#6b4a33' : '#7a6448'}"/>`;
       for (let i = 0; i < 16; i++) {
         const x = x0 + 4 + r() * (x1 - x0 - 8), y = 341 + r() * 10;
@@ -198,20 +244,27 @@ const HOUSE = (() => {
   }
 
   function path(st) {
+    const pend = st.path && PEND.path;
+    if (pend === 'snow') return `<g data-part="path"><path d="M186 342 L214 342 L234 540 L166 540 Z" fill="url(#pSnow)"/></g>`;
+    if (pend === 'leaves') return `<g data-part="path"><path d="M186 342 L214 342 L234 540 L166 540 Z" fill="url(#pFlags)"/><path d="M186 342 L214 342 L234 540 L166 540 Z" fill="url(#pLeaves)"/></g>`;
     return `<g data-part="path"><path d="M186 342 L214 342 L234 540 L166 540 Z" fill="url(#${st.path ? 'pFlags' : 'pMoss'})"/>
       <path d="M186 342 L166 540 M214 342 L234 540" stroke="${st.path ? '#a8987b' : '#6d7448'}" stroke-width="1.5"/></g>`;
   }
 
   function steps(st) {
     const pts = [[242, 392], [262, 410], [284, 426], [305, 440]];
-    return `<g data-part="steps">${pts.map(([x, y]) => `<ellipse cx="${x}" cy="${y + 1.5}" rx="9" ry="5" fill="#00000022"/><ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="${st.steps ? '#d8d0c2' : '#7f8a55'}"/>`).join('')}</g>`;
+    const pend = st.steps && PEND.steps;
+    const col = !st.steps || pend === 'grow' ? '#7f8a55' : pend === 'leaves' ? '#c98a4a' : pend === 'snow' || SEASON === 'winter' ? '#f4f8fb' : '#d8d0c2';
+    return `<g data-part="steps">${pts.map(([x, y]) => `<ellipse cx="${x}" cy="${y + 1.5}" rx="9" ry="5" fill="#00000022"/><ellipse cx="${x}" cy="${y}" rx="9" ry="5" fill="${col}"/>`).join('')}</g>`;
   }
 
   function pond(st) {
     return `<g data-part="pond">
       <ellipse cx="336" cy="380" rx="44" ry="16" fill="#9e9584"/>
-      <ellipse cx="336" cy="380" rx="40" ry="13.5" fill="${st.pond ? 'url(#gPond)' : '#5f7a3a'}"/>
-      ${st.pond
+      <ellipse cx="336" cy="380" rx="40" ry="13.5" fill="${!st.pond || PEND.pond === 'grow' ? '#5f7a3a' : PEND.pond === 'leaves' ? '#7d6a3a' : SEASON === 'winter' ? '#dfeef5' : 'url(#gPond)'}"/>
+      ${PEND.pond === 'leaves' ? '<ellipse cx="336" cy="380" rx="38" ry="12" fill="url(#pLeaves)"/>' : ''}
+      ${SEASON === 'winter' && st.pond && !PEND.pond ? '<path d="M312 376 l18 -4 M340 386 l20 -5" stroke="#fff" stroke-width="2"/>' : ''}
+      ${st.pond && !PEND.pond && SEASON !== 'winter'
         ? `<ellipse cx="322" cy="377" rx="6" ry="2.6" fill="#5fae5a"/><circle cx="324" cy="376" r="1.5" fill="#f7b6c8"/><ellipse cx="350" cy="384" rx="5" ry="2.2" fill="#6bb865"/>
            <path class="koi" d="M330 383 q4 -3 8 0 q-4 3 -8 0 l-3 -2 v4z" fill="#f08a3c"/>`
         : `<circle cx="318" cy="378" r="2" fill="#7f9a4a"/><circle cx="345" cy="383" r="2.5" fill="#86a04e"/><circle cx="335" cy="375" r="1.6" fill="#93a85a"/>`}
@@ -219,6 +272,16 @@ const HOUSE = (() => {
   }
 
   function tree(st) {
+    if (SEASON === 'winter') {
+      return `<g class="bigtree"><path d="M44 410 Q48 360 40 320 L56 320 Q52 360 60 410 Z" fill="#6b4a32"/>
+        <g stroke="#6b4a32" stroke-linecap="round" fill="none"><path d="M48 322 Q30 290 14 270 M48 322 Q60 288 84 266 M48 322 Q46 280 44 244 M30 296 Q20 296 8 300 M64 296 Q78 300 90 296 M45 270 Q34 262 28 250" stroke-width="4"/></g>
+        <g fill="#fff"><ellipse cx="22" cy="276" rx="7" ry="2.5"/><ellipse cx="74" cy="272" rx="8" ry="2.5"/><ellipse cx="44" cy="248" rx="6" ry="2.2"/><ellipse cx="51" cy="409" rx="18" ry="3"/></g></g>`;
+    }
+    if (SEASON === 'autumn') {
+      return `<g class="bigtree"><path d="M44 410 Q48 360 40 320 L56 320 Q52 360 60 410 Z" fill="#6b4a32"/>
+        <circle cx="48" cy="290" r="42" fill="#d9822b"/><circle cx="20" cy="306" r="26" fill="#c9692f"/><circle cx="78" cy="304" r="28" fill="#c4462f"/>
+        <circle cx="40" cy="268" r="24" fill="#e9a13c"/><circle cx="64" cy="278" r="16" fill="#efb23c"/></g>`;
+    }
     return `<g class="bigtree">
       <path d="M44 410 Q48 360 40 320 L56 320 Q52 360 60 410 Z" fill="#6b4a32"/>
       <circle cx="48" cy="290" r="42" fill="#5c8f45"/><circle cx="20" cy="306" r="26" fill="#558740"/><circle cx="78" cy="304" r="28" fill="#4f803c"/>
@@ -252,6 +315,28 @@ const HOUSE = (() => {
     return s;
   }
 
+  // paint that needs a fresh coat looks a little washed out
+  function faded() {
+    let s = '';
+    if (PEND.fenceLeft) s += '<rect x="0" y="486" width="164" height="48" fill="#cfc6b6" opacity="0.45"/>';
+    if (PEND.fenceRight) s += '<rect x="236" y="486" width="164" height="48" fill="#cfc6b6" opacity="0.45"/>';
+    if (PEND.door) s += '<path d="M181 336 V277 Q181 262 200 262 Q219 262 219 277 V336 Z" fill="#cfc6b6" opacity="0.5"/>';
+    if (PEND.shutters) for (const x of [111, 164, 227, 280]) s += `<rect x="${x}" y="246" width="9" height="54" fill="#cfc6b6" opacity="0.5"/>`;
+    return s;
+  }
+  function weather() {
+    let s = '';
+    if (SEASON === 'winter') {
+      for (let i = 0; i < 26; i++) s += `<circle class="flake" cx="${(i * 61) % 400}" cy="-10" r="${1.5 + (i % 3) * 0.7}" fill="#fff" style="animation-delay:-${(i * 0.83) % 9}s;animation-duration:${7 + (i % 5)}s"/>`;
+    } else if (SEASON === 'autumn') {
+      const cols = ['#d9822b', '#c4462f', '#e9b23c'];
+      for (let i = 0; i < 9; i++) s += `<ellipse class="fleaf" cx="${(i * 47 + 20) % 400}" cy="-10" rx="4" ry="2" fill="${cols[i % 3]}" style="animation-delay:-${(i * 1.3) % 10}s;animation-duration:${9 + (i % 4)}s"/>`;
+    } else if (SEASON === 'spring' && Object.keys(PEND).length) {
+      for (let i = 0; i < 8; i++) s += `<ellipse class="fleaf" cx="${(i * 53 + 10) % 400}" cy="-10" rx="2.6" ry="1.6" fill="#f7c6d1" style="animation-delay:-${(i * 1.7) % 11}s;animation-duration:${11 + (i % 3)}s"/>`;
+    }
+    return `<g class="weather">${s}</g>`;
+  }
+
   function sparkles(part) {
     if (!part) return '';
     const spots = {
@@ -271,11 +356,12 @@ const HOUSE = (() => {
 
   // st: map of restored part -> true; cols: chosen paint colours
   function render(st, cols, opts = {}) {
+    SEASON = opts.season || 'spring'; PEND = opts.pending || {};
     const s = Object.assign({}, st, { wallCol: cols.wall });
     const pct = opts.pct || 0;
     return `<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" class="house">
       ${defs()}${sky()}
-      <rect x="0" y="250" width="400" height="290" fill="#86a865"/>
+      <rect x="0" y="250" width="400" height="290" fill="${SEASON === 'winter' ? '#e9eff4' : '#86a865'}"/>
       ${lawnPart('lawnLeft', [[0, 300], [108, 300], [108, 356], [184, 356], [174, 470], [0, 470]], st.lawnLeft)}
       ${lawnPart('lawnRight', [[400, 300], [292, 300], [292, 356], [216, 356], [226, 470], [400, 470]], st.lawnRight)}
       ${lawnPart('lawnFront', [[0, 470], [174, 470], [167, 540], [0, 540]], st.lawnFront)}
@@ -285,7 +371,7 @@ const HOUSE = (() => {
       ${windowSvg(134, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}${windowSvg(232, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}
       ${windowSvg(122, 248, 40, 50, st.winKitchen, 'winKitchen', 'kitchen')}${windowSvg(238, 248, 40, 50, st.winLiving, 'winLiving', 'living')}
       ${shutters(st, cols.shutters || '#4e7b5b')}${door(s, cols.door)}${ivy(st)}${beds(st)}
-      ${tree(st)}${fence(st, cols.fence)}${life(st, pct)}${sparkles(opts.fresh)}
+      ${tree(st)}${fence(st, cols.fence)}${faded()}${life(st, pct)}${weather()}${sparkles(opts.fresh)}
     </svg>`;
   }
 

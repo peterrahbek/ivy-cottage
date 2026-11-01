@@ -48,6 +48,12 @@
     for (let i = 0; i < 1500; i++) { c.fillStyle = r() < 0.6 ? 'rgba(60,50,40,0.12)' : 'rgba(255,255,255,0.15)'; c.fillRect(x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 1 + r(), 1 + r()); }
   }
 
+  // the cottage wall once it has been painted: the chosen colour, softly textured
+  function paintedPlaster(c, nz, x0, y0, x1, y1, col) {
+    c.fillStyle = col; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+    field(c, x0, y0, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.05 + 30, y * 0.05, 3); return v > 0.5 ? [255, 255, 255, (v - 0.5) * 80] : [0, 0, 0, (0.5 - v) * 45]; });
+  }
+
   function ivySprig(c, r, x, y, len, dir = 1) {
     c.strokeStyle = '#5b4a33'; c.lineWidth = 1.4;
     let px = x, py = y;
@@ -291,9 +297,14 @@
         return 1;
       },
       decor(c) {
-        oldPlaster(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1);
-        ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 22, 1);
-        ivySprig(c, r, bleed.x1 - 6, bleed.y1 - 30, 16, -1);
+        if (opts.wallColor) {
+          paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
+          ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 12, 1);
+        } else {
+          oldPlaster(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1);
+          ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 22, 1);
+          ivySprig(c, r, bleed.x1 - 6, bleed.y1 - 30, 16, -1);
+        }
         const fr = new Path2D(); fr.rect(fx0 - 6, fy0 - 6, fx1 - fx0 + 12, fy1 - fy0 + 30);
         softShadow(c, fr, 14, 0.4, 0, 6);
       },
@@ -349,7 +360,7 @@
         c.fillStyle = 'rgba(0,0,0,0.1)'; c.fillRect(gx0, gy0, gx1 - gx0, 4); c.fillRect(gx0, gy0, 4, gy1 - gy0);
         c.strokeStyle = dk; c.lineWidth = 1.2; c.strokeRect(fx0 + 0.5, fy0 + 0.5, fx1 - fx0 - 1, fy1 - fy0 - 1);
         // chips in the old paint
-        for (let i = 0; i < 26; i++) {
+        for (let i = 0; i < (opts.wallColor ? 0 : 26); i++) {
           const side = r() * 4 | 0;
           const x = side < 2 ? fx0 + r() * (fx1 - fx0) : (side === 2 ? fx0 + r() * t : fx1 - r() * t);
           const y = side < 2 ? (side === 0 ? fy0 + r() * t : fy1 - r() * t) : fy0 + r() * (fy1 - fy0);
@@ -372,7 +383,7 @@
 
   // ------------------------------------------------------------------- DOOR
   function door(S) {
-    const { r, nz, bleed } = S;
+    const { r, nz, opts, bleed } = S;
     const x0 = 80, x1 = 280, yTop = 150, y1 = 540, cx = 180, R = 100;
     const fan = 66;
     const region = new Path2D();
@@ -387,7 +398,8 @@
       tough: (x, y) => (y > 480 ? 1.35 : 1),
       decor(c) {
         // stone surround and a brick doorstep
-        oldPlaster(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, ['#c4b79d', '#d1c5ad', '#dcd2be', '#e2d9c7']);
+        if (opts.wallColor) paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
+        else oldPlaster(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, ['#c4b79d', '#d1c5ad', '#dcd2be', '#e2d9c7']);
         c.fillStyle = '#efe7d8';
         c.beginPath(); c.moveTo(x0 - 22, y1); c.lineTo(x0 - 22, yTop); c.arc(cx, yTop, R + 22, Math.PI, 0); c.lineTo(x1 + 22, y1); c.closePath(); c.fill();
         c.fillStyle = '#5b4a3a';

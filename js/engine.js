@@ -210,6 +210,7 @@ const ENGINE = (() => {
     weed: ['#4f8a3a', '#62a042', '#6b4f36', '#7bb553'],
     suds: ['#ffffff'],
     water: ['#bfe6f5'],
+    snow: ['#ffffff', '#eef6fb', '#dfeaf3'],
   };
   function spawn(kind, x, y, a, amount, t) {
     const n = Math.min(5, amount * 0.9 + (Math.random() < amount * 0.9 % 1 ? 1 : 0));
@@ -225,6 +226,7 @@ const ENGINE = (() => {
       if (kind === 'paint') { p.col = paint; p.vx *= 0.3; p.vy = 20 + Math.random() * 30; p.s = 1 + Math.random() * 1.5; }
       else if (kind === 'suds') { p.vx *= 0.25; p.vy = -10 - Math.random() * 20; p.s = 2 + Math.random() * 4; p.max = 0.9 + Math.random() * 0.7; }
       else if (kind === 'dust') { p.vx *= 0.35; p.vy = -8 - Math.random() * 15; p.s = 4 + Math.random() * 6; p.max = 0.9 + Math.random() * 0.6; }
+      else if (kind === 'snow') { p.vx *= 0.8; p.vy -= 30; p.s = 1.5 + Math.random() * 2.5; p.max = 0.6 + Math.random() * 0.5; }
       else if (kind === 'water') { p.vx *= 0.1; p.vy = 0; p.s = 2; p.max = 0.8; }
       if (!p.col) { const cols = PCOL[kind] || PCOL.grass; p.col = cols[(Math.random() * cols.length) | 0]; }
       parts.push(p);
@@ -272,6 +274,9 @@ const ENGINE = (() => {
         c.globalAlpha = Math.min(1, a * 2);
         c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.col;
         c.beginPath(); c.ellipse(0, 0, p.s * 2.4, p.s * 1.3, 0, 0, 7); c.fill(); c.restore();
+      } else if (p.kind === 'snow') {
+        c.globalAlpha = Math.min(1, a * 1.6);
+        c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s, 0, 7); c.fill();
       } else if (p.kind === 'paint') {
         c.globalAlpha = Math.min(1, a * 2);
         c.fillStyle = p.col; c.beginPath(); c.arc(p.x, p.y, p.s, 0, 7); c.fill();

@@ -65,6 +65,8 @@ const AUDIO = (() => {
     dust: { type: 'highpass', f: 2600, q: 0.6, vol: 0.18 },
     rake: { type: 'bandpass', f: 1400, q: 0.9, vol: 0.3 },
     vacuum: { type: 'bandpass', f: 900, q: 0.8, vol: 0.2, engine: 120 },
+    snow: { type: 'bandpass', f: 1000, q: 0.7, vol: 0.34 },
+    snowblower: { type: 'bandpass', f: 1400, q: 0.6, vol: 0.2, engine: 70 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;

@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, started: Date.now() };
   }
   function load() {
     try {
@@ -21,9 +21,13 @@
 
   const tierIdx = (fam) => S.tiers[fam] || 0;
   const tierOf = (fam) => TOOLS.FAM[fam].tiers[tierIdx(fam)];
-  const nextChore = () => DATA.CHORES.find((c) => !S.done[c.id]);
+  const seasonJobs = () => DATA.seasonJobs(S.seasonNo);
+  const nextChore = () => (S.seasonNo === 0 ? DATA.CHORES.find((c) => !S.done[c.id]) : seasonJobs().find((j) => !S.sdone[j.id]));
   const doneCount = () => DATA.CHORES.filter((c) => S.done[c.id]).length;
+  const seasonName = () => (S.seasonNo ? DATA.seasonOf(S.seasonNo) : 'spring');
   const famUnlocked = (fam) => {
+    if (DATA.FAMILY_SEASON[fam]) return S.seasonNo >= DATA.FAMILY_SEASON[fam];
+    if (S.seasonNo > 0) return true;
     const n = nextChore();
     const reach = n ? n.index : DATA.CHORES.length;
     return DATA.intro[fam] !== undefined && DATA.intro[fam] <= reach;
@@ -58,37 +62,54 @@
   // ---------------------------------------------------------------- home
   let freshPart = null;
   function renderHome() {
-    const st = {};
+    const st = {}, pending = {};
     for (const c of DATA.CHORES) if (S.done[c.id]) st[c.part] = true;
+    for (const j of seasonJobs()) if (!S.sdone[j.id]) pending[j.part] = j.pending;
     const pct = doneCount() / DATA.CHORES.length;
-    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart });
+    $('#scene').innerHTML = HOUSE.render(st, S.colours, { pct, fresh: freshPart, season: seasonName(), pending });
     if (freshPart) {
       const g = $('#scene').querySelectorAll(`[data-part="${freshPart}"]`);
       g.forEach((el) => el.classList.add('fresh'));
     }
     freshPart = null;
     $('#homeCoins').innerHTML = coinHtml(S.coins);
-    $('#restoredBar').style.width = (pct * 100).toFixed(1) + '%';
-    $('#restoredTxt').textContent = pct >= 1 ? 'Ivy Cottage is restored' : `${doneCount()} of ${DATA.CHORES.length} jobs done`;
+    if (S.seasonNo === 0) {
+      $('#restoredBar').style.width = (pct * 100).toFixed(1) + '%';
+      $('#restoredTxt').textContent = pct >= 1 ? 'Ivy Cottage is restored' : `${doneCount()} of ${DATA.CHORES.length} jobs done`;
+    } else {
+      const jobs = seasonJobs(), d = jobs.filter((j) => S.sdone[j.id]).length;
+      $('#restoredBar').style.width = ((d / jobs.length) * 100).toFixed(1) + '%';
+      $('#restoredTxt').textContent = `${DATA.SEASON_NAMES[seasonName()]}, year ${1 + Math.floor(S.seasonNo / 4)} · ${d} of ${jobs.length}`;
+    }
+    document.body.dataset.season = seasonName();
     const n = nextChore();
     const card = $('#nextCard');
     if (n) {
       const fam = TOOLS.FAM[n.family];
-      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${DATA.AREAS[n.area]} · ${fam.job}</div><div class="nextName">${n.name}</div>
+      const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
+      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
         <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${tierOf(n.family).name}</span></div></div>
         <div class="nextIcon"></div><button class="go" id="goBtn">Start</button>`;
       card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
     } else {
-      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">All done</div><div class="nextName">The cottage is lovely again</div>
-        <div class="nextMeta">Replay any job from the job list. More is coming.</div></div><button class="go" id="goBtn">Jobs</button>`;
-      $('#goBtn').onclick = () => { AUDIO.pop(); openJobs(); };
+      const upcoming = DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)];
+      const title = S.seasonNo === 0 ? 'The cottage is lovely again' : `${DATA.SEASON_NAMES[seasonName()]} is all tidy`;
+      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${S.seasonNo === 0 ? 'All restored' : 'Season done'}</div><div class="nextName">${title}</div>
+        <div class="nextMeta">${upcoming} is on its way, with new jobs.</div></div><button class="go" id="goBtn">${upcoming}</button>`;
+      $('#goBtn').onclick = () => {
+        S.seasonNo++; S.sdone = {}; save();
+        AUDIO.chime(); toast(`${upcoming} has arrived`);
+        renderHome();
+      };
     }
     $('#btnShed').classList.toggle('alert', affordableSomething());
     $('#scene').querySelectorAll('[data-part]').forEach((el) => {
       el.addEventListener('click', () => {
-        const c = DATA.CHORES.find((x) => x.part === el.dataset.part || (el.dataset.part === 'lawnFront2' && x.part === 'lawnFront'));
-        if (c && S.done[c.id]) { AUDIO.soft(); openJobs(c.id); }
+        const part = el.dataset.part;
+        const sj = seasonJobs().find((j) => j.part === part && !S.sdone[j.id]);
+        const c = sj || DATA.CHORES.find((x) => x.part === part);
+        if (c && (sj || S.done[c.id])) { AUDIO.soft(); openJobs(c.id); }
       });
     });
   }
@@ -110,7 +131,8 @@
     for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
     const f = DATA.FINDS[c.id];
     if (f && !S.finds[c.id]) treasures.push({ kind: 'find', id: c.id, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
-    ENGINE.start(c, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures });
+    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, S.done.wall ? { wallColor: S.colours.wall } : {}) });
+    ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures });
     lastMilestone = 0;
     const hint = $('#hint');
     if (S.touched < 3) { hint.querySelector('span').textContent = 'Drag to ' + DATA.VERBS[fam]; hint.classList.add('on'); } else hint.classList.remove('on');
@@ -180,8 +202,9 @@
   function finishChore() {
     const bonus = Math.round(curValue * 0.25);
     S.coins += bonus; S.earned += bonus;
-    const first = !S.done[cur.id];
-    S.done[cur.id] = (S.done[cur.id] || 0) + 1;
+    let first;
+    if (cur.seasonNo) { first = !S.sdone[cur.id]; S.sdone[cur.id] = (S.sdone[cur.id] || 0) + 1; }
+    else { first = !S.done[cur.id]; S.done[cur.id] = (S.done[cur.id] || 0) + 1; }
     save();
     if (first) freshPart = cur.part;
     AUDIO.chime(); AUDIO.activity(0, false);
@@ -297,19 +320,27 @@
   function openJobs(focus) {
     const n = nextChore();
     let html = '', lastArea = '';
+    const row = (c, doneN) => {
+      const done = !!doneN, isNext = n && n.id === c.id, locked = !done && !isNext;
+      const v = done ? Math.round(c.value * 0.6) : c.value;
+      return `<div class="jobRow${locked ? ' locked' : ''}${focus === c.id ? ' focus' : ''}" id="job-${c.id}"><div class="jState">${done ? '✓' : isNext ? '•' : ''}</div>
+        <div class="jName">${c.name}<div class="sub">${TOOLS.FAM[c.family].job}${done ? ' · done' + (doneN > 1 ? ' ×' + doneN : '') : ''}</div></div>
+        ${locked ? '<div class="lock">Later</div>' : `<button class="jGo" data-id="${c.id}">${done ? 'Again' : 'Start'} ${coinHtml(v)}</button>`}</div>`;
+    };
+    const sj = seasonJobs();
+    if (sj.length) {
+      html += `<div class="jobArea">${DATA.SEASON_NAMES[seasonName()]}</div>`;
+      for (const j of sj) html += row(j, S.sdone[j.id]);
+    }
     for (const c of DATA.CHORES) {
       if (c.area !== lastArea) { html += `<div class="jobArea">${DATA.AREAS[c.area]}</div>`; lastArea = c.area; }
-      const done = !!S.done[c.id], isNext = n && n.id === c.id, locked = !done && !isNext;
-      const v = done ? Math.round(c.value * 0.6) : c.value;
-      html += `<div class="jobRow${locked ? ' locked' : ''}${focus === c.id ? ' focus' : ''}" id="job-${c.id}"><div class="jState">${done ? '✓' : isNext ? '•' : ''}</div>
-        <div class="jName">${c.name}<div class="sub">${TOOLS.FAM[c.family].job}${done ? ' · done' + (S.done[c.id] > 1 ? ' ×' + S.done[c.id] : '') : ''}</div></div>
-        ${locked ? '<div class="lock">Later</div>' : `<button class="jGo" data-id="${c.id}">${done ? 'Again' : 'Start'} ${coinHtml(v)}</button>`}</div>`;
+      html += row(c, S.done[c.id]);
     }
     openSheet('Jobs', html, (body) => {
       body.querySelectorAll('.jGo').forEach((b) => b.onclick = () => {
-        const c = DATA.CHORES.find((x) => x.id === b.dataset.id);
+        const c = DATA.CHORES.find((x) => x.id === b.dataset.id) || sj.find((x) => x.id === b.dataset.id);
         $('#sheet').classList.remove('on'); AUDIO.pop();
-        startChore(c, !!S.done[c.id]);
+        startChore(c, !!(S.done[c.id] || S.sdone[c.id]));
       });
       if (focus) { const el = body.querySelector('#job-' + focus); el && el.scrollIntoView({ block: 'center' }); }
     });
@@ -355,5 +386,5 @@
   }
 
   // test hooks
-  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), save, reset() { S = fresh(); save(); renderHome(); } };
+  window.__ivy = { get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startJob: (c) => startChore(c, false), render: () => renderHome(), save, reset() { S = fresh(); save(); renderHome(); } };
 })();
