@@ -301,7 +301,8 @@
   // A beach hut on short stilts, front on, painted in the player's colour.
   // Trim, roof, windows and the door handle sit above the paint.
   function hut(S) {
-    const { r, nz, bleed } = S;
+    const { r, nz, bleed, opts } = S;
+    const garden = !!(opts && opts.garden);
     const xL = 68, xR = 292, yE = 210, yA = 132, yB = 470, cx = 180;
     const door = { x0: 138, x1: 222, y0: 282, y1: 470 };
     const wins = [{ x: 101, y: 330 }, { x: 259, y: 330 }];
@@ -327,6 +328,24 @@
       tough: (x, y) => (x < xL + 12 || x > xR - 12 || y > yB - 12 ? 1.3 : 1),
       decor(c) {
         const { x0, y0, x1, y1 } = bleed;
+        if (garden) {
+          // the potting shed in the walled garden: brick wall, lawn, a stone step
+          sky(c, y0, 260, x0, x1, '#a3d4ec', '#e6f3f1');
+          cloud(c, 70, 70, 20);
+          for (let y = 150, row = 0; y < 330; y += 13, row++) for (let x = x0 - (row % 2) * 15; x < x1; x += 30) {
+            c.fillStyle = U.pick(r, ['#b5603f', '#a8573a', '#bf6c48', '#9e5236']); c.fillRect(x + 1, y + 1, 28, 11);
+          }
+          c.fillStyle = '#d9d3c5'; c.fillRect(x0, 142, x1 - x0, 10);
+          for (let i = 0; i < 9; i++) { c.fillStyle = U.pick(r, ['#4f8a3c', '#467e37', '#5d9644']); c.beginPath(); c.ellipse(x0 + r() * (x1 - x0), 330 + r() * 30, 30 + r() * 20, 26 + r() * 10, 0, 0, 7); c.fill(); }
+          SCENES.mowedLawn(c, nz, x0, 360, x1, y1, true);
+          c.fillStyle = 'rgba(60,45,25,0.25)'; c.beginPath(); c.ellipse(cx + 6, 478, 150, 10, 0, 0, 7); c.fill();
+          c.fillStyle = '#a49c8c'; c.fillRect(xL - 8, yB - 2, xR - xL + 16, 12);
+          c.fillStyle = '#bdb6a6'; c.fillRect(door.x0 - 10, yB + 8, door.x1 - door.x0 + 20, 12);
+          for (const px of [44, 316]) { c.fillStyle = '#b8653f'; c.beginPath(); c.moveTo(px - 16, 448); c.lineTo(px + 16, 448); c.lineTo(px + 12, 478); c.lineTo(px - 12, 478); c.closePath(); c.fill(); for (let k = 0; k < 7; k++) { c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042']); c.beginPath(); c.ellipse(px + (r() - 0.5) * 26, 440 - r() * 18, 7, 4, r() * 3, 0, 7); c.fill(); } for (let k = 0; k < 4; k++) { c.fillStyle = U.pick(r, ['#e98aa2', '#f2c230', '#ffffff']); c.beginPath(); c.arc(px + (r() - 0.5) * 22, 432 - r() * 14, 3.4, 0, 7); c.fill(); } }
+          const p = new Path2D(); p.moveTo(xL, yB); p.lineTo(xL, yE); p.lineTo(cx, yA); p.lineTo(xR, yE); p.lineTo(xR, yB); p.closePath();
+          softShadow(c, p, 12, 0.3, 5, 6);
+          return;
+        }
         sky(c, y0, 300, x0, x1, '#a3d4ec', '#e6f3f1');
         cloud(c, 60, 70, 22); cloud(c, 300, 110, 18, 0.8);
         seaBand(c, r, nz, x0, x1, 300, 392);
@@ -385,8 +404,9 @@
         seams(c, 'rgba(45,38,30,0.55)', 'rgba(255,255,255,0.08)');
         // what is left of the old paint
         peelingPaint(c, r, xL, yA, xR, yB, 70, '#bcd3cc');
-        // salt crust creeping up from the bottom
-        field(c, xL, yA, xR, yB, 2, (x, y) => { const v = nz.fbm(x * 0.03 + 5, y * 0.03, 4) + ((y - yA) / (yB - yA)) * 0.35; return [238, 234, 222, Math.max(0, v - 0.62) * 600]; });
+        // salt crust (green moss in the garden) creeping up from the bottom
+        const crust = garden ? [104, 132, 70] : [238, 234, 222];
+        field(c, xL, yA, xR, yB, 2, (x, y) => { const v = nz.fbm(x * 0.03 + 5, y * 0.03, 4) + ((y - yA) / (yB - yA)) * 0.35; return [...crust, Math.max(0, v - 0.62) * 600]; });
         grime(c, r, xL, yA, xR, yB, 26);
         c.strokeStyle = 'rgba(0,0,0,0.35)'; c.lineWidth = 2; c.strokeRect(door.x0 + 1, door.y0 + 1, door.x1 - door.x0 - 2, door.y1 - door.y0 - 2);
         for (let i = 0; i < 18; i++) rustStreak(c, r, xL + 16 * (1 + ((r() * 13) | 0)) + (r() < 0.5 ? -4 : 4), yE + 10 + r() * 220, 20 + r() * 40);
@@ -411,13 +431,18 @@
         board(door.x0 - 7, door.y0 - 7, 7, door.y1 - door.y0 + 7); board(door.x1, door.y0 - 7, 7, door.y1 - door.y0 + 7);
         board(door.x0 - 7, door.y0 - 7, door.x1 - door.x0 + 14, 7);
         c.fillStyle = '#8f8a80'; c.fillRect(door.x0 - 2, yB - 2, door.x1 - door.x0 + 4, 6);
-        // brass handle and a starfish on the door
+        // brass handle and a starfish on the door (a wreath of leaves on the shed)
         dot(c, door.x1 - 14, 386, 6, '#b8913d'); dot(c, door.x1 - 14, 386, 4, '#e2bd5e'); dot(c, door.x1 - 15.5, 384.5, 1.4, '#fff3c4');
-        c.save(); c.translate(cx, 318); c.rotate(0.2);
-        c.fillStyle = 'rgba(30,20,10,0.3)'; starPath(c, 1.5, 2, 13, 5); c.fill();
-        c.fillStyle = '#ee8a4f'; starPath(c, 0, 0, 13, 5); c.fill();
-        for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k / 5) * 6.283; for (let j = 1; j <= 3; j++) dot(c, Math.cos(a) * j * 3.2, Math.sin(a) * j * 3.2, 0.9, '#f9c38f'); }
-        c.restore();
+        if (garden) {
+          for (let k = 0; k < 16; k++) { const a = (k / 16) * 6.283; c.fillStyle = k % 2 ? '#4f8a3a' : '#62a042'; c.beginPath(); c.ellipse(cx + Math.cos(a) * 14, 318 + Math.sin(a) * 14, 6, 3, a + 1.2, 0, 7); c.fill(); }
+          dot(c, cx, 304, 3, '#e98aa2'); dot(c, cx + 10, 309, 2.6, '#f2c230');
+        } else {
+          c.save(); c.translate(cx, 318); c.rotate(0.2);
+          c.fillStyle = 'rgba(30,20,10,0.3)'; starPath(c, 1.5, 2, 13, 5); c.fill();
+          c.fillStyle = '#ee8a4f'; starPath(c, 0, 0, 13, 5); c.fill();
+          for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k / 5) * 6.283; for (let j = 1; j <= 3; j++) dot(c, Math.cos(a) * j * 3.2, Math.sin(a) * j * 3.2, 0.9, '#f9c38f'); }
+          c.restore();
+        }
         // two little windows with gingham curtains
         for (const w of wins) {
           c.fillStyle = 'rgba(30,20,10,0.25)'; c.fillRect(w.x - 22, w.y - 27, 48, 62);

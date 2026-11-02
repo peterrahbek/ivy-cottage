@@ -492,6 +492,50 @@
       c.fillStyle = 'rgba(80,100,150,0.7)'; c.font = '800 10px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.fillText('z', x0 + 56, 420); c.font = '800 13px ui-rounded, system-ui, sans-serif'; c.fillText('z', x0 + 66, 406);
       glow(c, (x0 + x1) / 2, 300, 200, 'rgba(255,230,190,0.12)');
     },
+    // inside the old glasshouse: light through the far glass, slatted benches
+    // of pots and seedlings, a tomato vine up a cane, a hanging basket
+    glasshouse(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      const sky = c.createLinearGradient(0, y0, 0, y1);
+      sky.addColorStop(0, '#e4f2ec'); sky.addColorStop(0.6, '#d5ead9'); sky.addColorStop(1, '#c4dcc0');
+      c.fillStyle = sky; c.fillRect(x0, y0, w, y1 - y0);
+      // the far side of the glasshouse: white glazing bars and green beyond
+      for (let i = 0; i < 9; i++) { c.fillStyle = U.pick(r, ['#9cc58a', '#8dba7c', '#a9cf96']); c.beginPath(); c.ellipse(x0 + r() * w, 300 + r() * 40, 30 + r() * 30, 18 + r() * 12, 0, 0, 7); c.fill(); }
+      c.fillStyle = 'rgba(255,255,255,0.55)';
+      for (let x = x0 + 18; x < x1; x += 44) c.fillRect(x, y0, 3, 330 - y0);
+      c.fillRect(x0, 150, w, 3); c.fillRect(x0, 240, w, 3);
+      // a tomato vine climbing a cane on the left
+      c.strokeStyle = '#b98654'; c.lineWidth = 2.5; c.beginPath(); c.moveTo(x0 + 26, 420); c.lineTo(x0 + 30, 170); c.stroke();
+      for (let y = 190; y < 410; y += 22) {
+        const s = y % 44 ? 1 : -1;
+        c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042', '#5b9640']); c.beginPath(); c.ellipse(x0 + 28 + s * 12, y, 11, 5, s * 0.5, 0, 7); c.fill();
+        if (r() < 0.55) { c.fillStyle = U.pick(r, ['#e2483a', '#e86a3a', '#d93b30']); c.beginPath(); c.arc(x0 + 28 - s * 9, y + 8, 5, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.arc(x0 + 26 - s * 9, y + 6, 1.4, 0, 7); c.fill(); }
+      }
+      // slatted benches with pots on them
+      const pot = (x, y, s) => {
+        c.fillStyle = '#b8653f'; c.beginPath(); c.moveTo(x - s, y - s * 1.1); c.lineTo(x + s, y - s * 1.1); c.lineTo(x + s * 0.75, y); c.lineTo(x - s * 0.75, y); c.closePath(); c.fill();
+        c.fillStyle = '#cf7b52'; c.fillRect(x - s * 1.08, y - s * 1.3, s * 2.16, s * 0.34);
+        const kind = (r() * 3) | 0;
+        for (let k = 0; k < 6; k++) { c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042', '#7bb553']); c.beginPath(); c.ellipse(x + (r() - 0.5) * s * 1.6, y - s * 1.5 - r() * s * 1.1, s * 0.5, s * 0.26, r() * 3, 0, 7); c.fill(); }
+        if (kind === 0) for (let k = 0; k < 3; k++) { c.fillStyle = U.pick(r, ['#e0485a', '#f06a7e', '#f29ab0']); c.beginPath(); c.arc(x + (r() - 0.5) * s * 1.4, y - s * 2.2 - r() * s * 0.6, s * 0.3, 0, 7); c.fill(); }
+        if (kind === 1) for (let k = 0; k < 2; k++) { c.fillStyle = '#f7f3ea'; c.beginPath(); c.arc(x + (k - 0.5) * s * 0.9, y - s * 2.3, s * 0.28, 0, 7); c.fill(); c.fillStyle = '#f2c230'; c.beginPath(); c.arc(x + (k - 0.5) * s * 0.9, y - s * 2.3, s * 0.1, 0, 7); c.fill(); }
+      };
+      for (const [by, n] of [[330, 6], [452, 5]]) {
+        c.fillStyle = '#8a5a3c'; c.fillRect(x0 + 50, by, w - 56, 6); c.fillRect(x0 + 50, by + 8, w - 56, 6);
+        c.fillStyle = '#6b4a32'; c.fillRect(x0 + 58, by + 14, 6, y1 - by); c.fillRect(x1 - 18, by + 14, 6, y1 - by);
+        for (let i = 0; i < n; i++) pot(x0 + 78 + i * ((w - 96) / n) + r() * 6, by, 10 + r() * 4);
+      }
+      // a hanging basket of trailing flowers
+      c.strokeStyle = '#6b6258'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x1 - 70, y0); c.lineTo(x1 - 84, 170); c.moveTo(x1 - 70, y0); c.lineTo(x1 - 56, 170); c.stroke();
+      c.fillStyle = '#7a5a3a'; c.beginPath(); c.ellipse(x1 - 70, 174, 22, 10, 0, 0, Math.PI); c.fill();
+      for (let k = 0; k < 14; k++) { c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042']); c.beginPath(); c.ellipse(x1 - 70 + (r() - 0.5) * 44, 172 + r() * 26, 5, 2.6, r() * 3, 0, 7); c.fill(); }
+      for (let k = 0; k < 9; k++) { c.fillStyle = U.pick(r, ['#bba9df', '#e98aa2', '#ffffff']); c.beginPath(); c.arc(x1 - 70 + (r() - 0.5) * 40, 168 + r() * 26, 2.8, 0, 7); c.fill(); }
+      // a watering can on the brick floor
+      c.fillStyle = '#b9c0c4'; c.fillRect(x0 + 90, y1 - 34, 34, 26);
+      c.strokeStyle = '#b9c0c4'; c.lineWidth = 4; c.beginPath(); c.moveTo(x0 + 122, y1 - 26); c.lineTo(x0 + 146, y1 - 46); c.stroke();
+      c.beginPath(); c.arc(x0 + 107, y1 - 36, 11, Math.PI, 0); c.stroke();
+      glow(c, (x0 + x1) / 2, 200, 220, 'rgba(255,250,220,0.18)');
+    },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);
@@ -508,6 +552,8 @@
     const region = new Path2D();
     for (const [a, b, c2, d] of panes) region.rect(a, b, c2 - a, d - b);
     const room = ROOM[opts.room] || ROOM.living;
+    // a glasshouse is glass all round, on a low brick wall, not a window in plaster
+    const gh = opts.room === 'glasshouse';
     return {
       family: 'wash', particle: 'suds', region,
       tough(x, y) {
@@ -515,6 +561,30 @@
         return 1;
       },
       decor(c) {
+        if (gh) {
+          const { x0, y0, x1, y1 } = bleed;
+          const g = c.createLinearGradient(0, y0, 0, y1);
+          g.addColorStop(0, '#cfe3dc'); g.addColorStop(1, '#b9d2c2');
+          c.fillStyle = g; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+          // the neighbouring panes, some a little green with age, in white bars
+          for (let x = fx0 - 66, i = 0; x > x0 - 64; x -= 64, i++) for (let y = fy0 - 46, j = 0; y > y0 - 90; y -= 90, j++) { c.fillStyle = `rgba(120,150,110,${(0.08 + r() * 0.16).toFixed(2)})`; c.fillRect(x, y, 64, 90); }
+          for (let x = fx1 + 6, i = 0; x < x1; x += 64, i++) for (let y = fy0 - 46, j = 0; y > y0 - 90; y -= 90, j++) { c.fillStyle = `rgba(120,150,110,${(0.08 + r() * 0.16).toFixed(2)})`; c.fillRect(x, y, 64, 90); }
+          for (let x = fx0, i = 0; x < fx1; x += 75, i++) for (let y = fy0 - 46; y > y0 - 90; y -= 90) { c.fillStyle = `rgba(120,150,110,${(0.08 + r() * 0.16).toFixed(2)})`; c.fillRect(x, y, 75, 90); }
+          c.fillStyle = '#e9e4d6';
+          for (let x = fx0 - 70; x > x0 - 12; x -= 64) c.fillRect(x, y0, 8, fy1 - y0);
+          for (let x = fx1 + 2; x < x1; x += 64) c.fillRect(x, y0, 8, fy1 - y0);
+          for (let x = fx0 + 75; x < fx1; x += 75) c.fillRect(x - 3, y0, 6, fy0 - 46 - y0);
+          for (let y = fy0 - 50; y > y0 - 10; y -= 90) c.fillRect(x0, y, x1 - x0, 8);
+          c.fillStyle = 'rgba(255,255,255,0.18)';
+          for (let x = fx1 + 20; x < x1; x += 64) { c.beginPath(); c.moveTo(x, fy1); c.lineTo(x + 16, fy1); c.lineTo(x + 40, y0); c.lineTo(x + 24, y0); c.closePath(); c.fill(); }
+          // the low brick wall the glass stands on
+          for (let y = fy1 + 14, row = 0; y < y1; y += 13, row++) for (let x = x0 - (row % 2) * 15; x < x1; x += 30) {
+            c.fillStyle = U.pick(r, ['#b5603f', '#a8573a', '#bf6c48', '#9e5236']); c.fillRect(x + 1, y + 1, 28, 11);
+          }
+          const fr = new Path2D(); fr.rect(fx0 - 6, fy0 - 6, fx1 - fx0 + 12, fy1 - fy0 + 12);
+          softShadow(c, fr, 10, 0.25, 0, 4);
+          return;
+        }
         if (opts.wallColor) {
           paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
           ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 12, 1);
@@ -584,6 +654,12 @@
           const y = side < 2 ? (side === 0 ? fy0 + r() * t : fy1 - r() * t) : fy0 + r() * (fy1 - fy0);
           c.fillStyle = '#b8a58a'; c.beginPath(); c.ellipse(x, y, 1.5 + r() * 3, 1 + r() * 2, r() * 3, 0, 7); c.fill();
         }
+        if (gh) {
+          // stone coping on the brick wall instead of a sill and flower box
+          c.fillStyle = '#d9d3c5'; c.fillRect(bleed.x0, fy1, bleed.x1 - bleed.x0, 14);
+          c.fillStyle = '#bfb8a8'; c.fillRect(bleed.x0, fy1 + 12, bleed.x1 - bleed.x0, 3);
+          return;
+        }
         // sill with a flower box
         c.fillStyle = '#e4dccb'; c.fillRect(fx0 - 14, fy1, fx1 - fx0 + 28, 14);
         c.fillStyle = '#cfc6b3'; c.fillRect(fx0 - 14, fy1 + 12, fx1 - fx0 + 28, 4);
@@ -604,35 +680,45 @@
     const { r, nz, opts, bleed } = S;
     const x0 = 80, x1 = 280, yTop = 150, y1 = 540, cx = 180, R = 100;
     const fan = 66;
-    // the café door has a big glass pane and a push handle instead
-    const cafe = !!opts.cafe, glass = [104, 186, 152, 140], bar = [234, 350, 10, 84];
+    // the café door has a big glass pane and a push handle instead; the door
+    // in the garden wall is planked, with iron straps and a ring, set in brick
+    const cafe = !!opts.cafe, garden = !!opts.garden, glass = [104, 186, 152, 140], bar = [234, 350, 10, 84];
     const region = new Path2D();
     region.moveTo(x0, y1); region.lineTo(x0, yTop); region.arc(cx, yTop, R, Math.PI, 0); region.lineTo(x1, y1); region.closePath();
     // fanlight, knob and letterbox are holes
-    region.moveTo(cx - fan, yTop); region.arc(cx, yTop, fan, Math.PI, 0); region.closePath();
+    if (!garden) { region.moveTo(cx - fan, yTop); region.arc(cx, yTop, fan, Math.PI, 0); region.closePath(); }
     if (cafe) { region.rect(...glass); region.rect(...bar); }
+    else if (garden) { region.moveTo(256, 352); region.arc(244, 352, 12, 0, Math.PI * 2); }
     else { region.moveTo(252, 360); region.arc(244, 360, 8, 0, Math.PI * 2); region.rect(150, 300, 60, 14); }
-    const panels = cafe ? [[100, 350, 64, 160], [196, 350, 64, 160]] : [[100, 190, 64, 120], [196, 190, 64, 120], [100, 340, 64, 170], [196, 340, 64, 170]];
+    const panels = garden ? [] : cafe ? [[100, 350, 64, 160], [196, 350, 64, 160]] : [[100, 190, 64, 120], [196, 190, 64, 120], [100, 340, 64, 170], [196, 340, 64, 170]];
     return {
       family: 'paint', particle: 'paint', region,
       tough: (x, y) => (y > 480 ? 1.35 : 1),
       decor(c) {
         // stone surround and a brick doorstep
-        if (opts.wallColor) paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
+        if (garden) {
+          // the old brick garden wall, ivy spilling over the top
+          for (let y = bleed.y0, row = 0; y < y1; y += 13, row++) for (let x = bleed.x0 - (row % 2) * 15; x < bleed.x1; x += 30) {
+            c.fillStyle = U.pick(r, ['#b5603f', '#a8573a', '#bf6c48', '#9e5236', '#b86a4a']); c.fillRect(x + 1, y + 1, 28, 11);
+          }
+          ivySprig(c, r, bleed.x0 + 10, 80, 26, 1); ivySprig(c, r, bleed.x1 - 8, 60, 22, -1);
+        } else if (opts.wallColor) paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
         else oldPlaster(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, ['#c4b79d', '#d1c5ad', '#dcd2be', '#e2d9c7']);
-        c.fillStyle = '#efe7d8';
+        c.fillStyle = garden ? '#d6cfbf' : '#efe7d8';
         c.beginPath(); c.moveTo(x0 - 22, y1); c.lineTo(x0 - 22, yTop); c.arc(cx, yTop, R + 22, Math.PI, 0); c.lineTo(x1 + 22, y1); c.closePath(); c.fill();
         c.fillStyle = '#5b4a3a';
         c.beginPath(); c.moveTo(x0 - 4, y1); c.lineTo(x0 - 4, yTop); c.arc(cx, yTop, R + 4, Math.PI, 0); c.lineTo(x1 + 4, y1); c.closePath(); c.fill();
         // fanlight glass with a sunburst
         const g = c.createLinearGradient(0, yTop - fan, 0, yTop);
+        if (garden) c.globalAlpha = 0; // no fanlight in a garden door
         g.addColorStop(0, '#ffe2a6'); g.addColorStop(1, '#f2b46a');
         c.fillStyle = g; c.beginPath(); c.moveTo(cx - fan, yTop); c.arc(cx, yTop, fan, Math.PI, 0); c.closePath(); c.fill();
         c.strokeStyle = '#efe7d8'; c.lineWidth = 3;
         for (let k = 0; k <= 6; k++) { const a = Math.PI + (k / 6) * Math.PI; c.beginPath(); c.moveTo(cx, yTop); c.lineTo(cx + Math.cos(a) * fan, yTop + Math.sin(a) * fan); c.stroke(); }
         c.beginPath(); c.arc(cx, yTop, 16, Math.PI, 0); c.stroke();
+        c.globalAlpha = 1;
         // step
-        c.fillStyle = '#b28b6d'; c.fillRect(bleed.x0, y1, bleed.x1 - bleed.x0, bleed.y1 - y1);
+        c.fillStyle = garden ? '#8a9a6a' : '#b28b6d'; c.fillRect(bleed.x0, y1, bleed.x1 - bleed.x0, bleed.y1 - y1);
         c.fillStyle = '#c9a587'; c.fillRect(x0 - 40, y1, x1 - x0 + 80, 18);
         c.fillStyle = '#9c765a'; c.fillRect(x0 - 40, y1 + 18, x1 - x0 + 80, 5);
         // pots
@@ -657,6 +743,7 @@
       },
       clean(c, paint) { c.fillStyle = paint; c.fillRect(0, 0, W, H); },
       cleanOver(c) {
+        if (garden) for (let x = x0 + 25; x < x1; x += 25) { c.fillStyle = 'rgba(0,0,0,0.2)'; c.fillRect(x - 1, 40, 2, 500); c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(x + 1, 40, 1.5, 500); }
         for (const [x, y, w, h] of panels) {
           c.fillStyle = 'rgba(0,0,0,0.16)'; c.fillRect(x, y, w, 4); c.fillRect(x, y, 4, h);
           c.fillStyle = 'rgba(255,255,255,0.2)'; c.fillRect(x, y + h - 4, w, 4); c.fillRect(x + w - 4, y, 4, h);
@@ -690,6 +777,18 @@
           c.fillStyle = '#8a6a26'; c.fillRect(hx - 3, hy + 6, hw + 6, 5); c.fillRect(hx - 3, hy + hh - 11, hw + 6, 5);
           c.fillStyle = '#c9a24a'; c.beginPath(); c.roundRect(hx, hy, hw, hh, 5); c.fill();
           c.fillStyle = '#f2d88a'; c.fillRect(hx + 2, hy + 6, 3, hh - 12);
+          return;
+        }
+        if (garden) {
+          // black iron straps, a ring to pull and a big keyhole
+          for (const y of [196, 470]) {
+            c.fillStyle = '#2f2c2a'; c.fillRect(x0 - 2, y, 150, 12); c.beginPath(); c.arc(x0 + 148, y + 6, 8, 0, 7); c.fill();
+            c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(x0 - 2, y + 1, 150, 2);
+            for (const bx of [x0 + 20, x0 + 70, x0 + 120]) { c.fillStyle = '#56504a'; c.beginPath(); c.arc(bx, y + 6, 2.4, 0, 7); c.fill(); }
+          }
+          c.strokeStyle = '#2f2c2a'; c.lineWidth = 4; c.beginPath(); c.arc(244, 352, 12, 0, 7); c.stroke();
+          c.fillStyle = '#2f2c2a'; c.beginPath(); c.arc(244, 338, 5, 0, 7); c.fill();
+          c.fillStyle = '#2f2c2a'; c.beginPath(); c.arc(214, 400, 5, 0, 7); c.fill(); c.fillRect(212, 400, 4, 12);
           return;
         }
         c.fillStyle = '#d9b35a'; c.beginPath(); c.arc(244, 360, 8, 0, 7); c.fill();

@@ -376,12 +376,13 @@ const CAFE = (() => {
       for (let i = 0; i < 9; i++) s += `<circle cx="${f1(94 + r() * 126)}" cy="${f1(360 + r() * 14)}" r="${f1(1.6 + r() * 1.6)}" fill="${U.pick(r, ['#f1ede4', '#d9cfb6', '#c9a26a'])}"/>`;
     } else if (pf) s += `<rect x="90" y="347" width="134" height="31" fill="${url('Dusty')}" opacity="0.45"/>`;
     s += '</g>';
-    // shelf, cups and pendant lamps come with the counter
+    // the shelf and the pendant lamps come with the counter; putting the cups
+    // away on the shelf is a job of its own
     if (st.counter) {
       s += `<rect x="160" y="320" width="62" height="2.5" fill="#8a5a3c"/>`;
-      ['#ffffff', '#e9a0a6', '#9cc5a1', '#8fbfe6', '#ffffff', '#f2d88a'].forEach((c, i) => { const x = 164 + i * 9.5; s += `<path d="M${x} 314.5 h5.5 v3 a2.75 2.75 0 0 1 -5.5 0z" fill="${c}"/>`; });
       for (const x of [116, 146]) s += `<path d="M${x} 279 V318" stroke="#3d3d42" stroke-width="0.8"/><path d="M${x - 6} 323 q6 -8 12 0z" fill="#3d5a4a"/><circle cx="${x}" cy="323.5" r="2" fill="#ffe08a"/>`;
     }
+    s += cups(st);
     s += counter(st);
     s += insideTables(st);
     if (decor['c-cakes']) s += DECOR['c-cakes']();
@@ -389,6 +390,33 @@ const CAFE = (() => {
     if (!st.counter) s += `<rect x="90" y="279" width="134" height="97" fill="#3b3027" opacity="${st.tiles ? 0.16 : 0.3}" pointer-events="none"/>`;
     else s += `<rect x="90" y="279" width="134" height="97" fill="#ffd98a" opacity="0.1" pointer-events="none"/>`;
     return s;
+  }
+  // the cups on the shelf behind the counter, one of each glaze and pattern;
+  // before that, a wobbly stack and a couple lying on their sides
+  const CUPS = [['#ffffff', 'dots'], ['#e9a0a6', 'plain'], ['#9cc5a1', 'stripe'], ['#8fbfe6', 'dots'], ['#f6efe0', 'stripe'], ['#f2d88a', 'plain']];
+  function shelfCup(x, y, col, pat, rot = 0) {
+    let s = `<path d="M${f1(x)} ${f1(y)} h5.5 v3 a2.75 2.75 0 0 1 -5.5 0z" fill="${col}"/><path d="M${f1(x + 5.5)} ${f1(y + 0.8)} a1.4 1.4 0 0 1 0 2.8" stroke="${col}" stroke-width="0.8" fill="none"/>`;
+    if (pat === 'dots') s += `<circle cx="${f1(x + 1.6)}" cy="${f1(y + 1.6)}" r="0.55" fill="#c9586e"/><circle cx="${f1(x + 3.8)}" cy="${f1(y + 2.7)}" r="0.55" fill="#c9586e"/>`;
+    else if (pat === 'stripe') s += `<rect x="${f1(x)}" y="${f1(y + 1.3)}" width="5.5" height="0.9" fill="${U.shade(col, -0.35)}"/>`;
+    return rot ? `<g transform="rotate(${rot} ${f1(x + 2.75)} ${f1(y + 3)})">${s}</g>` : s;
+  }
+  function cups(st) {
+    const p = pend(st, 'cups');
+    let s = '<g data-part="cups">';
+    if (st.cups && !p) CUPS.forEach(([c, pat], i) => { s += shelfCup(164 + i * 9.5, 314.5, c, pat); });
+    else if (st.cups) {
+      // a few out of place again
+      CUPS.forEach(([c, pat], i) => { if (i !== 2 && i !== 4) s += shelfCup(164 + i * 9.5, 314.5, c, pat); });
+      s += shelfCup(184, 316.6, CUPS[2][0], CUPS[2][1], 90);
+    } else if (st.counter) {
+      // a leaning stack at the end of the shelf, two on their sides
+      [[163, 314.5, 0], [163.8, 311.4, 5], [165, 308.4, 10], [166.6, 305.6, 15]].forEach(([x, y, a], i) => { s += shelfCup(x, y, CUPS[i][0], CUPS[i][1], a); });
+      s += shelfCup(181, 316.6, CUPS[4][0], CUPS[4][1], 90) + shelfCup(213, 316.6, CUPS[5][0], CUPS[5][1], -90);
+    } else {
+      // no shelf yet: a dusty stack on the end of the counter
+      [[161, 335.5, -4], [161.6, 332.4, 3], [161.2, 329.4, -6]].forEach(([x, y, a]) => { s += shelfCup(x, y, '#c9c1b2', 'plain', a); });
+    }
+    return s + '</g>';
   }
   function counter(st) {
     const p = pend(st, 'counter');
@@ -815,6 +843,7 @@ const CAFE = (() => {
   const SPOTS = {
     floor: [124, 364], window: [157, 330], terrace: [200, 505], planters: [79, 424], tables: [171, 422], deck: [200, 430], awning: [157, 288],
     counter: [200, 334], brickwall: [107, 468], herbs: [128, 212], sign: [200, 258], door: [274, 330], tiles: [157, 310], pots: [274, 376],
+    cups: [190, 316],
   };
   function sparkles(part) {
     if (!part) return '';

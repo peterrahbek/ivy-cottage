@@ -2,7 +2,9 @@
 // Plays the real game in headless Chrome on an iPhone-sized screen, from a
 // fresh save and offline: every puzzle in the puzzle room with real touches
 // (half, leave, come back, finish; then once more from the jobs list for a
-// new layout), the puzzle room's screens, and every other job in the game
+// new layout), the puzzle room's screens, the puzzles out in the places
+// (started from the next-job card, as she would), an older save meeting the
+// new jobs, the glasshouse in every season, and every other job in the game
 // straight through. Prints a JSON report; pictures go to --out.
 //
 //   node test/game.mjs [--out dir]
@@ -142,11 +144,83 @@ try {
     await js(b, `document.querySelector('#btnBack').click()`); await sleep(400);
   }
 
+  // the puzzles out in the places: each is the next job once the jobs before
+  // it are done, started from the next-job card and played with real touches
+  report.placed = [];
+  for (const id of ['cafe-cups', 'rescue-feed', 'rescue-beds', 'gh-water', 'gh-cutting']) {
+    const c = await js(b, `(() => { const c = DATA.PLACES.flatMap((p) => p.chores).find((x) => x.id === '${id}'); return c && { place: c.place, index: c.index, value: c.value, puzzle: !!c.puzzle, family: c.family }; })()`);
+    if (!c) { problem(`${id}: not in any place`); continue; }
+    if (!c.puzzle || c.family !== 'think') problem(`${id}: not a puzzle in its place`);
+    await js(b, `(() => { const S = __ivy.S, p = DATA.placeOf('${c.place}'); S.owned['${c.place}'] = 1; for (const x of p.chores) { if (x.index < ${c.index}) S.done[x.id] = 1; else delete S.done[x.id]; delete S.wips[x.id]; } __ivy.save(); __ivy.goPlace('${c.place}'); })()`);
+    await sleep(1200);
+    const card = await js(b, `({ job: document.querySelector('#nextCard').dataset.job, text: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' '), pic: !!(document.querySelector('#nextCard .nextPic img') || {}).src })`);
+    if (card.job !== id) problem(`${id}: the next-job card shows ${card.job}`);
+    await pic(b, `placed-${id}-home`);
+    const coins0 = await js(b, '__ivy.S.coins');
+    await js(b, `document.querySelector('#goBtn').click()`); await sleep(900);
+    const hud = await js(b, `({ chip: document.querySelector('#toolChip').textContent, bots: document.querySelector('#btnBots').hidden, hint: document.querySelector('#hint span').textContent, puzzle: !!__ivy.ENGINE.scene.puzzle })`);
+    if (!hud.puzzle || !hud.chip.includes('Hint') || !hud.bots) problem(`${id}: does not play as a puzzle (${JSON.stringify(hud)})`);
+    for (const g of await js(b, '__ivy.ENGINE.scene.debugPlan()')) await gesture(b, g);
+    await sleep(3000);
+    await pic(b, `placed-${id}-done`);
+    const d = await state(b);
+    const want = c.value + Math.round(c.value * 0.15) + Math.round(c.value * 0.25);
+    if (!d.done) problem(`${id}: no finish card`);
+    if (!d.find) problem(`${id}: no keepsake on the first finish`);
+    if (Math.abs(d.coins - coins0 - want) > 1) problem(`${id}: paid ${d.coins - coins0}, expected ${want}`);
+    await js(b, `document.querySelector('#doneBtn').click()`); await sleep(800);
+    const part = await js(b, `(() => { const ch = DATA.PLACES.flatMap((p) => p.chores).find((x) => x.id === '${id}'); return document.querySelectorAll('#scene [data-part="' + ch.part + '"]').length; })()`);
+    if (!part) problem(`${id}: no part of the picture for it`);
+    report.placed.push({ id, place: c.place, card: card.text, chip: hud.chip, paid: d.coins - coins0, expected: want, find: d.find, partInPicture: part });
+  }
+
+  // an older save with the café restored and the year turning: the new job
+  // turns up at the café and the other places point there
+  {
+    await js(b, `(() => { const S = __ivy.S;
+      for (const p of DATA.PLACES) if (!p.beta && p.id !== 'glasshouse') { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; }
+      delete S.done['cafe-cups']; S.seasonNo = 3; S.sdone = {};
+      for (const j of __ivy.seasonJobs()) if (j.place === 'cottage') S.sdone[j.id] = 1;
+      __ivy.save(); __ivy.goPlace('cottage'); })()`);
+    await sleep(1000);
+    const home = await js(b, `({ next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ') })`);
+    report.olderSave = { cottage: home.next };
+    if (!/Marigold Café/.test(home.next)) problem('older save: the cottage does not point to the new job at the café');
+    await js(b, `__ivy.goPlace('cafe')`); await sleep(1000);
+    report.olderSave.cafe = await js(b, `({ job: document.querySelector('#nextCard').dataset.job, bar: document.querySelector('#restoredTxt').textContent })`);
+    if (report.olderSave.cafe.job !== 'cafe-cups') problem('older save: the café does not offer the cups');
+    await js(b, `__ivy.openPlaces()`); await sleep(800);
+    report.olderSave.places = await js(b, `[...document.querySelectorAll('.placeCard')].map((c) => c.querySelector('.pName').textContent + ' | ' + c.querySelector('.pSub').textContent.slice(0, 60))`);
+    await pic(b, 'places-older-save');
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+  }
+
+  // the glasshouse: for sale, then owned in every season, by day and night
+  {
+    await js(b, `(() => { const S = __ivy.S; for (const p of DATA.PLACES) if (!p.beta) for (const c of p.chores) S.done[c.id] = 1; for (const c of DATA.GLASS_CHORES) delete S.done[c.id]; delete S.owned.glasshouse; S.coins = 50000; S.seasonNo = 0; S.sdone = {}; __ivy.save(); __ivy.openPlaces(); })()`);
+    await sleep(900);
+    await pic(b, 'places-glasshouse-for-sale');
+    const buy = await js(b, `(() => { const card = [...document.querySelectorAll('.placeCard')].find((c) => /Primrose/.test(c.textContent)); const btn = card && card.querySelector('button'); return { text: card && card.innerText.replace(/\\s+/g, ' '), btn: btn && btn.textContent }; })()`);
+    report.glasshouse = { forSale: buy };
+    if (!buy.btn) problem('glasshouse: no buy button in the places list');
+    await js(b, `[...document.querySelectorAll('.placeCard')].find((c) => /Primrose/.test(c.textContent)).querySelector('button').click()`); await sleep(1500);
+    report.glasshouse.afterBuy = await js(b, `({ place: __ivy.S.place, owned: !!__ivy.S.owned.glasshouse, coins: __ivy.S.coins, brand: document.querySelector('#brandName').textContent, next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ') })`);
+    if (report.glasshouse.afterBuy.place !== 'glasshouse') problem('glasshouse: buying did not take her there');
+    await sleep(2500);
+    await pic(b, 'glasshouse-new');
+    for (const [n, season] of [[1, 'summer'], [2, 'autumn'], [3, 'winter'], [4, 'spring']]) {
+      await js(b, `(() => { const S = __ivy.S; for (const c of DATA.GLASS_CHORES) S.done[c.id] = 1; S.seasonNo = ${n}; S.sdone = {}; __ivy.save(); __ivy.render(); })()`);
+      await sleep(700);
+      await pic(b, `glasshouse-${season}`);
+    }
+    report.glasshouse.seasonJobs = await js(b, `__ivy.seasonJobs().filter((j) => j.place === 'glasshouse').map((j) => j.name + ' (' + j.family + ')')`);
+  }
+
   // every other job, straight through
   report.regression = await js(b, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES];
-    for (let n = 1; n <= 8; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue']));
+    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES, ...DATA.GLASS_CHORES];
+    for (let n = 1; n <= 8; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue', 'glasshouse']));
     const bad = [];
     for (const j of jobs) {
       try {

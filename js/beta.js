@@ -43,13 +43,16 @@ const BETA = (() => {
   };
   const HILL = { spring: ['#a9cf8f', '#8fbd78'], summer: ['#86b971', '#6f9a5c'], autumn: ['#d4b06c', '#b98f5a'], winter: ['#eef3f7', '#dfe8f0'] };
 
-  // the four cards: where they hang, how askew, their tint and pin colour
+  // the five cards: where they hang, how askew, their tint and pin colour;
+  // three along the top, two below, drawn at CARD_K of their full size
   const CARDS = {
-    cups: { x: 204, y: 106, tilt: -5, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
-    feed: { x: 318, y: 106, tilt: 4, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
-    hose: { x: 204, y: 244, tilt: 3.5, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
-    beds: { x: 318, y: 244, tilt: -4, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
+    cups: { x: 186, y: 111, tilt: -5, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
+    feed: { x: 261, y: 106, tilt: 3, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
+    hose: { x: 336, y: 111, tilt: -3.5, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
+    beds: { x: 223, y: 244, tilt: 4, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
+    plan: { x: 299, y: 247, tilt: -4, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
   };
+  const CARD_K = 0.78;
 
   // a sleeping cat breathes, the mug steams, petals and snow drift past the window
   function style() {
@@ -173,7 +176,12 @@ const BETA = (() => {
     return `<rect x="141" y="33" width="246" height="290" rx="4" fill="#3b2a1a" opacity="0.14"/>
       <rect x="138" y="30" width="246" height="290" rx="4" fill="#b98f5a"/><rect x="138" y="30" width="246" height="3" rx="1.5" fill="#d2ab78"/>
       <rect x="146" y="38" width="230" height="274" fill="${url('Cork')}"/><rect x="146" y="38" width="230" height="5" fill="#3b2a1a" opacity="0.12"/>
-      <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>`;
+      <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>
+      <g transform="rotate(-7 166 236)"><rect x="153" y="218" width="26" height="34" rx="1.4" fill="#3b2a1a" opacity="0.15" transform="translate(1.6 2)"/><rect x="153" y="218" width="26" height="34" rx="1.4" fill="#fbf3e2"/>
+        <rect x="156" y="221" width="20" height="18" rx="1" fill="#c6dcb4"/>${dot(162, 229, 2.6, '#e9962c')}${dot(170, 231, 2.6, '#e2574c')}${dot(166, 226, 2.2, '#fffaf1')}
+        <path d="M157 244 h18 M157 247.6 h12" stroke="#b5ab9c" stroke-width="1.2"/>${dot(166, 218.6, 2.6, '#8fbfe6')}${dot(165.4, 218, 0.9, '#fff', 0.8)}</g>
+      <g transform="rotate(14 360 238)"><path d="M360 216 Q374 232 360 262 Q346 232 360 216Z" fill="#d98b63"/><path d="M360 220 V258 M360 232 l-6 -5 M360 240 l7 -6 M360 248 l-6 -5" stroke="#b5683f" stroke-width="0.9" fill="none"/>
+        <rect x="352" y="214" width="16" height="6" fill="#f2d88a" opacity="0.85" transform="rotate(-8 360 217)"/></g>`;
   }
   // the BETA tape label across the top of the board
   function tape() {
@@ -234,6 +242,31 @@ const BETA = (() => {
         L('M39.6 79 q0.9 0.7 1.8 0', LINE, 0.8) + L('M19.6 80 q-2 3 3 3.6 h10', '#c4793a', 2);
       return s + L('M84 46 h5 l-5 6 h5 M91 38 h3.6 l-3.6 4.4 h3.6', '#8a83a8', 1.2);
     },
+    // the cutting garden: four flowers, one of each in every row and column
+    plan() {
+      let s = P('M14 20 H86 L90 94 H10Z', '#b98f5a', true) + P('M18.4 24 H81.6 L85 90 H15Z', '#8a6a4a');
+      const at = (i, j) => { const y = 24 + 16.5 * i, a = 18.4 - 0.85 * i, b = 81.6 + 0.85 * i; return [a + ((b - a) * j) / 4, y]; };
+      let grid = '';
+      for (let k = 1; k < 4; k++) {
+        const [ax, ay] = at(k, 0), [bx] = at(k, 4), [cx, cy] = at(0, k), [dx, dy] = at(4, k);
+        grid += `M${f1(ax)} ${f1(ay)} H${f1(bx)} M${f1(cx)} ${f1(cy)} L${f1(dx)} ${f1(dy)} `;
+      }
+      s += L(grid, '#d9c39a', 1.4);
+      const flower = [
+        (x, y) => P(`M${f1(x - 4.2)} ${f1(y - 3.4)} q0 6.6 4.2 7 q4.2 -0.4 4.2 -7 l-2.1 2.2 l-2.1 -3.2 l-2.1 3.2Z`, '#e2574c'),
+        (x, y) => [0, 1, 2, 3, 4, 5].map((k) => E(x + Math.cos(k * 1.047) * 3.4, y + Math.sin(k * 1.047) * 3.4, 2.2, 2.2, '#fffaf1')).join('') + E(x, y, 1.9, 1.9, '#f2d88a'),
+        (x, y) => P(star(x, y, 5, 2.2, 0), '#5d7fd8'),
+        (x, y) => E(x, y, 4.6, 4.6, '#e9962c') + E(x, y, 2.4, 2.4, '#f2b63a'),
+      ];
+      const LAT = [[0, 1, 2, 3], [2, 3, 0, 1], [3, 2, 1, 0], [1, 0, 3, 2]];
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          const [x0, y0] = at(i, j), [x1, y1] = at(i + 1, j + 1);
+          s += flower[LAT[i][j]]((x0 + x1) / 2, (y0 + y1) / 2);
+        }
+      }
+      return s;
+    },
   };
 
   // one pinned card, unsolved (pencil, askew) or solved (colour, gold star)
@@ -241,14 +274,14 @@ const BETA = (() => {
     const c = CARDS[part];
     COL = done;
     const tilt = done ? c.tilt * 0.2 : c.tilt;
-    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) translate(-50 -58)">
+    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) scale(${CARD_K}) translate(-50 -58)">
       <rect x="-6" y="-8" width="112" height="132" fill="#000" fill-opacity="0"/>
       <rect x="2" y="3.4" width="100" height="116" rx="2" fill="#3b2a1a" opacity="0.2"/>
       <rect width="100" height="116" rx="2" fill="${done ? '#fffaf1' : '#f3e9d4'}"/>`;
     if (done) s += `<rect x="6" y="12" width="88" height="84" rx="4" fill="${c.tint}" opacity="0.3"/>`;
     else s += '<path d="M8 99 H92 M8 9 H40" stroke="#d9cdb6" stroke-width="0.7"/><path d="M100 102 L86 116 H98 q2 0 2 -2Z" fill="#e2d5bc"/>';
     s += ART[part]();
-    s += `<text x="${done ? 46 : 50}" y="110" text-anchor="middle" font-family="${FONT}" font-size="13" font-weight="800" fill="${done ? '#3b352e' : PEN}">${c.label}</text>`;
+    s += `<text x="${done ? 46 : 50}" y="110" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="800" fill="${done ? '#3b352e' : PEN}">${c.label}</text>`;
     if (done) {
       s += `<g transform="rotate(12 86 101)"><path d="${star(86, 101, 12, 5.6)}" fill="#e9bf4f" stroke="#c99a2e" stroke-width="0.8" stroke-linejoin="round"/>
         <path d="${star(86, 101, 7.4, 3.4)}" fill="#f6d77a"/>${dot(83, 96.6, 1.4, '#fff', 0.8)}</g>`;

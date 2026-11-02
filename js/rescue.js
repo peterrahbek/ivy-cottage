@@ -418,6 +418,71 @@ const RESCUE = (() => {
     return s + '</g>';
   }
 
+  // pet beds on the barn floor: flat old cushions, or plump beds with a dog
+  // and a cat fast asleep
+  function beds(st) {
+    const p = pend(st, 'beds'), ok = st.beds && p !== 'grow';
+    let s = '<g data-part="beds">';
+    if (!st.beds) {
+      s += `${oval(62, 286.4, 10.4, 2.6, '#8f877c')}<path d="M57 285.4 q3 -1.6 6 0.4" stroke="#6e675e" stroke-width="0.6" fill="none"/>${dot(66, 285.6, 1, '#efe9dd')}${dot(67.6, 286.6, 0.8, '#efe9dd')}
+        ${oval(79.4, 289, 6.4, 1.9, '#7d776f')}<path d="M75 288.4 l3 0.8 l3 -0.6" stroke="#5f5a54" stroke-width="0.6" fill="none"/>`;
+      return s + '</g>';
+    }
+    // the dog's basket and the cat's cushion
+    s += `${shadow(62, 290, 12.6, 1.8)}${oval(62, 286, 11.6, 4.6, '#c9586e')}${oval(62, 285.4, 8.8, 3, '#f6dcc2')}
+      ${shadow(79.4, 292, 8.6, 1.4)}${oval(79.4, 289, 7.6, 3, '#5d7fd8')}${oval(79.4, 288.6, 5.6, 2, '#cfe0f6')}`;
+    if (ok) {
+      // a ginger dog curled nose to tail, a grey tabby rolled up next door
+      s += `<g class="rs-breathe">${oval(61, 283.4, 7, 3.2, '#e2b36a')}${oval(60, 282.6, 4.6, 1.6, '#f6dca6', 0.8)}</g>
+        <path d="M54.6 284.6 q-1.6 -3 1.6 -4.4" stroke="#e2b36a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        ${dot(67, 282.4, 2.8, '#e2b36a')}${oval(68.6, 281, 1.3, 2.2, '#c48c48')}<path d="M65.4 282.6 q0.9 0.8 1.8 0" stroke="#5a3a22" stroke-width="0.6" fill="none"/>${oval(69.4, 283.4, 0.8, 0.6, '#2b2422')}
+        <g class="rs-breathe">${oval(79, 286.8, 4.8, 2.4, '#9a9a9e')}<path d="M76.6 285.2 q0.8 1.2 0 2.6 M79 284.8 q0.8 1.4 0 3 M81.4 285.2 q0.8 1.2 0 2.6" stroke="#6e6e74" stroke-width="0.6" fill="none"/></g>
+        ${dot(83.6, 286.2, 2, '#9a9a9e')}<path d="M82.2 284.6 l0.3 -2 l1.3 1.2Z M84.4 284.2 l1.4 -1.4 l0.4 1.8Z" fill="#9a9a9e"/><path d="M82.8 286.4 q0.6 0.6 1.2 0" stroke="#3d3d42" stroke-width="0.5" fill="none"/>
+        <path d="M74.6 288 q-2 -0.6 -1.6 -2.6" stroke="#9a9a9e" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+    } else {
+      // made, but nobody settled in: a blanket dragged half out
+      s += `<path d="M66 287 q6 2 10 6 q-5 1 -9 -1Z" fill="#e9c35a"/><path d="M68 288.6 l4 2.4" stroke="#c9a03a" stroke-width="0.5"/>`;
+    }
+    return s + '</g>';
+  }
+
+  // the feed corner by the farmhouse door: sacks of food and the feeding chart
+  function feed(st) {
+    const p = pend(st, 'feed'), ok = st.feed && p !== 'grow';
+    let s = '<g data-part="feed">';
+    // the chart, clipped to a board on the wall
+    s += `<rect x="263" y="239" width="20" height="25" rx="1.2" fill="#a77b56"/><rect x="264.6" y="241.6" width="16.8" height="20.8" fill="${st.feed ? '#fbf7ee' : '#e3d9c6'}"/>
+      <rect x="270.6" y="237.6" width="4.8" height="2.8" rx="0.8" fill="#5b636d"/>`;
+    if (st.feed) {
+      const icon = [(x, y) => paw(x, y, 0.42, '#8a5a3c'), (x, y) => `<path d="M${x - 1.8} ${y} q1.6 -1.4 3.2 0 q-1.6 1.4 -3.2 0 l-1 -0.8 v1.6Z" fill="#6f8fb0"/>`, (x, y) => `<path d="M${x - 0.6} ${y - 1.6} l1.2 0 l-0.6 3.2Z" fill="#f08a3a"/>`];
+      for (let r = 0; r < 4; r++) {
+        const y = 245 + r * 4.6;
+        s += icon[r % 3](267.6, y) + `<path d="M270.4 ${y} H276" stroke="#c9c0b0" stroke-width="0.6"/>`;
+        if (ok || r < 2) s += `<path d="M277 ${y - 0.2} l1 1 l1.8 -2" stroke="#4f9d7a" stroke-width="0.8" fill="none" stroke-linecap="round"/>`;
+      }
+    } else {
+      // blank, faded and curling at the corner
+      s += '<path d="M281.4 241.6 L281.4 247 L276 241.6Z" fill="#cfc4ae"/><path d="M276 241.6 L281.4 247" stroke="#b8ad96" stroke-width="0.5"/>';
+    }
+    if (ok) {
+      // two sacks standing neatly, a scoop in the first
+      s += `${shadow(271, 294.6, 14, 1.8)}<path d="M258.6 294 V279 q0 -3 2 -4 l1.6 -1.4 h5.6 l1.6 1.4 q2 1 2 4 V294Z" fill="#dcc196"/><path d="M260 278.4 h10" stroke="#b89a6a" stroke-width="0.8"/>
+        ${paw(265, 286, 0.8, '#8a5a3c')}<path d="M266 276 l5 -6" stroke="#9aa3ad" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M272 294 V283 q0 -2.4 1.6 -3 h7.4 q1.6 0.6 1.6 3 V294Z" fill="#c9d6e2"/><path d="M273 284 h9" stroke="#9fb2c4" stroke-width="0.8"/>
+        <path d="M275.4 289 q2.4 -2 4.8 0 q-2.4 2 -4.8 0 l-1.4 -1.2 v2.4Z" fill="#6f8fb0"/>`;
+    } else if (st.feed) {
+      s += `${shadow(271, 294.6, 14, 1.8)}<path d="M258.6 294 V279 q0 -3 2 -4 l1.6 -1.4 h5.6 l1.6 1.4 q2 1 2 4 V294Z" fill="#dcc196"/>${paw(265, 286, 0.8, '#8a5a3c')}
+        <g transform="rotate(-70 278 293)"><path d="M272 294 V283 q0 -2.4 1.6 -3 h7.4 q1.6 0.6 1.6 3 V294Z" fill="#c9d6e2"/></g>${dot(284, 293.6, 0.8, '#9c6a3a')}${dot(286.4, 294.6, 0.7, '#9c6a3a')}`;
+    } else {
+      // toppled over, with kibble all over the ground
+      s += `${shadow(270, 295, 16, 1.8)}<g transform="rotate(-82 266 293)"><path d="M258.6 294 V279 q0 -3 2 -4 l1.6 -1.4 h5.6 l1.6 1.4 q2 1 2 4 V294Z" fill="#b8a688"/></g>
+        <path d="M271 294 q4 -6 9 -4 q3 2 2 4Z" fill="#a8b2bb"/>`;
+      const r = U.rng(17);
+      for (let i = 0; i < 12; i++) s += dot(276 + r() * 12, 293 + r() * 3.6, 0.8, U.pick(r, ['#9c6a3a', '#7d4f2a', '#b07a44']));
+    }
+    return s + '</g>';
+  }
+
   // ---------------------------------------------------------- the farmhouse
   function upperWin(x, y) {
     const clean = PCT > 0.5, frame = clean ? '#fbf7ee' : '#b8b1a2';
@@ -884,7 +949,7 @@ const RESCUE = (() => {
   const SPOTS = {
     trail: [222, 200], floor: [79, 266], hutch: [47, 314], veg: [123, 322], door: [301, 266], window: [356, 253], cat: [362, 264],
     bowls: [212, 300], trough: [361, 307], yard: [222, 352], seal: [348, 352], toys: [50, 372], tub: [124, 372],
-    sign: [200, 454], fence: [80, 510], meadow: [80, 470], pond: [322, 450],
+    sign: [200, 454], fence: [80, 510], meadow: [80, 470], pond: [322, 450], feed: [273, 268], beds: [70, 284],
   };
   function sparkles(part) {
     if (!part) return '';
@@ -908,7 +973,7 @@ const RESCUE = (() => {
     const C = K.C;
     return `<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" class="house rescue">
       ${style()}${defs()}${sky()}${opts.night ? '' : farDecor(decor)}${hills(st)}${ground()}${meadow(st)}${yard(st)}
-      ${barn(st)}${farmhouse(st, C)}${kennels(st)}${bowls(st)}${trough(st)}${cat(st)}${hutch(st)}${veg(st)}${clutter()}
+      ${barn(st)}${beds(st)}${farmhouse(st, C)}${feed(st)}${kennels(st)}${bowls(st)}${trough(st)}${cat(st)}${hutch(st)}${veg(st)}${clutter()}
       ${seal(st)}${toys(st)}${tub(st)}${donkey(62, 432, 0.95)}${hooves(st, 62, 432, 0.95)}${pond(st)}${saleSign()}
       ${fence(st, C)}${sign(st, C)}${decorations(decor)}${life(st)}${weather()}${opts.night ? night(st, decor) : ''}${sparkles(opts.fresh)}
     </svg>`;

@@ -166,6 +166,29 @@
       dot(c, -s * 0.15, -s * 0.26, s * 0.055, '#2b2422'); dot(c, s * 0.15, -s * 0.26, s * 0.055, '#2b2422'); dot(c, 0, -s * 0.1, s * 0.07, '#2b2422');
       c.strokeStyle = '#e2574c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-s * 0.3, s * 0.12); c.lineTo(s * 0.3, s * 0.12); c.stroke();
     },
+    // windfalls for the orchard
+    apple(c, r, s) {
+      const col = U.pick(r, ['#d9443a', '#e2574c', '#c9a43a', '#9bbf4a']);
+      c.fillStyle = U.shade(col, -0.18); c.beginPath(); c.arc(-s * 0.2, s * 0.05, s * 0.5, 0, 7); c.arc(s * 0.2, s * 0.05, s * 0.5, 0, 7); c.fill();
+      c.fillStyle = col; c.beginPath(); c.arc(-s * 0.2, 0, s * 0.46, 0, 7); c.arc(s * 0.2, 0, s * 0.46, 0, 7); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.ellipse(-s * 0.3, -s * 0.18, s * 0.14, s * 0.08, -0.5, 0, 7); c.fill();
+      c.strokeStyle = '#5a3d28'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(0, -s * 0.36); c.lineTo(s * 0.06, -s * 0.62); c.stroke();
+      c.fillStyle = '#5d9644'; c.beginPath(); c.ellipse(s * 0.2, -s * 0.56, s * 0.2, s * 0.09, -0.4, 0, 7); c.fill();
+      if (r() < 0.4) dot(c, s * 0.18, s * 0.12, s * 0.1, 'rgba(120,80,40,0.45)'); // a little bruise from the fall
+    },
+    pear(c, r, s) {
+      const col = U.pick(r, ['#b7c24a', '#c9b648', '#a9b84a']);
+      c.fillStyle = col; c.beginPath(); c.arc(0, s * 0.22, s * 0.48, 0, 7); c.fill();
+      c.beginPath(); c.ellipse(0, -s * 0.2, s * 0.28, s * 0.36, 0, 0, 7); c.fill();
+      c.fillStyle = 'rgba(160,110,50,0.25)'; c.beginPath(); c.arc(s * 0.12, s * 0.3, s * 0.3, 0, 7); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.ellipse(-s * 0.16, -s * 0.1, s * 0.08, s * 0.16, 0, 0, 7); c.fill();
+      c.strokeStyle = '#5a3d28'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, -s * 0.54); c.lineTo(-s * 0.06, -s * 0.76); c.stroke();
+    },
+    plum(c, r, s) {
+      dot(c, 0, 0, s * 0.42, '#5b3a73'); dot(c, -s * 0.06, -s * 0.04, s * 0.36, '#6e4a8a');
+      c.fillStyle = 'rgba(220,210,240,0.35)'; c.beginPath(); c.ellipse(-s * 0.12, -s * 0.12, s * 0.14, s * 0.08, -0.5, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(40,20,50,0.4)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -s * 0.38); c.quadraticCurveTo(s * 0.1, 0, 0, s * 0.38); c.stroke();
+    },
   };
   const ITEM_SETS = {
     litter: ['bottle', 'can', 'packet', 'flipflop', 'bag', 'cup', 'can', 'packet'],
@@ -174,6 +197,7 @@
     shells: ['scallop', 'whelk', 'mussel', 'starfish', 'cockle', 'scallop', 'seaglass', 'sanddollar'],
     seaglass: ['seaglass', 'seaglass', 'mussel', 'cockle', 'whelk', 'seaglass'],
     toys: ['ball', 'bone', 'frisbee', 'duck', 'teddy', 'rope', 'ball', 'bone'],
+    apples: ['apple', 'apple', 'pear', 'apple', 'plum', 'apple', 'pear', 'apple'],
   };
   function pawPrint(c, x, y, a, s, col) {
     c.save(); c.translate(x, y); c.rotate(a + Math.PI / 2); c.fillStyle = col;
@@ -192,7 +216,7 @@
     const { r, nz, opts, bleed } = S;
     const set = ITEM_SETS[opts.items || 'litter'], bin = /litter|storm/.test(opts.items || 'litter');
     // the rescue's version: dog toys all over a lawn, into the toy box
-    const grass = opts.ground === 'grass', toys = opts.items === 'toys';
+    const grass = opts.ground === 'grass', toys = opts.items === 'toys', apples = opts.items === 'apples';
     const target = { x: 316, y: 548 };
     const region = new Path2D();
     if (grass) { region.moveTo(14, 100); region.lineTo(346, 100); }
@@ -245,6 +269,15 @@
           const g = SCENES.ramp(['#6f8f3c', '#80a046', '#94ab52', '#a7a85a']);
           field(c, 0, 0, W, H, 3, (x, y) => g(nz.fbm(x * 0.03, y * 0.03, 4)));
           for (let i = 0; i < 30; i++) { c.fillStyle = 'rgba(110,85,50,0.3)'; c.beginPath(); c.ellipse(r() * W, r() * H, 12 + r() * 24, 7 + r() * 12, r() * 3, 0, 7); c.fill(); }
+          if (apples) {
+            // an orchard nobody has been to: fallen leaves and a few twigs, no paw prints
+            for (let i = 0; i < 70; i++) {
+              c.fillStyle = U.pick(r, ['#c9a43a', '#b5762f', '#8f9a3a', '#d9b44a']);
+              c.save(); c.translate(r() * W, r() * H); c.rotate(r() * 6.28); c.beginPath(); c.ellipse(0, 0, 6, 3, 0, 0, 7); c.fill(); c.restore();
+            }
+            for (let i = 0; i < 200; i++) dot(c, r() * W, r() * H, 0.8 + r() * 1.2, U.pick(r, ['#5f7f32', '#b9b06a', '#7d6e4a', '#d9d29a']));
+            return;
+          }
           for (let k = 0; k < 3; k++) {
             let x = 40 + r() * 280, y = 580, a = -Math.PI / 2 + (r() - 0.5) * 0.6;
             for (let i = 0; i < 26 && y > 90; i++) {
@@ -277,7 +310,15 @@
       top(c) {
         const { x, y } = target;
         softShadow(c, (() => { const p = new Path2D(); p.arc(x, y + 4, 26, 0, 7); return p; })(), 8, 0.4, 2, 4);
-        if (toys) {
+        if (apples) {
+          // a round wicker basket, seen from above, with a few apples in it
+          dot(c, x, y, 29, '#8a5a32'); dot(c, x, y, 26, '#c08a52');
+          c.strokeStyle = 'rgba(90,55,25,0.55)'; c.lineWidth = 1.2;
+          for (let k = 0; k < 18; k++) { const a = (k / 18) * 6.283; c.beginPath(); c.moveTo(x + Math.cos(a) * 19, y + Math.sin(a) * 19); c.lineTo(x + Math.cos(a) * 27, y + Math.sin(a) * 27); c.stroke(); }
+          dot(c, x, y, 19, '#6b4426');
+          for (const [dx, dy, col] of [[-7, -5, '#d9443a'], [6, -7, '#9bbf4a'], [0, 6, '#e2574c']]) { dot(c, x + dx, y + dy, 6.5, U.shade(col, -0.15)); dot(c, x + dx - 0.6, y + dy - 0.6, 5.6, col); }
+          c.strokeStyle = '#a06a3a'; c.lineWidth = 3.5; c.beginPath(); c.arc(x, y, 31, -2.5, -0.65); c.stroke();
+        } else if (toys) {
           // a wooden toy box, its lid propped open
           c.fillStyle = '#7a4f2e'; rect(c, x - 31, y - 25, 62, 50, 7); c.fill();
           c.fillStyle = '#b07a48'; rect(c, x - 28, y - 22, 56, 44, 5); c.fill();
@@ -403,7 +444,7 @@
   function lights(S) {
     const { r, nz, opts, bleed } = S;
     const where = opts.where || 'cottage', warm = where === 'cafe';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c' }[where] || '#f2d88a';
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc' }[where] || '#f2d88a';
     const boarded = where === 'cove' || where === 'rescue';
     // three strings: under the eaves, across the window, along the fence
     const strings = [
@@ -452,6 +493,13 @@
           c.beginPath(); c.moveTo(166, 216); c.lineTo(166, 230); c.arc(180, 230, 14, Math.PI, 0, true); c.lineTo(194, 216); c.stroke();
           c.strokeStyle = '#c3c9cf'; c.lineWidth = 2.4; c.beginPath(); c.arc(180, 230, 14, Math.PI * 0.85, Math.PI * 0.35, true); c.stroke();
           for (const [hx, hy] of [[166, 222], [169, 236], [180, 241], [191, 236], [194, 222]]) dot(c, hx, hy, 1.1, '#4b5056');
+        }
+        if (where === 'glasshouse') {
+          // the glasshouse at dusk: white glazing bars and pots on the bench inside
+          c.fillStyle = 'rgba(244,240,228,0.55)';
+          for (let x = 10; x < 360; x += 40) c.fillRect(x, 140, 4, 310);
+          c.fillRect(0, 200, 360, 4);
+          for (let x = 124; x < 240; x += 26) { c.fillStyle = '#b8653f'; c.fillRect(x, 372, 16, 16); c.fillStyle = '#4f8a3a'; c.beginPath(); c.ellipse(x + 8, 366, 10, 7, 0, 0, 7); c.fill(); }
         }
         if (where === 'cafe') { c.fillStyle = '#2f8068'; c.fillRect(96, 228, 168, 14); for (let x = 96; x < 264; x += 24) { c.fillStyle = x % 48 ? '#f4ecda' : '#2f8068'; c.fillRect(x, 242, 24, 10); } }
         // ground, fence or rail, and snow

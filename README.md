@@ -7,10 +7,11 @@ attic. Every finished job restores a piece of the cottage and earns coins;
 coins buy better tools, little helper robots, decorations and new places:
 a little corner café to bring back to life with some light building and
 planting, a seaside cove with a beach hut, a rowing boat, an old camper
-van and a lighthouse, and an animal rescue on an old farm, where dogs need
-feeding and walking, a cat wants brushing and the rabbits fresh straw. A
-puzzle room, open from the start, tries out jobs with a little thinking
-instead of a tool.
+van and a lighthouse, an animal rescue on an old farm, where dogs need
+feeding and walking, a cat wants brushing and the rabbits fresh straw, and a
+walled garden with an old glasshouse. Some jobs take a little thinking
+instead of a tool; a puzzle room, open from the start, is where new ones are
+tried out first.
 
 No timers, no losing, no ads, no accounts. Works offline once opened.
 
@@ -46,34 +47,47 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **The cottage.** 20 jobs restore the whole house. Painted colours carry over
   to the cottage picture.
 - **Places.** Once the cottage is restored, Marigold Café is for sale (9,000
-  coins). Its 14 jobs: sweep the floor, wash the shop window, scrub the
+  coins). Its 16 jobs: sweep the floor, wash the shop window, scrub the
   terrace, wipe the tables, polish the coffee machine, clean the awning, paint
   the sign and the door, and new kinds of job: lay a deck, rebuild a brick
-  wall, tile behind the counter (pieces click into place as you work), and
-  plant planter boxes, a herb box and flower pots (plants spring up).
+  wall, tile behind the counter (pieces click into place as you work), plant
+  planter boxes, a herb box and flower pots (plants spring up), stock the
+  drinks fridge, and a puzzle: put the cups away.
 - **Seashell Cove.** Once the café is restored the cove is for sale (20,000
   coins). Its 18 jobs include picking up litter and collecting shells (things
   fly into a bin or a bucket), raking seaweed, a sandcastle, planting the
   dunes, a boardwalk and a jetty, the beach hut, the boat, the rock pool, the
   lighthouse, and a camper van in four steps: vacuum, wash, wax, polish.
 - **Bluebell Rescue.** Once the cove is restored the rescue is for sale
-  (30,000 coins). Its 17 jobs: breakfast and fresh water for the dogs (fill
+  (30,000 coins). Its 19 jobs: breakfast and fresh water for the dogs (fill
   every bowl), walk the dogs along a path (paw prints follow you), muck out
   the rabbit hutch, bath a muddy puppy, tidy the dog toys into their box, brush
   a fluffy cat, feed the seal pup, the duck pond, the paddock fence and grass,
   new boards in the barn, carrots for the rabbits, and the farmhouse door,
-  office window and sign. The animals never need you: nothing goes hungry or
-  sad while you are away.
-- **The Puzzle Room (beta).** Open from the start, first on the Places list.
-  Jobs done by hand with a little thinking, with no tools and no robots: put
-  the cups away (each shelf one kind, each coaster one glaze), feeding time
-  (follow the chart: the right food and the right number of scoops for each
-  animal), water the greenhouse (tap the pipes to turn them until the water
-  reaches every pot) and who sleeps where (tuck the animals in so every note on
-  the board holds). A move that is not right just glides back; Hint at the
-  bottom shows one right move. Every puzzle comes out different each time, a
-  half-done one is kept for later, and they can be taken in any order.
-- **Music.** Four quiet tunes of the game's own, one per place, in a key that
+  office window and sign, plus two puzzles: feeding time and who sleeps
+  where. The animals never need you: nothing goes hungry or sad while you are
+  away.
+- **Primrose Glasshouse.** Once the rescue is restored the walled garden is
+  for sale (42,000 coins). Its 15 jobs: the brick path, the grimy glasshouse,
+  the long border, the orchard grass, raised beds to build and sow, windfall
+  apples into a basket, the potting shed and its roof, the old garden wall,
+  the lily pond, pots by the door, the door in the wall, and two puzzles:
+  water the glasshouse and the cutting garden (one of each flower in every row
+  and column).
+- **Puzzles.** Jobs done by hand with a little thinking, with no tools and no
+  robots: put the cups away at the café (each shelf one kind, each coaster one
+  glaze), feeding time at the rescue (follow the chart: the right food and the
+  right number of scoops for each animal), who sleeps where at the rescue
+  (tuck the animals in so every note on the board holds), and at the
+  glasshouse water the glasshouse (tap the pipes to turn them until the water
+  reaches every pot) and the cutting garden. A move that is not right just
+  glides back; Hint at the bottom shows one right move. Every puzzle comes out
+  different each time and a half-done one is kept for later. Each is a job in
+  its place and comes back in that place's seasons, at most one a season.
+- **The Puzzle Room (beta).** Open from the start, first on the Places list:
+  every puzzle in the game, to play in any order and as often as you like, and
+  where new kinds of jobs are tried out before they move out to the places.
+- **Music.** Five quiet tunes of the game's own, one per place, in a key that
   follows the season and slower in the evening; volume in Settings.
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
   12-character cloud code; on another phone, I have a code picks the game up
@@ -100,7 +114,8 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   cold light in winter, drifting leaves in autumn, petals in spring and a few
   seeds on the air in summer.
 - **Decorate.** Sixteen things to buy for the cottage, from a garden gnome to a
-  hot-air balloon, and twelve each for the café, the cove and the rescue.
+  hot-air balloon, and twelve each for the café, the cove, the rescue and the
+  glasshouse.
 - **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
   new places take a while to save up for.
 - **Before and after.** The finish card shows a small before-and-after picture
@@ -177,16 +192,17 @@ then open http://localhost:8790.
   the dog walk, the cat and the rabbit hutch
 - `js/puzzles.js` the contract every puzzle follows, its house rules (calm, no
   timers, nothing ever wrong for long) and a few shared helpers
-- `js/pz-cups.js`, `js/pz-feed.js`, `js/pz-hose.js`, `js/pz-beds.js` the
-  four puzzles in the puzzle room
+- `js/pz-cups.js`, `js/pz-feed.js`, `js/pz-hose.js`, `js/pz-beds.js`,
+  `js/pz-plan.js` the five puzzles (each a job in its place and in the puzzle room)
 - `js/beta.js` the puzzle room overview (SVG): a pinboard of puzzle cards
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
 - `js/cove.js` the cove overview (SVG), same conventions
 - `js/rescue.js` the rescue overview (SVG), same conventions
+- `js/glasshouse.js` the glasshouse overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
 - `js/data.js` places, jobs, season pools, finds, decorations, prices
-- `js/audio.js` synthesised sound and four composed tunes (no audio files)
+- `js/audio.js` synthesised sound and five composed tunes (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
 - `test/` a bench that plays one puzzle in headless Chrome with real touches
@@ -196,7 +212,8 @@ then open http://localhost:8790.
 Bump `CACHE` in `sw.js` whenever a file changes.
 
     node test/run.mjs puzzle js/pz-cups.js cups --seeds 20
-    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds
+    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds,plan
+    node test/game.mjs --out /tmp/ivy-game
 
 Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`, `__ivy.startRescue(i)`,
 `__ivy.startBeta(i)`, `__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,

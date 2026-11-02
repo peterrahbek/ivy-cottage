@@ -101,6 +101,7 @@
     if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
     if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
     if (id === 'rescue' && typeof RESCUE !== 'undefined') return RESCUE.render(st, S.colours, opts);
+    if (id === 'glasshouse' && typeof GLASSHOUSE !== 'undefined') return GLASSHOUSE.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
