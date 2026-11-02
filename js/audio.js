@@ -77,6 +77,11 @@ const AUDIO = (() => {
     steam: { type: 'highpass', f: 2600, q: 0.5, vol: 0.08 },
     groom: { type: 'bandpass', f: 1500, q: 1.4, vol: 0.15 },
     shower: { type: 'highpass', f: 2200, q: 0.5, vol: 0.1 },
+    brew: { type: 'lowpass', f: 650, q: 1.4, vol: 0.13 },
+    feed: { type: 'bandpass', f: 950, q: 1.1, vol: 0.13 },
+    walk: { type: 'bandpass', f: 1900, q: 1.5, vol: 0.06 },
+    brush: { type: 'bandpass', f: 2500, q: 1.3, vol: 0.1 },
+    muck: { type: 'bandpass', f: 1250, q: 0.9, vol: 0.17 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;
@@ -192,7 +197,7 @@ const AUDIO = (() => {
   }
 
   // ----------------------------------------------------------------- music
-  // Three quiet tunes of our own (so there are no rights to worry about), one
+  // Four quiet tunes of our own (so there are no rights to worry about), one
   // per place, each a 16-bar loop: a soft pad, a felt-piano arpeggio, a music
   // box melody and a little bass. The season picks the key, the evening slows
   // it down, and every pass round the loop is arranged a little differently
@@ -226,6 +231,16 @@ const AUDIO = (() => {
         [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 2], [2, 8, 2]], [[0, 6, 2], [2, 4, 2]], [[0, 5, 4]],
         [[0, 8, 2], [2, 10, 2]], [[0, 9, 2], [2, 7, 2]], [[0, 8, 1], [1, 6, 1], [2, 5, 2]], [[0, 7, 4]],
         [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 12, 2], [2, 10, 2]], [[0, 9, 2], [2, 6, 2]], [[0, 5, 4]],
+      ],
+    },
+    // a little folk tune for the farm
+    rescue: {
+      chords: [[1], [4], [1], [5], [6], [4], [1], [5], [4], [1], [2, 1], [5], [1], [4], [5, 1], [1]],
+      melody: [
+        [[0, 5, 1], [1, 5, 0.5], [1.5, 6, 0.5], [2, 8, 2]], [[0, 8, 1], [1, 6, 1], [2, 4, 2]], [[0, 5, 1], [1, 3, 1], [2, 5, 1], [3, 8, 1]], [[0, 7, 3], [3, 5, 1]],
+        [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 1], [1, 8, 1], [2, 6, 2]], [[0, 5, 1], [1, 6, 1], [2, 8, 2]], [[0, 7, 4]],
+        [[0, 8, 1], [1, 9, 1], [2, 11, 2]], [[0, 10, 1], [1, 8, 1], [2, 5, 2]], [[0, 6, 1.5], [1.5, 7, 0.5], [2, 9, 2]], [[0, 7, 3]],
+        [[0, 5, 1], [1, 5, 0.5], [1.5, 6, 0.5], [2, 8, 2]], [[0, 11, 1.5], [1.5, 10, 0.5], [2, 8, 2]], [[0, 7, 1], [1, 9, 1], [2, 6, 2]], [[0, 8, 4]],
       ],
     },
   };

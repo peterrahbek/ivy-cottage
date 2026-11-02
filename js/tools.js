@@ -155,6 +155,54 @@ const TOOLS = (() => {
         { id: 'bubbles', name: 'Bubble shower', shape: 'circle', r: 32, power: 1.75, speed: 240, sprite: 'bubbleshower' },
       ],
     },
+    // pouring coffee at the café
+    brew: {
+      name: 'Coffee pots', job: 'Pouring', icon: 'coffeepot',
+      tiers: [
+        { id: 'pot', name: 'Coffee pot', shape: 'circle', r: 11, power: 1.0, speed: 165, sprite: 'coffeepot' },
+        { id: 'press', name: 'Big cafetière', shape: 'circle', r: 16, power: 1.15, speed: 185, sprite: 'cafetiere' },
+        { id: 'jugs', name: 'Coffee and milk', shape: 'rect', w: 40, h: 16, power: 1.35, speed: 210, sprite: 'twojugs' },
+        { id: 'cart', name: 'Barista trolley', shape: 'rect', w: 58, h: 24, power: 1.7, speed: 235, sprite: 'baristacart' },
+      ],
+    },
+    // the animals' food and water, and fish for the seals
+    feed: {
+      name: 'Feeding', job: 'Feeding', icon: 'scoop',
+      tiers: [
+        { id: 'scoop', name: 'Scoop', shape: 'circle', r: 12, power: 1.0, speed: 165, sprite: 'scoop' },
+        { id: 'bigscoop', name: 'Big scoop', shape: 'circle', r: 17, power: 1.15, speed: 185, sprite: 'bigscoop' },
+        { id: 'bucket', name: 'Feed bucket', shape: 'circle', r: 24, power: 1.35, speed: 210, sprite: 'feedbucket' },
+        { id: 'trolley', name: 'Feed trolley', shape: 'rect', w: 58, h: 24, power: 1.7, speed: 235, sprite: 'feedcart' },
+      ],
+    },
+    // the dogs themselves trot along the path; a better lead takes more of them
+    walk: {
+      name: 'Dog leads', job: 'Walking', icon: 'walk2',
+      tiers: [
+        { id: 'lead', name: 'A lead', shape: 'circle', r: 12, power: 1.0, speed: 170, sprite: 'walk1' },
+        { id: 'double', name: 'A double lead', shape: 'circle', r: 17, power: 1.15, speed: 190, sprite: 'walk2' },
+        { id: 'triple', name: 'A triple lead', shape: 'circle', r: 23, power: 1.35, speed: 210, sprite: 'walk3' },
+        { id: 'belt', name: 'A walking belt', shape: 'circle', r: 30, power: 1.7, speed: 235, sprite: 'walk4' },
+      ],
+    },
+    brush: {
+      name: 'Pet brushes', job: 'Brushing', icon: 'slicker',
+      tiers: [
+        { id: 'soft', name: 'Soft brush', shape: 'circle', r: 11, power: 1.0, speed: 165, sprite: 'softbrush' },
+        { id: 'slicker', name: 'Slicker brush', shape: 'rect', w: 28, h: 12, power: 1.15, speed: 185, sprite: 'slicker' },
+        { id: 'mitt', name: 'Grooming mitt', shape: 'circle', r: 20, power: 1.35, speed: 210, sprite: 'mitt' },
+        { id: 'double', name: 'Double brush', shape: 'rect', w: 46, h: 16, power: 1.7, speed: 235, sprite: 'doublebrush' },
+      ],
+    },
+    muck: {
+      name: 'Mucking out', job: 'Mucking out', icon: 'pitchfork',
+      tiers: [
+        { id: 'handfork', name: 'Hand fork', shape: 'circle', r: 11, power: 1.0, speed: 160, sprite: 'handfork' },
+        { id: 'pitchfork', name: 'Pitchfork', shape: 'rect', w: 30, h: 12, power: 1.15, speed: 185, sprite: 'pitchfork' },
+        { id: 'shovel', name: 'Straw shovel', shape: 'rect', w: 44, h: 16, power: 1.35, speed: 210, sprite: 'strawshovel' },
+        { id: 'barrow', name: 'Wheelbarrow', shape: 'rect', w: 60, h: 24, power: 1.7, speed: 235, sprite: 'barrow' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -652,7 +700,186 @@ const TOOLS = (() => {
       c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1.2; c.fillStyle = 'rgba(255,255,255,0.25)';
       for (const [dx, dy, s] of [[0.7, -0.5, 0.16], [0.85, 0.35, 0.12], [0.45, 0.75, 0.1], [0.2, -0.85, 0.12]]) { disc(c, r * dx, r * dy, r * s); c.fill(); c.stroke(); }
     },
+
+    // ---- coffee: the pot pours straight down where the tool is
+    coffeepot(c, t, p, s = t.r, y = 0) {
+      c.save(); c.translate(0, y);
+      handle(c, -s * 0.7, -s * 1.55, 3.4, '#3a3633');
+      const g = c.createLinearGradient(-s, -s, s, s);
+      g.addColorStop(0, '#eef1f4'); g.addColorStop(1, '#9aa3ad');
+      c.fillStyle = g; disc(c, 0, 0, s * 0.82); c.fill();
+      c.fillStyle = '#c7cdd4'; disc(c, -s * 0.06, -s * 0.06, s * 0.52); c.fill();
+      c.fillStyle = '#3a3633'; disc(c, -s * 0.06, -s * 0.06, s * 0.17); c.fill();
+      c.fillStyle = '#b7bec6'; c.beginPath(); c.moveTo(s * 0.62, -s * 0.2); c.lineTo(s * 1.18, -s * 0.07); c.lineTo(s * 1.18, s * 0.07); c.lineTo(s * 0.62, s * 0.2); c.closePath(); c.fill();
+      c.fillStyle = '#6b4226'; disc(c, s * 1.26, 0, s * 0.13); c.fill();
+      c.restore();
+    },
+    cafetiere(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.75, -r * 1.5, 4, '#3a3633');
+      c.fillStyle = '#9aa3ad'; disc(c, 0, 0, r * 0.86); c.fill();
+      c.fillStyle = 'rgba(220,235,245,0.9)'; disc(c, 0, 0, r * 0.76); c.fill();
+      c.fillStyle = '#5a3520'; disc(c, 0, 0, r * 0.62); c.fill();
+      c.fillStyle = '#c8955a'; c.beginPath(); c.arc(0, 0, r * 0.62, 0, 7); c.arc(0, 0, r * 0.5, 0, 7, true); c.fill();
+      c.fillStyle = '#c7cdd4'; disc(c, 0, 0, r * 0.22); c.fill();
+      c.fillStyle = '#3a3633'; disc(c, 0, 0, r * 0.12); c.fill();
+      c.fillStyle = '#9aa3ad'; c.beginPath(); c.moveTo(r * 0.7, -r * 0.16); c.lineTo(r * 1.08, 0); c.lineTo(r * 0.7, r * 0.16); c.closePath(); c.fill();
+    },
+    twojugs(c, t) {
+      const w = t.w, s = Math.min(t.h * 0.62, w * 0.24);
+      SPR.coffeepot(c, t, null, s, -w * 0.25);
+      // a white enamel milk jug with a blue rim
+      c.save(); c.translate(0, w * 0.25);
+      handle(c, -s * 0.7, -s * 1.5, 3.2, '#e9edf1');
+      c.fillStyle = '#3d86c6'; disc(c, 0, 0, s * 0.84); c.fill();
+      c.fillStyle = '#f7f5ef'; disc(c, 0, 0, s * 0.72); c.fill();
+      c.fillStyle = '#ffffff'; disc(c, -s * 0.05, -s * 0.05, s * 0.5); c.fill();
+      c.fillStyle = '#3d86c6'; c.beginPath(); c.moveTo(s * 0.64, -s * 0.2); c.lineTo(s * 1.12, 0); c.lineTo(s * 0.64, s * 0.2); c.closePath(); c.fill();
+      c.restore();
+    },
+    baristacart(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.55, -h * 1.4, 2.4, '#9aa3ad');
+      for (const [x, y] of [[-0.3, -1], [-0.3, 1], [0.35, -1], [0.35, 1]]) wheel(c, h * x, y * (w / 2 - 1), 8, 4);
+      c.fillStyle = '#8a5a3c'; rr(c, -h / 2, -w / 2 + 2, h, w - 4, 4); c.fill();
+      c.fillStyle = '#a8734f'; rr(c, -h / 2 + 2, -w / 2 + 4, h - 4, w - 8, 3); c.fill();
+      // the urn and a row of cups
+      const g = c.createRadialGradient(-2, -w * 0.2 - 2, 1, 0, -w * 0.2, h * 0.42);
+      g.addColorStop(0, '#f4f6f8'); g.addColorStop(1, '#8f99a3');
+      c.fillStyle = g; disc(c, 0, -w * 0.2, h * 0.38); c.fill();
+      c.fillStyle = '#3a3633'; disc(c, 0, -w * 0.2, h * 0.1); c.fill();
+      for (let i = 0; i < 3; i++) { const y = w * 0.06 + i * w * 0.13; c.fillStyle = '#ffffff'; disc(c, 0, y, h * 0.2); c.fill(); c.fillStyle = '#7a4a2a'; disc(c, 0, y, h * 0.13); c.fill(); }
+    },
+
+    // ---- feeding
+    scoop(c, t, p, col = '#e2574c') {
+      const r = t.r;
+      handle(c, -r * 0.6, -r * 1.5, 3.4, U.shade(col, -0.1));
+      c.fillStyle = U.shade(col, -0.25); rr(c, -r * 0.75, -r * 0.62, r * 1.65, r * 1.24, r * 0.5); c.fill();
+      c.fillStyle = col; rr(c, -r * 0.65, -r * 0.52, r * 1.5, r * 1.04, r * 0.42); c.fill();
+      const k = U.rng(7);
+      for (let i = 0; i < 9; i++) { c.fillStyle = k() < 0.5 ? '#9c6a3a' : '#b98450'; disc(c, -r * 0.35 + k() * r * 1.05, (k() - 0.5) * r * 0.75, r * 0.13); c.fill(); }
+    },
+    bigscoop(c, t) { SPR.scoop(c, t, null, '#3d86c6'); },
+    feedbucket(c, t) {
+      const r = t.r;
+      c.fillStyle = '#4f9d7a'; disc(c, 0, 0, r * 0.9); c.fill();
+      c.fillStyle = '#3f8466'; disc(c, 0, 0, r * 0.76); c.fill();
+      const k = U.rng(11);
+      for (let i = 0; i < 22; i++) { const a = k() * 6.28, d = Math.sqrt(k()) * r * 0.62; c.fillStyle = k() < 0.5 ? '#9c6a3a' : '#b98450'; disc(c, Math.cos(a) * d, Math.sin(a) * d, r * 0.09); c.fill(); }
+      c.strokeStyle = '#9aa3ad'; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, r * 0.98, -1.2, 1.2); c.stroke();
+    },
+    feedcart(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.55, -h * 1.4, 2.4, '#9aa3ad');
+      for (const [x, y] of [[-0.3, -1], [-0.3, 1], [0.35, -1], [0.35, 1]]) wheel(c, h * x, y * (w / 2 - 1), 8, 4);
+      c.fillStyle = '#5b636d'; rr(c, -h / 2, -w / 2 + 2, h, w - 4, 3); c.fill();
+      // two sacks of food with a paw on, and a churn of water
+      for (const y of [-w * 0.27, 0]) {
+        c.fillStyle = '#e6d3ad'; rr(c, -h * 0.42, y - w * 0.12, h * 0.84, w * 0.24, 4); c.fill();
+        c.fillStyle = '#b98450'; disc(c, 0, y, h * 0.1); c.fill();
+        for (const [dx, dy] of [[-0.18, -0.1], [-0.18, 0.1], [0.04, -0.17], [0.04, 0.17]]) { disc(c, h * dx + h * 0.16, y + w * dy * 0.5, h * 0.045); c.fill(); }
+      }
+      c.fillStyle = '#c7cdd4'; disc(c, 0, w * 0.28, h * 0.36); c.fill();
+      c.fillStyle = '#8fc6e0'; disc(c, 0, w * 0.28, h * 0.25); c.fill();
+    },
+
+    // ---- dogs on leads, seen from above, trotting along +x
+    walk1(c, t) { walkers(c, t.r, [[0, 0, 0.92]]); },
+    walk2(c, t) { walkers(c, t.r, [[0.08, -0.46, 0.62], [-0.08, 0.46, 0.62]]); },
+    walk3(c, t) { walkers(c, t.r, [[0, -0.62, 0.48], [0.18, 0, 0.5], [-0.05, 0.62, 0.48]]); },
+    walk4(c, t) { walkers(c, t.r, [[0.05, -0.7, 0.38], [0.24, -0.24, 0.4], [0.2, 0.24, 0.38], [0.02, 0.7, 0.38], [-0.32, 0, 0.34]]); },
+
+    // ---- pet brushes
+    softbrush(c, t) {
+      const r = t.r;
+      handle(c, -r * 0.7, -r * 1.6, 4, '#ef8aa6');
+      c.fillStyle = '#c98a55'; c.beginPath(); c.ellipse(0, 0, r * 0.95, r * 0.75, 0, 0, 7); c.fill();
+      c.fillStyle = '#f6d6df';
+      for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) { if (i * i / 12 + j * j / 5 > 1) continue; disc(c, i * r * 0.22, j * r * 0.24, r * 0.1); c.fill(); }
+    },
+    slicker(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.4, -h * 2.2, 4, '#3d86c6');
+      c.fillStyle = '#2f6ea6'; rr(c, -h * 0.5, -w / 2, h, w, 3); c.fill();
+      c.fillStyle = '#e9edf1';
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 9; j++) { disc(c, -h * 0.3 + i * h * 0.3, -w / 2 + 2.5 + j * (w - 5) / 8, 0.9); c.fill(); }
+    },
+    mitt(c, t) {
+      const r = t.r;
+      c.fillStyle = '#4fb3c9'; c.beginPath(); c.ellipse(0, 0, r * 0.95, r * 0.72, 0, 0, 7); c.fill();
+      c.beginPath(); c.ellipse(-r * 0.2, -r * 0.72, r * 0.32, r * 0.2, -0.5, 0, 7); c.fill();
+      c.fillStyle = '#2f8ea6';
+      for (let i = -3; i <= 3; i++) for (let j = -2; j <= 2; j++) { if (i * i / 11 + j * j / 5.5 > 1) continue; disc(c, i * r * 0.24, j * r * 0.24, r * 0.07); c.fill(); }
+      c.fillStyle = '#f2c230'; rr(c, -r * 1.05, -r * 0.55, r * 0.2, r * 1.1, 3); c.fill();
+    },
+    doublebrush(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, 0, -h * 1.7, 4, '#c98a55');
+      c.fillStyle = '#9b6a42'; rr(c, -3, -w * 0.32, 6, w * 0.64, 3); c.fill();
+      for (const y of [-w * 0.26, w * 0.26]) {
+        c.fillStyle = '#c98a55'; c.beginPath(); c.ellipse(0, y, h * 0.6, w * 0.22, 0, 0, 7); c.fill();
+        c.fillStyle = '#f6d6df'; for (let i = -1; i <= 1; i++) for (let j = -2; j <= 2; j++) { disc(c, i * h * 0.3, y + j * w * 0.07, 1.2); c.fill(); }
+      }
+    },
+
+    // ---- mucking out
+    pitchfork(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.4, -h * 2.8, 3.4, '#c98a55');
+      c.strokeStyle = '#7d8590'; c.lineWidth = 2.4; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-h * 0.4, -w * 0.4); c.quadraticCurveTo(-h * 0.7, 0, -h * 0.4, w * 0.4); c.stroke();
+      c.strokeStyle = '#c7cdd4'; c.lineWidth = 1.8;
+      for (const y of [-0.38, -0.13, 0.13, 0.38]) { c.beginPath(); c.moveTo(-h * 0.45, w * y); c.lineTo(h * 0.75, w * y * 1.05); c.stroke(); }
+      c.strokeStyle = '#e8c35a'; c.lineWidth = 1;
+      for (const [y0, y1] of [[-0.3, 0.05], [0.2, -0.1], [0.4, 0.15]]) { c.beginPath(); c.moveTo(-h * 0.1, w * y0); c.lineTo(h * 0.5, w * y1); c.stroke(); }
+    },
+    strawshovel(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.5, -h * 2.4, 3.6, '#c98a55');
+      c.fillStyle = '#7d8590'; rr(c, -h * 0.55, -w / 2, h * 1.1, w, 4); c.fill();
+      c.fillStyle = '#9aa3ad'; rr(c, -h * 0.45, -w / 2 + 2, h * 0.9, w - 4, 3); c.fill();
+      c.strokeStyle = '#e8c35a'; c.lineWidth = 1.3; c.lineCap = 'round';
+      const k = U.rng(5);
+      for (let i = 0; i < 14; i++) { const y = (k() - 0.5) * (w - 8), x = (k() - 0.5) * h * 0.6; c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x + 4, y + (k() - 0.5) * 4); c.stroke(); }
+    },
+    barrow(c, t) {
+      const w = t.w, h = t.h;
+      c.strokeStyle = '#5b636d'; c.lineWidth = 3; c.lineCap = 'round';
+      for (const y of [-w * 0.3, w * 0.3]) { c.beginPath(); c.moveTo(-h * 0.3, y); c.lineTo(-h * 1.25, y * 1.05); c.stroke(); }
+      c.fillStyle = '#2f2b28'; rr(c, h * 0.5, -3, 9, 6, 2.5); c.fill();
+      c.fillStyle = '#3f8466'; c.beginPath(); c.moveTo(-h * 0.55, -w * 0.45); c.lineTo(h * 0.45, -w * 0.32); c.lineTo(h * 0.45, w * 0.32); c.lineTo(-h * 0.55, w * 0.45); c.closePath(); c.fill();
+      c.fillStyle = '#4f9d7a'; c.beginPath(); c.moveTo(-h * 0.45, -w * 0.38); c.lineTo(h * 0.36, -w * 0.27); c.lineTo(h * 0.36, w * 0.27); c.lineTo(-h * 0.45, w * 0.38); c.closePath(); c.fill();
+      c.strokeStyle = '#e8c35a'; c.lineWidth = 1.4;
+      const k = U.rng(9);
+      for (let i = 0; i < 18; i++) { const y = (k() - 0.5) * w * 0.6, x = -h * 0.4 + k() * h * 0.7; c.beginPath(); c.moveTo(x - 5, y); c.lineTo(x + 5, y + (k() - 0.5) * 6); c.stroke(); }
+    },
   };
+
+  // a few dogs (x, y, size as parts of the tool radius) on leads that meet
+  // in the walker's hand behind them; tails wag as they go
+  const COATS = [['#e2b36a', '#c48c48'], ['#f4efe6', '#3b3533'], ['#a8754a', '#6e4a2c'], ['#8f8a86', '#5b5753'], ['#2f2b28', '#f4efe6']];
+  function walkers(c, r, dogs) {
+    const now = typeof performance !== 'undefined' ? performance.now() / 1000 : 0;
+    c.strokeStyle = '#c9474f'; c.lineWidth = 1.4; c.lineCap = 'round';
+    for (const [x, y, s] of dogs) { c.beginPath(); c.moveTo(r * (x + s * 0.2), r * y); c.quadraticCurveTo(r * (x - 0.9), r * y * 0.6, -r * 1.55, 0); c.stroke(); }
+    c.fillStyle = '#e9b46a'; disc(c, -r * 1.6, 0, 3); c.fill();
+    dogs.forEach(([x, y, s], i) => {
+      const [fur, ear] = COATS[i % COATS.length], k = r * s, cx = r * x, cy = r * y, wag = Math.sin(now * 13 + i * 1.7) * 0.6, trot = Math.sin(now * 16 + i * 2.1);
+      c.save(); c.translate(cx, cy);
+      c.strokeStyle = fur; c.lineWidth = k * 0.22;
+      c.beginPath(); c.moveTo(-k * 0.8, 0); c.quadraticCurveTo(-k * 1.15, wag * k * 0.3, -k * 1.35, wag * k * 0.55); c.stroke();
+      c.fillStyle = U.shade(fur, -0.2);
+      for (const [px, py, ph] of [[0.45, -0.42, 1], [0.45, 0.42, -1], [-0.55, -0.4, -1], [-0.55, 0.4, 1]]) { disc(c, k * (px + trot * ph * 0.08), k * py, k * 0.13); c.fill(); }
+      c.fillStyle = fur; c.beginPath(); c.ellipse(-k * 0.12, 0, k * 0.8, k * 0.44, 0, 0, 7); c.fill();
+      c.fillStyle = '#c9474f'; c.fillRect(k * 0.42, -k * 0.24, k * 0.08, k * 0.48);
+      c.fillStyle = fur; disc(c, k * 0.72, 0, k * 0.38); c.fill();
+      c.fillStyle = ear; c.beginPath(); c.ellipse(k * 0.62, -k * 0.34, k * 0.2, k * 0.12, -0.4, 0, 7); c.fill(); c.beginPath(); c.ellipse(k * 0.62, k * 0.34, k * 0.2, k * 0.12, 0.4, 0, 7); c.fill();
+      c.fillStyle = U.shade(fur, 0.25); c.beginPath(); c.ellipse(k * 1.02, 0, k * 0.2, k * 0.15, 0, 0, 7); c.fill();
+      c.fillStyle = '#2b2422'; disc(c, k * 1.18, 0, k * 0.07); c.fill();
+      c.restore();
+    });
+  }
 
   function drawSprite(c, tier, paint) {
     const f = SPR[tier.sprite];

@@ -8,6 +8,7 @@ const DATA = (() => {
     roof: 'Roof', attic: 'Attic', autumn: 'Autumn',
     inside: 'Inside the café', front: 'The café front', terrace: 'The terrace',
     beach: 'The beach', hutarea: 'The beach hut', sea: 'By the sea', van: 'The camper van', lighthouse: 'The lighthouse',
+    kennels: 'The kennels', farmyard: 'The farmyard', dogwalk: 'The dog walk', barn: 'The barn', farmhouse: 'The farmhouse', paddock: 'The paddock', pool: 'The seal pool',
   };
 
   // part = which piece of the place's picture this chore restores
@@ -77,8 +78,32 @@ const DATA = (() => {
     { id: 'cove-lighthouse', area: 'lighthouse', part: 'lighthouse', name: 'Paint the lighthouse', scene: 'lighthouse', opts: {}, seed: 417, color: 'stripes' },
   ];
 
+  // The fourth place: an old farm that takes in dogs, cats, rabbits and the
+  // odd seal pup. Bought once the cove is restored. Feeding, walking and
+  // brushing live here, each with tools of its own.
+  const RESCUE_CHORES = [
+    { id: 'rescue-bowls', area: 'kennels', part: 'bowls', name: 'Breakfast for the dogs', scene: 'bowls', opts: { food: 'dog' }, seed: 501, verb: 'fill every bowl' },
+    { id: 'rescue-yard', area: 'farmyard', part: 'yard', name: 'Moss on the farmyard', scene: 'stones', opts: { shape: 'terrace' }, seed: 502 },
+    { id: 'rescue-walk', area: 'dogwalk', part: 'trail', name: 'Walk the dogs', scene: 'walk', opts: {}, seed: 503, verb: 'walk the dogs along the path' },
+    { id: 'rescue-hutch', area: 'barn', part: 'hutch', name: 'Fresh straw for the rabbits', scene: 'hutch', opts: {}, seed: 504, verb: 'muck out the old straw' },
+    { id: 'rescue-puppy', area: 'kennels', part: 'tub', name: 'A very muddy puppy', scene: 'dog', opts: {}, seed: 505, verb: 'give the puppy a bath' },
+    { id: 'rescue-toys', area: 'farmyard', part: 'toys', name: 'Dog toys all over the grass', scene: 'beach', opts: { items: 'toys', ground: 'grass' }, seed: 506, family: 'arrange', verb: 'put the toys in the box' },
+    { id: 'rescue-cat', area: 'farmhouse', part: 'cat', name: 'Brush the fluffy cat', scene: 'cat', opts: {}, seed: 507, verb: 'brush the cat' },
+    { id: 'rescue-fence', area: 'paddock', part: 'fence', name: 'Paint the paddock fence', scene: 'fence', opts: { side: 'left' }, seed: 508, color: 'paddock' },
+    { id: 'rescue-water', area: 'kennels', part: 'trough', name: 'Fresh water for everyone', scene: 'bowls', opts: { food: 'water' }, seed: 509, verb: 'fill every bowl' },
+    { id: 'rescue-pond', area: 'paddock', part: 'pond', name: 'The duck pond', scene: 'pond', opts: {}, seed: 510 },
+    { id: 'rescue-seal', area: 'pool', part: 'seal', name: 'Lunch for the seal pup', scene: 'seal', opts: { where: 'pool' }, seed: 511, verb: 'give the seal its fish' },
+    { id: 'rescue-floor', area: 'barn', part: 'floor', name: 'New boards in the barn', scene: 'build', opts: { material: 'planks' }, seed: 512 },
+    { id: 'rescue-veg', area: 'barn', part: 'veg', name: 'Carrots for the rabbits', scene: 'plant', opts: { box: 'veg' }, seed: 513 },
+    { id: 'rescue-meadow', area: 'paddock', part: 'meadow', name: 'Long grass in the paddock', scene: 'lawn', opts: { shape: 'patch' }, seed: 514 },
+    { id: 'rescue-door', area: 'farmhouse', part: 'door', name: 'Paint the farmhouse door', scene: 'door', opts: {}, seed: 515, color: 'rescueDoor' },
+    { id: 'rescue-window', area: 'farmhouse', part: 'window', name: 'The office window', scene: 'window', opts: { room: 'office' }, seed: 516 },
+    { id: 'rescue-sign', area: 'farmyard', part: 'sign', name: 'Paint the rescue sign', scene: 'sign', opts: { title: 'RESCUE', sub: '· BLUEBELL FARM ·', icon: 'paw', farm: true }, seed: 517, color: 'rescueSign' },
+  ];
+
   // Jobs that only turn up in the seasons, for variety: planting and
-  // building around the cottage. They have no part in the picture.
+  // building around the cottage, serving at the café, a seal at the cove.
+  // They have no part in the picture.
   const EXTRAS = [
     { id: 'x-sunflowers', area: 'beds', name: 'Sunflowers', scene: 'plant', opts: { box: 'bed', plants: 'sunflowers' }, seed: 301 },
     { id: 'x-veg', area: 'beds', name: 'The vegetable patch', scene: 'plant', opts: { box: 'veg' }, seed: 302 },
@@ -93,6 +118,13 @@ const DATA = (() => {
     { id: 'x-dog', area: 'lawn', name: 'A muddy dog', scene: 'dog', opts: {}, seed: 311, verb: 'give the dog a bath' },
     { id: 'x-cafe-dog', place: 'cafe', area: 'terrace', name: 'A muddy dog', scene: 'dog', opts: {}, seed: 313, verb: 'give the dog a bath' },
     { id: 'x-cove-dog', place: 'cove', area: 'beach', name: 'A sandy dog', scene: 'dog', opts: {}, seed: 312, verb: 'give the dog a bath' },
+    { id: 'x-cafe-coffee', place: 'cafe', area: 'inside', name: 'Coffee for the guests', scene: 'coffee', opts: {}, seed: 314, verb: 'pour a drink in every cup' },
+    { id: 'x-cafe-napkins', place: 'cafe', area: 'inside', name: 'Fill the napkin holders', scene: 'serve', opts: { what: 'napkins' }, seed: 315, verb: 'fill every napkin holder' },
+    { id: 'x-cafe-chairs', place: 'cafe', area: 'terrace', name: 'Tables and chairs out', scene: 'serve', opts: { what: 'tables' }, seed: 316, verb: 'put each table and chair on its mark' },
+    { id: 'x-cove-seal', place: 'cove', area: 'beach', name: 'A hungry seal', scene: 'seal', opts: { where: 'beach' }, seed: 317, verb: 'give the seal its fish' },
+    { id: 'x-rescue-lights', place: 'rescue', area: 'barn', name: 'Fairy lights', scene: 'lights', opts: { where: 'rescue' }, seed: 318, verb: 'hang the lights' },
+    { id: 'x-walk', area: 'lawn', name: 'Walk the dog next door', scene: 'walk', opts: {}, seed: 319, verb: 'walk the dog along the path' },
+    { id: 'x-cat', area: 'door', name: 'The cat next door', scene: 'cat', opts: {}, seed: 320, verb: 'brush the cat' },
   ];
 
   const FAMILY_OF = {
@@ -100,18 +132,25 @@ const DATA = (() => {
     bed: 'weed', pond: 'skim', attic: 'dust', leaves: 'rake', plant: 'plant', build: 'build',
     cafeFloor: 'dust', awning: 'scrub', sign: 'paint', tables: 'wipe', counter: 'wipe', fridge: 'arrange', lights: 'arrange',
     dog: 'groom', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
+    coffee: 'brew', serve: 'arrange', seal: 'feed', bowls: 'feed', walk: 'walk', cat: 'brush', hutch: 'muck',
   };
   const familyOf = (scene) => FAMILY_OF[scene];
+
+  // indoor jobs get no snow or falling leaves from the season outside
+  const INDOOR = new Set(['cafeFloor', 'tables', 'counter', 'fridge', 'attic', 'coffee', 'bowls', 'cat', 'hutch']);
+  const isIndoor = (c) => INDOOR.has(c.scene) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles') || (c.scene === 'serve' && c.opts.what === 'napkins');
 
   // What jobs pay. Kept modest: tools, helpers, decorations and new places
   // should take a while to save up for.
   function choreValue(i) { return Math.round(24 * Math.pow(1.2, i)); }
   function cafeValue(i) { return Math.round(150 * Math.pow(1.1, i)); }
   function coveValue(i) { return Math.round(260 * Math.pow(1.08, i)); }
+  function rescueValue(i) { return Math.round(380 * Math.pow(1.07, i)); }
 
   CHORES.forEach((c, i) => { c.index = i; c.place = 'cottage'; c.family = familyOf(c.scene); c.value = choreValue(i); });
   CAFE_CHORES.forEach((c, i) => { c.index = i; c.place = 'cafe'; c.family = familyOf(c.scene); c.value = cafeValue(i); });
   COVE_CHORES.forEach((c, i) => { c.index = i; c.place = 'cove'; c.family = c.family || familyOf(c.scene); c.value = coveValue(i); });
+  RESCUE_CHORES.forEach((c, i) => { c.index = i; c.place = 'rescue'; c.family = c.family || familyOf(c.scene); c.value = rescueValue(i); });
   EXTRAS.forEach((c) => { c.place = c.place || 'cottage'; c.family = familyOf(c.scene); c.extra = true; });
 
   // first cottage chore that uses each family sets the price level of its tools
@@ -131,26 +170,27 @@ const DATA = (() => {
         ['lawn-stones', 'Long grass by the stones'], ['bed-roses', 'Weeds among the roses'], ['win-living', 'Pollen on the living room window'],
         ['lawn-patch', 'The patch by the gate'], ['path-steps', 'Moss on the stepping stones'], ['x-sunflowers', 'Sow sunflowers by the fence'],
         ['x-jetty', 'Build a little jetty by the pond'], ['fence-right', 'Touch up the fence'], ['x-veg', 'Plant the vegetable patch'],
+        ['x-walk', 'A summer walk with the dog next door'],
       ],
       autumn: [
         ['lawn-tree', 'Leaves under the old tree', 'leaves'], ['path-front', 'Leaves on the path', 'leaves'], ['lawn-stones', 'Leaves all over the lawn', 'leaves'],
         ['pond', 'Leaves in the pond', 'leaves'], ['win-bedroom', 'Rain spots on the bedroom windows'], ['lawn-patch', 'Leaves by the gate', 'leaves'],
         ['roof-left', 'Moss creeping back on the roof'], ['path-steps', 'Leaves on the stepping stones', 'leaves'], ['x-bulbs', 'Plant tulip bulbs for spring'],
         ['x-firewood', 'Stack the firewood'], ['shutters', 'Paint the shutters before winter'], ['bed-tulips', 'Tidy the tulip bed'],
-        ['x-dog', 'A muddy dog from next door'],
+        ['x-dog', 'A muddy dog from next door'], ['x-cat', 'Burrs in the fur of the cat next door'],
       ],
       winter: [
         ['path-front', 'Snow on the path', 'snow'], ['win-kitchen', 'Frost on the kitchen window', 'frost'], ['path-steps', 'Snowy stepping stones', 'snow'],
         ['win-living', 'Frost on the living room window', 'frost'], ['lawn-patch', 'A clear spot for the birds', 'snow'], ['win-bedroom', 'Frosty bedroom windows', 'frost'],
         ['attic-window', 'Frost on the round window', 'frost'], ['attic-floor', 'Winter dusting in the attic'], ['x-firewood', 'More wood for the stove'],
-        ['x-jetty', 'Snow on the jetty', 'snow'], ['x-lights', 'Christmas lights on the cottage'],
+        ['x-jetty', 'Snow on the jetty', 'snow'], ['x-lights', 'Christmas lights on the cottage'], ['x-cat', 'A cat curled up by the stove'],
       ],
       spring: [
         ['bed-roses', 'Spring weeds in the roses'], ['fence-left', 'Fresh paint for the fence'], ['bed-tulips', 'Spring weeds in the tulips'],
         ['fence-right', 'More fresh paint for the fence'], ['shutters', 'A new colour for the shutters'], ['door', 'A new colour for the door'],
         ['lawn-tree', 'The first mow of the year'], ['roof-right', 'Moss by the chimney'], ['x-windowboxes', 'Plant the window boxes'],
         ['x-veg', 'Sow the vegetable patch'], ['x-brickpath', 'Lay a brick path to the shed'], ['pond', 'Spring clean in the pond'],
-        ['x-dog', 'Bath time after a muddy spring walk'],
+        ['x-dog', 'Bath time after a muddy spring walk'], ['x-walk', 'The dog next door wants a walk'],
       ],
     },
     cafe: {
@@ -158,22 +198,24 @@ const DATA = (() => {
         ['cafe-tables', 'Sticky summer tables'], ['cafe-awning', 'Dust on the awning'], ['cafe-terrace', 'Weeds between the flagstones'],
         ['cafe-planters', 'Replant the planter boxes'], ['cafe-floor', 'Sand on the café floor'], ['cafe-pots', 'New flowers for the pots'],
         ['cafe-window', 'Fingerprints on the shop window'], ['cafe-counter', 'Polish the coffee machine'], ['cafe-fridge', 'Cold drinks for a hot day'],
+        ['x-cafe-coffee', 'Iced coffee for a hot day', null, { drink: 'iced' }], ['x-cafe-chairs', 'Tables out in the sunshine'], ['x-cafe-napkins', 'Napkins for the lunch rush'],
       ],
       autumn: [
         ['cafe-terrace', 'Leaves on the terrace', 'leaves'], ['cafe-deck', 'Leaves on the deck', 'leaves'], ['cafe-window', 'Rain spots on the shop window'],
         ['cafe-floor', 'Muddy footprints on the floor'], ['cafe-herbs', 'Fresh herbs for the kitchen'], ['cafe-tables', 'Coffee rings on the tables'],
         ['x-cafe-dog', 'A guest\'s muddy dog'],
-        ['cafe-counter', 'Pumpkin spice everywhere'],
+        ['cafe-counter', 'Pumpkin spice everywhere'], ['x-cafe-coffee', 'Lattes for a rainy day'], ['x-cafe-napkins', 'Fresh napkins on every table'],
       ],
       winter: [
         ['cafe-terrace', 'Snow on the terrace', 'snow'], ['cafe-deck', 'Snow on the deck', 'snow'], ['cafe-window', 'Frost on the shop window', 'frost'],
         ['cafe-floor', 'Slushy footprints'], ['cafe-counter', 'Hot chocolate splashes'], ['cafe-tables', 'Cocoa rings on the tables'],
         ['x-cafe-lights', 'Christmas lights in the café'], ['cafe-fridge', 'Restock the fridge for the holidays'],
+        ['x-cafe-coffee', 'Hot chocolate for everyone', null, { drink: 'cocoa' }], ['x-cafe-napkins', 'Napkins for the Christmas rush'],
       ],
       spring: [
         ['cafe-sign', 'Repaint the sign'], ['cafe-door', 'A new colour for the door'], ['cafe-planters', 'Spring planting'],
         ['cafe-pots', 'Pots for the steps'], ['cafe-herbs', 'Sow new herbs'], ['cafe-terrace', 'Moss on the terrace'],
-        ['cafe-awning', 'Spring clean for the awning'],
+        ['cafe-awning', 'Spring clean for the awning'], ['x-cafe-chairs', 'The terrace opens for spring'],
       ],
     },
     cove: {
@@ -181,11 +223,12 @@ const DATA = (() => {
         ['cove-castle', 'A sandcastle for the summer'], ['cove-shells', 'Shells after the high tide'], ['cove-rockpool', 'Seaweed in the rock pool'],
         ['cove-litter', 'Picnic litter on the beach'], ['cove-window', 'Sandy fingerprints on the hut window'], ['cove-van-inside', 'Sand in the camper van'],
         ['cove-boat', 'Weed on the boat'], ['cove-seaweed', 'Seaweed after the tide'], ['x-cove-dog', 'A sandy dog after the beach'],
+        ['x-cove-seal', 'A hungry seal on the beach'],
       ],
       autumn: [
         ['cove-litter', 'The storm washed things up', null, { items: 'storm' }], ['cove-seaweed', 'Storm seaweed on the sand'], ['cove-boardwalk', 'Leaves on the boardwalk', 'leaves'],
         ['cove-window', 'Salt spray on the hut window'], ['cove-lantern', 'Salt on the lighthouse lamp'], ['cove-rockpool', 'Leaves in the rock pool', 'leaves'],
-        ['cove-van-wash', 'A muddy camper van'], ['cove-boat', 'Barnacles are back'],
+        ['cove-van-wash', 'A muddy camper van'], ['cove-boat', 'Barnacles are back'], ['x-cove-seal', 'A seal resting after the storm'],
       ],
       winter: [
         ['x-cove-lights', 'Christmas lights on the beach hut'], ['cove-boardwalk', 'Snow on the boardwalk', 'snow'], ['cove-jetty', 'Snow on the jetty', 'snow'],
@@ -195,27 +238,51 @@ const DATA = (() => {
       spring: [
         ['cove-hut', 'A new colour for the hut'], ['cove-boat-paint', 'Fresh paint for the boat'], ['cove-lighthouse', 'Touch up the lighthouse'],
         ['cove-dunes', 'Sea pinks for the dunes'], ['cove-seaweed', 'Spring tide seaweed'], ['cove-van-polish', 'Polish the van for the summer'],
-        ['cove-castle', 'The first sandcastle of the year'], ['cove-van-wash', 'Spring wash for the camper van'],
+        ['cove-castle', 'The first sandcastle of the year'], ['cove-van-wash', 'Spring wash for the camper van'], ['x-cove-seal', 'A seal pup on the sand'],
+      ],
+    },
+    rescue: {
+      summer: [
+        ['rescue-walk', 'A long summer walk'], ['rescue-water', 'Cool water on a hot day'], ['rescue-pond', 'Duckweed on the pond'],
+        ['rescue-meadow', 'The paddock has grown again'], ['rescue-puppy', 'A puppy rolled in the mud'], ['rescue-seal', 'Fish for the seal pup'],
+        ['rescue-toys', 'Toys left out after playtime'], ['rescue-veg', 'More carrots for the rabbits'],
+      ],
+      autumn: [
+        ['rescue-yard', 'Leaves in the farmyard', 'leaves'], ['rescue-walk', 'A walk through the autumn woods'], ['rescue-hutch', 'Cosy straw for the autumn'],
+        ['rescue-bowls', 'Supper for the dogs'], ['rescue-cat', 'Burrs in the cat\'s fur'], ['rescue-pond', 'Leaves on the duck pond', 'leaves'],
+        ['rescue-window', 'Rain on the office window'], ['rescue-puppy', 'Muddy paws after the rain'],
+      ],
+      winter: [
+        ['x-rescue-lights', 'Fairy lights on the barn'], ['rescue-yard', 'Snow in the farmyard', 'snow'], ['rescue-window', 'Frost on the office window', 'frost'],
+        ['rescue-walk', 'A walk in the snow'], ['rescue-hutch', 'Extra straw for cold nights'], ['rescue-water', 'Fresh water on a frosty morning'],
+        ['rescue-bowls', 'A warm breakfast'], ['rescue-floor', 'Snow blown into the barn', 'snow'],
+      ],
+      spring: [
+        ['rescue-fence', 'Fresh paint for the paddock fence'], ['rescue-door', 'A new colour for the farmhouse door'], ['rescue-veg', 'Sow the vegetable patch'],
+        ['rescue-meadow', 'The first mow of the year'], ['rescue-cat', 'Spring moult: brush the cat'], ['rescue-seal', 'A new seal pup to feed'],
+        ['rescue-sign', 'Touch up the sign'], ['rescue-toys', 'Toys out in the spring sunshine'],
       ],
     },
   };
   // Christmas lights always come with winter
-  const ALWAYS = new Set(['x-lights', 'x-cafe-lights', 'x-cove-lights']);
-  const PER_SEASON = { cottage: 6, cafe: 5, cove: 5 };
+  const ALWAYS = new Set(['x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights']);
+  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5 };
   // at most this many jobs of one kind in a season (default 2)
-  const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2 };
+  const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2, brew: 1, walk: 1, brush: 1, muck: 1 };
 
   const seasonOf = (n) => SEASON_ORDER[(n - 1) % 4];
   function seasonValue(n, i) { return Math.round(choreValue(CHORES.length - 1) * 0.4 * Math.min(1.6, Math.pow(1.05, n - 1)) * (1 + i * 0.04)); }
-  const byId = (id) => CHORES.find((c) => c.id === id) || CAFE_CHORES.find((c) => c.id === id) || COVE_CHORES.find((c) => c.id === id) || EXTRAS.find((c) => c.id === id);
-  const famFor = (b, dirt) => (dirt === 'leaves' ? (b.scene === 'pond' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family);
+  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, EXTRAS);
+  const byId = (id) => ALL().find((c) => c.id === id);
+  // leaves in water are skimmed with a net, never raked
+  const famFor = (b, dirt) => (dirt === 'leaves' ? (b.scene === 'pond' || b.scene === 'rockpool' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family);
 
   // Pick a varied handful from the pool: seeded by the season number, never
   // more than the cap of one kind, at least one planting or building job,
   // and jobs from the same season last year pushed to the back.
   function pickSeason(n, place, history = true) {
     const pool = SEASON_POOL[place][seasonOf(n)];
-    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759 }[place]);
+    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899 }[place]);
     const last = history && n > 4 ? new Set(pickSeason(n - 4, place, false)) : new Set();
     const scored = pool.map((p) => ({ p, s: r() + (last.has(p[0]) ? 0.6 : 0) - (ALWAYS.has(p[0]) ? 2 : 0) })).sort((a, b) => a.s - b.s).map((x) => x.p);
     const want = PER_SEASON[place], picked = [], count = {};
@@ -226,7 +293,7 @@ const DATA = (() => {
       count[fam] = (count[fam] || 0) + 1;
       picked.push(p);
     }
-    const isNew = (p) => { const f = famFor(byId(p[0]), p[2]); return f === 'plant' || f === 'build' || f === 'collect' || f === 'polish' || f === 'arrange'; };
+    const isNew = (p) => ['plant', 'build', 'collect', 'polish', 'arrange', 'brew', 'feed', 'walk'].includes(famFor(byId(p[0]), p[2]));
     if (!picked.some(isNew)) {
       const swap = scored.find((p) => isNew(p) && !picked.includes(p));
       if (swap) picked[picked.length - 1] = swap;
@@ -266,8 +333,8 @@ const DATA = (() => {
   function famBase(fam) {
     if (fam in intro) return choreValue(intro[fam]);
     if (FAMILY_SEASON[fam]) return seasonValue(FAMILY_SEASON[fam], 0);
-    if (fam === 'collect' || fam === 'polish') return coveValue(0);
-    return cafeValue(0); // planting, building and arranging
+    if (['collect', 'polish', 'feed', 'walk', 'brush', 'muck'].includes(fam)) return coveValue(0);
+    return cafeValue(0); // planting, building, arranging and pouring
   }
   // every place has its own toolbox, and the later places are dearer
   function toolCost(fam, tierIdx, place) {
@@ -285,7 +352,7 @@ const DATA = (() => {
     { name: 'Terracotta', c: '#d98b63' }, { name: 'Butter', c: '#f2d88a' }, { name: 'Cream', c: '#f4ecdc' },
     { name: 'Forest', c: '#4e7b5b' }, { name: 'Navy', c: '#3d5a86' }, { name: 'Charcoal', c: '#4b4a52' },
   ];
-  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f' };
+  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b' };
 
   // one keepsake hidden in each job, found the first time through
   const FINDS = {
@@ -307,10 +374,16 @@ const DATA = (() => {
     'cove-rockpool': ['🐙', 'A shy little octopus'], 'cove-boat-paint': ['🧜', 'A mermaid figurine'], 'cove-van-wax': ['🎸', 'A ukulele under the seat'],
     'cove-shells': ['💎', 'A piece of blue sea glass'], 'cove-jetty': ['🐬', 'A dolphin, waving'], 'cove-van-polish': ['🔑', 'The van\'s lucky keyring'],
     'cove-lantern': ['🗝️', 'The lighthouse keeper\'s key'], 'cove-lighthouse': ['🦭', 'A seal pup'], 'cove-castle': ['👑', 'A tiny golden crown'],
+    'rescue-bowls': ['🦴', 'A squeaky bone'], 'rescue-yard': ['🐾', 'A tile with a paw print'], 'rescue-walk': ['🎾', 'A lost tennis ball'],
+    'rescue-hutch': ['🥕', 'A carrot someone hid'], 'rescue-puppy': ['🧼', 'A bar of lavender soap'], 'rescue-toys': ['🧸', 'A teddy with one ear'],
+    'rescue-cat': ['🧶', 'A ball of red wool'], 'rescue-fence': ['🌾', 'A sheaf of wheat'], 'rescue-water': ['🐟', 'A goldfish who moved in'],
+    'rescue-pond': ['🦆', 'A duckling'], 'rescue-seal': ['🐚', 'A pearly shell'], 'rescue-floor': ['🏷️', 'An old name tag'],
+    'rescue-veg': ['🥬', 'The first lettuce'], 'rescue-meadow': ['🌼', 'A daisy chain'], 'rescue-door': ['📜', 'The farm\'s old deed'],
+    'rescue-window': ['📷', 'A photo of a happy adoption'], 'rescue-sign': ['🔨', 'Grandad\'s old hammer'],
   };
 
   // what you do in each kind of job, for the first-time hint
-  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog' };
+  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog', brew: 'pour', feed: 'feed', walk: 'walk', brush: 'brush', muck: 'muck out' };
 
   // decorations, bought in the shed once a few jobs are done at that place
   const DECOR = [
@@ -359,18 +432,33 @@ const DATA = (() => {
     { id: 'v-kiosk', name: 'An ice-cream kiosk', icon: '🍦', cost: 7500 },
     { id: 'v-whale', name: 'A whale saying hello', icon: '🐋', cost: 10000 },
   ];
+  const RESCUE_DECOR = [
+    { id: 'r-bunting', name: 'Bunting on the barn', icon: '🎏', cost: 500 },
+    { id: 'r-bench', name: 'A bench by the paddock', icon: '🪑', cost: 750 },
+    { id: 'r-hens', name: 'A few happy hens', icon: '🐔', cost: 1000 },
+    { id: 'r-sunflowers', name: 'Sunflowers by the gate', icon: '🌻', cost: 1350 },
+    { id: 'r-goat', name: 'A goat on the hay bales', icon: '🐐', cost: 1800 },
+    { id: 'r-lights', name: 'Fairy lights on the barn', icon: '✨', cost: 2400 },
+    { id: 'r-tractor', name: 'A little red tractor', icon: '🚜', cost: 3000 },
+    { id: 'r-donkey', name: 'A donkey friend', icon: '🫏', cost: 3800 },
+    { id: 'r-pony', name: 'A Shetland pony', icon: '🐴', cost: 4800 },
+    { id: 'r-ducklings', name: 'Ducklings on the pond', icon: '🦆', cost: 6200 },
+    { id: 'r-owl', name: 'An owl in the hayloft', icon: '🦉', cost: 8000 },
+    { id: 'r-rainbow', name: 'A rainbow after the rain', icon: '🌈', cost: 11000 },
+  ];
   const DECOR_UNLOCK = 6;
 
-  // the places you can own; the picture of each is drawn by HOUSE or CAFE
+  // the places you can own; the picture of each is drawn by HOUSE, CAFE, COVE or RESCUE
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
     { id: 'cafe', name: 'Marigold Café', short: 'the café', toolPrice: 2, blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
     { id: 'cove', name: 'Seashell Cove', short: 'the cove', toolPrice: 3, blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
+    { id: 'rescue', name: 'Bluebell Rescue', short: 'the rescue', toolPrice: 4, blurb: 'An old farm that takes in dogs, cats, rabbits and the odd seal pup. Feed them, walk them, brush them and mend the place.', price: 30000, needs: 'cove', chores: RESCUE_CHORES, decor: RESCUE_DECOR, done: 'The animals are at home again', lights: 'r-lights' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
-    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS, DECOR, CAFE_DECOR, COVE_DECOR, DECOR_UNLOCK, SEASON_NAMES,
-    seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro,
+    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS, DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, DECOR_UNLOCK, SEASON_NAMES,
+    seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();

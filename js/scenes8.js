@@ -1,7 +1,8 @@
 'use strict';
 // More jobs made of pieces: things to pick up on the beach (they fly off to
-// a bucket), a sandcastle, Christmas lights that switch on bulb by bulb, and
-// a drinks fridge where every bottle has its own labelled place.
+// a bucket), or dog toys on a lawn (into the toy box), a sandcastle,
+// Christmas lights that switch on bulb by bulb, and a drinks fridge where
+// every bottle has its own labelled place.
 
 (() => {
   const { W, H, field, ramp, softShadow } = SCENES;
@@ -126,6 +127,45 @@
       c.strokeStyle = '#c9b597'; c.lineWidth = 0.9;
       for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * 0.4; c.beginPath(); c.moveTo(0, s * 0.45); c.lineTo(Math.cos(a) * s * 0.55, Math.sin(a) * s * 0.55); c.stroke(); }
     },
+    // dog toys for the rescue's lawn
+    ball(c, r, s) {
+      dot(c, 0, 0, s * 0.6, '#c9d93a'); dot(c, -s * 0.12, -s * 0.12, s * 0.44, '#dbe85a');
+      c.strokeStyle = '#ffffff'; c.lineWidth = 1.6;
+      c.beginPath(); c.arc(-s * 0.72, 0, s * 0.56, -0.85, 0.85); c.stroke();
+      c.beginPath(); c.arc(s * 0.72, 0, s * 0.56, Math.PI - 0.85, Math.PI + 0.85); c.stroke();
+    },
+    bone(c, r, s) {
+      const col = U.pick(r, ['#f4ecdc', '#8fbfe6', '#ef8aa6']);
+      c.fillStyle = U.shade(col, -0.2); rect(c, -s * 0.6, -s * 0.15, s * 1.2, s * 0.36, s * 0.1); c.fill();
+      for (const [dx, dy] of [[-0.62, -0.18], [-0.62, 0.24], [0.62, -0.18], [0.62, 0.24]]) dot(c, dx * s, dy * s, s * 0.25, U.shade(col, -0.2));
+      c.fillStyle = col; rect(c, -s * 0.6, -s * 0.2, s * 1.2, s * 0.36, s * 0.1); c.fill();
+      for (const [dx, dy] of [[-0.62, -0.22], [-0.62, 0.18], [0.62, -0.22], [0.62, 0.18]]) dot(c, dx * s, dy * s, s * 0.24, col);
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(-s * 0.45, -s * 0.14, s * 0.9, s * 0.07);
+    },
+    frisbee(c, r, s) {
+      const col = U.pick(r, ['#e2574c', '#3d86c6', '#f2b531', '#4f9d7a']);
+      dot(c, 0, 0, s * 0.85, U.shade(col, -0.25)); dot(c, 0, 0, s * 0.78, col);
+      c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1.4; c.beginPath(); c.arc(0, 0, s * 0.52, 0, 7); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,0.3)'; c.beginPath(); c.ellipse(-s * 0.3, -s * 0.36, s * 0.3, s * 0.11, -0.6, 0, 7); c.fill();
+    },
+    duck(c, r, s) {
+      c.fillStyle = '#f2c230'; c.beginPath(); c.ellipse(-s * 0.12, 0, s * 0.72, s * 0.5, 0, 0, 7); c.fill();
+      c.fillStyle = '#e3ad1c'; c.beginPath(); c.ellipse(-s * 0.25, -s * 0.06, s * 0.36, s * 0.24, 0.2, 0, 7); c.fill();
+      dot(c, s * 0.42, 0, s * 0.34, '#f7d34a');
+      c.fillStyle = '#f08a2a'; c.beginPath(); c.ellipse(s * 0.8, 0, s * 0.2, s * 0.12, 0, 0, 7); c.fill();
+      dot(c, s * 0.5, -s * 0.14, s * 0.06, '#2b2422'); dot(c, s * 0.5, s * 0.14, s * 0.06, '#2b2422');
+    },
+    teddy(c, r, s) {
+      const col = U.pick(r, ['#b07a48', '#d9a066', '#9a8f86']);
+      dot(c, -s * 0.5, s * 0.55, s * 0.18, col); dot(c, s * 0.5, s * 0.55, s * 0.18, col);
+      c.fillStyle = col; c.beginPath(); c.ellipse(0, s * 0.42, s * 0.42, s * 0.36, 0, 0, 7); c.fill();
+      dot(c, -s * 0.36, -s * 0.5, s * 0.18, col); dot(c, s * 0.36, -s * 0.5, s * 0.18, col);
+      dot(c, -s * 0.36, -s * 0.5, s * 0.09, U.shade(col, 0.4)); dot(c, s * 0.36, -s * 0.5, s * 0.09, U.shade(col, 0.4));
+      dot(c, 0, -s * 0.18, s * 0.42, col);
+      dot(c, 0, -s * 0.06, s * 0.18, U.shade(col, 0.4));
+      dot(c, -s * 0.15, -s * 0.26, s * 0.055, '#2b2422'); dot(c, s * 0.15, -s * 0.26, s * 0.055, '#2b2422'); dot(c, 0, -s * 0.1, s * 0.07, '#2b2422');
+      c.strokeStyle = '#e2574c'; c.lineWidth = 2; c.beginPath(); c.moveTo(-s * 0.3, s * 0.12); c.lineTo(s * 0.3, s * 0.12); c.stroke();
+    },
   };
   const ITEM_SETS = {
     litter: ['bottle', 'can', 'packet', 'flipflop', 'bag', 'cup', 'can', 'packet'],
@@ -133,7 +173,14 @@
     driftwood: ['driftwood', 'driftwood', 'crate'],
     shells: ['scallop', 'whelk', 'mussel', 'starfish', 'cockle', 'scallop', 'seaglass', 'sanddollar'],
     seaglass: ['seaglass', 'seaglass', 'mussel', 'cockle', 'whelk', 'seaglass'],
+    toys: ['ball', 'bone', 'frisbee', 'duck', 'teddy', 'rope', 'ball', 'bone'],
   };
+  function pawPrint(c, x, y, a, s, col) {
+    c.save(); c.translate(x, y); c.rotate(a + Math.PI / 2); c.fillStyle = col;
+    c.beginPath(); c.ellipse(0, s * 0.35, s * 0.62, s * 0.5, 0, 0, 7); c.fill();
+    for (const [dx, dy] of [[-0.62, -0.25], [-0.22, -0.62], [0.22, -0.62], [0.62, -0.25]]) { c.beginPath(); c.ellipse(dx * s, dy * s, s * 0.22, s * 0.27, 0, 0, 7); c.fill(); }
+    c.restore();
+  }
   function drawItem(c, u) {
     c.save(); c.translate(u.x, u.y); c.rotate(u.rot);
     c.fillStyle = 'rgba(80,55,20,0.2)'; c.beginPath(); c.ellipse(1.5, 2.5, u.s * 0.95, u.s * 0.6, 0, 0, 7); c.fill();
@@ -144,9 +191,12 @@
   function beach(S) {
     const { r, nz, opts, bleed } = S;
     const set = ITEM_SETS[opts.items || 'litter'], bin = /litter|storm/.test(opts.items || 'litter');
+    // the rescue's version: dog toys all over a lawn, into the toy box
+    const grass = opts.ground === 'grass', toys = opts.items === 'toys';
     const target = { x: 316, y: 548 };
     const region = new Path2D();
-    region.moveTo(14, 96); for (let x = 14; x <= 346; x += 12) region.lineTo(x, 88 + Math.sin(x * 0.05) * 6);
+    if (grass) { region.moveTo(14, 100); region.lineTo(346, 100); }
+    else { region.moveTo(14, 96); for (let x = 14; x <= 346; x += 12) region.lineTo(x, 88 + Math.sin(x * 0.05) * 6); }
     region.lineTo(346, 584); region.lineTo(14, 584); region.closePath();
     region.moveTo(target.x + 34, target.y); region.arc(target.x, target.y, 34, 0, Math.PI * 2, true);
     const units = [];
@@ -154,7 +204,7 @@
       const x = 38 + r() * 284, y = 124 + r() * 432;
       if (Math.hypot(x - target.x, y - target.y) < 64) continue;
       if (units.some((u) => Math.hypot(u.x - x, u.y - y) < 52)) continue;
-      const kind = set[units.length % set.length], s = kind === 'driftwood' ? 21 + r() * 5 : 15 + r() * 5;
+      const kind = set[units.length % set.length], s = kind === 'driftwood' || kind === 'frisbee' || kind === 'teddy' ? 20 + r() * 4 : 15 + r() * 5;
       units.push({ shape: 'circle', x, y, r: s * 0.95, s, kind, seed: (r() * 1e9) | 0, rot: r() * 6.28, spin: (r() - 0.5) * 6 });
     }
     return {
@@ -163,6 +213,14 @@
       units, drawUnit: drawItem,
       decor(c) {
         const { x0, y0, x1, y1 } = bleed;
+        if (grass) {
+          // a lawn with a hedge and a few flowers along the top
+          SCENES.mowedLawn(c, nz, x0, y0, x1, y1, false);
+          SCENES.grassGrain(c, r, x0, y0, x1, y1, 6, 0.2);
+          for (let x = x0 + 10; x < x1; x += 26) SCENES.shrub(c, r, x, 60 + r() * 14, 26 + r() * 8, U.pick(r, ['#4f8a3c', '#467e37', '#5d9644']));
+          for (let i = 0; i < 5; i++) SCENES.flowerClump(c, r, 30 + i * 70 + r() * 20, 92, U.pick(r, ['#e98aa2', '#f2c230', '#b48fd8', '#ffffff']));
+          return;
+        }
         sand(c, nz, x0, y0, x1, y1);
         // the sea at the top, with the line of foam
         const g = c.createLinearGradient(0, y0, 0, 96);
@@ -175,12 +233,31 @@
         for (let i = 0; i < 14; i++) { const x = x0 + r() * (x1 - x0), y = y0 + r() * (70 - y0); c.beginPath(); c.moveTo(x - 10, y); c.quadraticCurveTo(x, y - 3, x + 10, y); c.stroke(); }
       },
       clean(c) {
+        if (grass) { SCENES.mowedLawn(c, nz, 0, 0, W, H, true); SCENES.grassGrain(c, r, 0, 0, W, H, 4, 0.25); return; }
         sand(c, nz, 0, 0, W, H, -6);
         // the smooth ripples a tide leaves behind
         c.strokeStyle = 'rgba(180,150,100,0.3)'; c.lineWidth = 1.2;
         for (let y = 100; y < H; y += 9) { c.beginPath(); c.moveTo(0, y); for (let x = 0; x <= W; x += 14) c.lineTo(x, y + Math.sin(x * 0.04 + y * 0.2) * 2); c.stroke(); }
       },
       dirt(c) {
+        if (grass) {
+          // trampled, scuffed grass: muddy patches, paw prints, chewed sticks
+          const g = SCENES.ramp(['#6f8f3c', '#80a046', '#94ab52', '#a7a85a']);
+          field(c, 0, 0, W, H, 3, (x, y) => g(nz.fbm(x * 0.03, y * 0.03, 4)));
+          for (let i = 0; i < 30; i++) { c.fillStyle = 'rgba(110,85,50,0.3)'; c.beginPath(); c.ellipse(r() * W, r() * H, 12 + r() * 24, 7 + r() * 12, r() * 3, 0, 7); c.fill(); }
+          for (let k = 0; k < 3; k++) {
+            let x = 40 + r() * 280, y = 580, a = -Math.PI / 2 + (r() - 0.5) * 0.6;
+            for (let i = 0; i < 26 && y > 90; i++) {
+              a += (r() - 0.5) * 0.5; x += Math.cos(a) * 20; y += Math.sin(a) * 20;
+              pawPrint(c, x + Math.cos(a + Math.PI / 2) * (i % 2 ? 5 : -5), y + Math.sin(a + Math.PI / 2) * (i % 2 ? 5 : -5), a, 4, 'rgba(90,65,35,0.45)');
+            }
+          }
+          c.lineCap = 'round';
+          for (let i = 0; i < 30; i++) { c.strokeStyle = U.pick(r, ['#8a6a46', '#7a5a3a', '#a07c52']); c.lineWidth = 1.6 + r() * 1.6; const x0 = r() * W, y0 = r() * H, a = r() * 6.28, l = 6 + r() * 12; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x0 + Math.cos(a) * l, y0 + Math.sin(a) * l); c.stroke(); }
+          for (let i = 0; i < 26; i++) { const x = r() * W, y = r() * H; for (let k = 0; k < 8; k++) { const a = (k / 8) * 6.28; dot(c, x + Math.cos(a) * 3, y + Math.sin(a) * 3, 1.3, 'rgba(255,255,255,0.8)'); } dot(c, x, y, 1.2, '#c9c2a8'); }
+          for (let i = 0; i < 200; i++) dot(c, r() * W, r() * H, 0.8 + r() * 1.2, U.pick(r, ['#5f7f32', '#b9b06a', '#7d6e4a', '#d9d29a']));
+          return;
+        }
         sand(c, nz, 0, 0, W, H, 14);
         // footprints, wet patches, bits of weed: a messy, trampled beach
         for (let i = 0; i < 26; i++) { c.fillStyle = 'rgba(120,95,60,0.22)'; c.beginPath(); c.ellipse(r() * W, r() * H, 14 + r() * 26, 8 + r() * 14, r() * 3, 0, 7); c.fill(); }
@@ -200,7 +277,16 @@
       top(c) {
         const { x, y } = target;
         softShadow(c, (() => { const p = new Path2D(); p.arc(x, y + 4, 26, 0, 7); return p; })(), 8, 0.4, 2, 4);
-        if (bin) {
+        if (toys) {
+          // a wooden toy box, its lid propped open
+          c.fillStyle = '#7a4f2e'; rect(c, x - 31, y - 25, 62, 50, 7); c.fill();
+          c.fillStyle = '#b07a48'; rect(c, x - 28, y - 22, 56, 44, 5); c.fill();
+          c.fillStyle = '#3e2a1a'; rect(c, x - 23, y - 17, 46, 34, 3); c.fill();
+          c.fillStyle = 'rgba(255,230,190,0.18)'; c.fillRect(x - 28, y - 1, 56, 2);
+          c.fillStyle = '#9c6a3e'; rect(c, x - 31, y - 44, 62, 17, 5); c.fill();
+          c.fillStyle = '#f2c230'; c.font = '800 8.5px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('TOYS', x, y - 35);
+          dot(c, x - 8, y + 6, 6, '#c9d93a'); dot(c, x + 9, y + 2, 5, '#e2574c');
+        } else if (bin) {
           // a green litter bin, seen from above, lid open
           dot(c, x, y, 27, '#2f6b4f'); dot(c, x, y, 23, '#3f8a64'); dot(c, x, y, 18, '#25352d');
           c.fillStyle = '#ffffff'; c.font = '700 9px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.fillText('♻', x, y + 3);
@@ -317,7 +403,8 @@
   function lights(S) {
     const { r, nz, opts, bleed } = S;
     const where = opts.where || 'cottage', warm = where === 'cafe';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6' }[where];
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c' }[where] || '#f2d88a';
+    const boarded = where === 'cove' || where === 'rescue';
     // three strings: under the eaves, across the window, along the fence
     const strings = [
       { x0: 6, y0: 150, x1: 354, y1: 150, sag: 26 },
@@ -348,7 +435,7 @@
         for (let i = 0; i < 30; i++) dot(c, x0 + r() * (x1 - x0), y0 + r() * (120 - y0), 0.6 + r() * 0.9, '#fff8dc');
         const dusk = U.hex(U.mix(wall, '#4a5a8f', 0.35));
         field(c, x0, 120, x1, 450, 3, (x, y) => { const v = 0.9 + nz.fbm(x * 0.02, y * 0.02, 3) * 0.15; return [dusk[0] * v, dusk[1] * v, dusk[2] * v]; });
-        if (where === 'cove') { c.strokeStyle = 'rgba(30,40,70,0.35)'; c.lineWidth = 2; for (let x = 0; x < 360; x += 22) { c.beginPath(); c.moveTo(x, 130); c.lineTo(x, 450); c.stroke(); } }
+        if (boarded) { c.strokeStyle = 'rgba(30,40,70,0.35)'; c.lineWidth = 2; for (let x = 0; x < 360; x += 22) { c.beginPath(); c.moveTo(x, 130); c.lineTo(x, 450); c.stroke(); } }
         // snowy eaves
         c.fillStyle = where === 'cove' ? '#6b4a32' : '#5b3a2e'; c.fillRect(x0, 118, x1 - x0, 22);
         c.fillStyle = '#f4f8fc'; c.beginPath(); c.moveTo(x0, 116); for (let x = x0; x <= x1; x += 12) c.lineTo(x, 112 + Math.sin(x * 0.3) * 2); c.lineTo(x1, 124); for (let x = x1; x >= x0; x -= 18) c.lineTo(x, 124 + (Math.floor(x / 18) % 3 === 0 ? 7 : 2)); c.closePath(); c.fill();
@@ -359,10 +446,17 @@
         c.fillStyle = glow; c.fillRect(30, 200, 300, 260);
         c.fillStyle = '#f7f3ea'; c.fillRect(104, 264, 152, 7); c.fillRect(104, 390, 152, 8); c.fillRect(104, 264, 7, 132); c.fillRect(249, 264, 7, 132); c.fillRect(176, 270, 7, 120);
         if (where === 'cottage') { c.strokeStyle = '#4f8a3c'; c.lineWidth = 7; c.beginPath(); c.arc(180, 330, 26, 0, 7); c.stroke(); dot(c, 180, 304, 4, '#d9534f'); }
+        if (where === 'rescue') {
+          // a lucky horseshoe over the barn window, the open end up
+          c.strokeStyle = '#7d848c'; c.lineWidth = 7; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(166, 216); c.lineTo(166, 230); c.arc(180, 230, 14, Math.PI, 0, true); c.lineTo(194, 216); c.stroke();
+          c.strokeStyle = '#c3c9cf'; c.lineWidth = 2.4; c.beginPath(); c.arc(180, 230, 14, Math.PI * 0.85, Math.PI * 0.35, true); c.stroke();
+          for (const [hx, hy] of [[166, 222], [169, 236], [180, 241], [191, 236], [194, 222]]) dot(c, hx, hy, 1.1, '#4b5056');
+        }
         if (where === 'cafe') { c.fillStyle = '#2f8068'; c.fillRect(96, 228, 168, 14); for (let x = 96; x < 264; x += 24) { c.fillStyle = x % 48 ? '#f4ecda' : '#2f8068'; c.fillRect(x, 242, 24, 10); } }
         // ground, fence or rail, and snow
         c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
-        c.fillStyle = where === 'cove' ? '#a2734a' : '#f4ecdc';
+        c.fillStyle = boarded ? '#a2734a' : '#f4ecdc';
         for (let x = 10; x < 360; x += 26) { c.fillRect(x, 470, 10, 90); c.beginPath(); c.moveTo(x, 470); c.lineTo(x + 5, 462); c.lineTo(x + 10, 470); c.fill(); }
         c.fillRect(0, 490, 360, 8); c.fillRect(0, 530, 360, 8);
         // the wires

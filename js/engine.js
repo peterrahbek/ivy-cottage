@@ -81,6 +81,7 @@ const ENGINE = (() => {
     if (scene.top) { L.top = layer(); scene.top(L.top.x); }
     if (scene.depth) L.shadow = layer();
     if (units.length) { L.units = layer(); bakeUnits(); }
+    paintWeather();
     L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
     release(old);
     maskDirty = true;
@@ -650,6 +651,71 @@ const ENGINE = (() => {
     if (hp[k] > 0) sparkle(((k % GW) + 0.5) * CELL, (((k / GW) | 0) + 0.5) * CELL);
   }
 
+  // ---------------------------------------------------------------- weather
+  // The season outside carries on into every outdoor job, so a snowy cove is
+  // still snowy once a job starts: falling snow, leaves or petals, and in
+  // winter a cold light. Indoor jobs stay as they are.
+  const WEATHER = {
+    winter: { n: 70, wash: 'rgba(218,231,246,0.2)', edge: 'rgba(255,255,255,0.5)' },
+    autumn: { n: 14, wash: 'rgba(226,150,70,0.07)' },
+    spring: { n: 16 },
+    summer: { n: 6 },
+  };
+  const PETALS = ['#f7c6d3', '#fbe3ea', '#ffffff', '#f2a7b8'];
+  let weather = null;
+  function makeWeather(season, indoor) {
+    const w = !indoor && WEATHER[season];
+    if (!w) return null;
+    const b = bleed(), flakes = [];
+    for (let i = 0; i < w.n; i++) {
+      const f = { x: b.x0 + Math.random() * (b.x1 - b.x0), y: b.y0 + Math.random() * (b.y1 - b.y0), ph: Math.random() * 6.28, rot: Math.random() * 6.28 };
+      if (season === 'winter') Object.assign(f, { s: 1 + Math.random() * 1.8, v: 16 + Math.random() * 22 });
+      else if (season === 'autumn') Object.assign(f, { s: 3.5 + Math.random() * 2.5, v: 22 + Math.random() * 16, col: PCOL.leaf[(Math.random() * PCOL.leaf.length) | 0] });
+      else if (season === 'spring') Object.assign(f, { s: 2 + Math.random() * 1.6, v: 12 + Math.random() * 12, col: PETALS[(Math.random() * PETALS.length) | 0] });
+      else Object.assign(f, { s: 1.2 + Math.random(), v: -4 - Math.random() * 6 }); // summer: seeds drifting up
+      flakes.push(f);
+    }
+    return Object.assign({ season, flakes }, w);
+  }
+  function stepWeather(dt) {
+    const b = bleed();
+    for (const f of weather.flakes) {
+      f.ph += dt; f.rot += dt * (weather.season === 'winter' ? 0 : 1.6);
+      f.y += f.v * dt;
+      f.x += (Math.sin(f.ph * 0.9) * (weather.season === 'summer' ? 6 : 10) + (weather.season === 'autumn' ? 12 : 3)) * dt;
+      if (f.y > b.y1 + 8) { f.y = b.y0 - 8; f.x = b.x0 + Math.random() * (b.x1 - b.x0); }
+      else if (f.y < b.y0 - 8) { f.y = b.y1 + 8; f.x = b.x0 + Math.random() * (b.x1 - b.x0); }
+      if (f.x > b.x1 + 8) f.x = b.x0 - 8;
+    }
+  }
+  // the cold light and frosty edges are drawn once per layout
+  function paintWeather() {
+    if (!weather || !weather.wash) return;
+    L.wx = layer();
+    const x = L.wx.x, b = bleed();
+    x.fillStyle = weather.wash; x.fillRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
+    if (weather.edge) {
+      const g = x.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.hypot(b.x1 - b.x0, b.y1 - b.y0) * 0.56);
+      g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(1, weather.edge);
+      x.fillStyle = g; x.fillRect(b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0);
+    }
+  }
+  function drawWeather(c) {
+    const s = weather.season;
+    if (s === 'winter' || s === 'summer') {
+      c.fillStyle = s === 'winter' ? 'rgba(255,255,255,0.88)' : 'rgba(255,253,235,0.75)';
+      c.beginPath();
+      for (const f of weather.flakes) { c.moveTo(f.x + f.s, f.y); c.arc(f.x, f.y, f.s, 0, 7); }
+      c.fill();
+      return;
+    }
+    for (const f of weather.flakes) {
+      c.save(); c.translate(f.x, f.y); c.rotate(f.rot); c.fillStyle = f.col;
+      c.beginPath(); c.ellipse(0, 0, f.s * (s === 'autumn' ? 1.3 : 1), f.s * 0.55 * (0.6 + 0.4 * Math.abs(Math.sin(f.ph * 2))), 0, 0, 7); c.fill();
+      c.restore();
+    }
+  }
+
   // ------------------------------------------------------------------- loop
   function frame(now) {
     if (!running) return;
@@ -673,6 +739,7 @@ const ENGINE = (() => {
     stepGems(dt);
     if (growing.length) stepUnits(dt);
     stepParts(dt); stepCoins(dt);
+    if (weather) stepWeather(dt);
     smoothAct += (Math.min(1, activity / 6) - smoothAct) * Math.min(1, dt * 10);
     cb.onActivity && cb.onActivity(tool.down ? smoothAct : 0, tool.down);
     cb.onProgress && cb.onProgress(cleaned / total);
@@ -741,6 +808,10 @@ const ENGINE = (() => {
     if (L.top) ctx.drawImage(L.top.c, 0, 0);
     ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
     if (scene.liveTop) scene.liveTop(ctx, clock);
+    if (weather) {
+      if (L.wx) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(L.wx.c, 0, 0); ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr); }
+      drawWeather(ctx);
+    }
     for (const g of gems) if (g.state === 1) drawGem(ctx, g, true);
     for (const h of helpers) drawHelper(ctx, h);
     drawParts(ctx);
@@ -758,6 +829,7 @@ const ENGINE = (() => {
     buildGrid();
     if (o.resume) restoreGrid(o.resume);
     setupUnits();
+    weather = makeWeather(o.season, o.indoor || scene.indoor);
     paintLayers(false);
     valuePerCell = o.value / total;
     coinUnit = Math.max(1, o.value / 36);

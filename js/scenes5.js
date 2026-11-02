@@ -355,7 +355,11 @@
   // Gold-leaf letters with a dark outline read on every colour in the paint
   // box, and they sit above the paint so the brush never covers them.
   function sign(S) {
-    const { r, nz, bleed } = S;
+    const { r, nz, bleed, opts } = S;
+    // the café's sign by default; other places bring their own words, a paw
+    // instead of the cup, and a barn wall instead of the café front
+    const title = opts.title || 'CAFÉ', sub = opts.sub || '· COFFEE & CAKE ·';
+    const ghostTitle = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const ox0 = 20, oy0 = 160, ox1 = 340, oy1 = 392, f = 16;
     const ix0 = ox0 + f, iy0 = oy0 + f, ix1 = ox1 - f, iy1 = oy1 - f, cx = (ix0 + ix1) / 2;
     const region = new Path2D();
@@ -375,6 +379,22 @@
       c.fillStyle = 'rgba(30,20,10,0.5)'; c.fillText(text, cx + size * 0.05, y + size * 0.06);
       c.strokeStyle = '#3a2814'; c.lineWidth = Math.max(2.5, size * 0.09); c.strokeText(text, cx, y);
       c.fillStyle = gold(c, y - size * 0.45, y + size * 0.45); c.fillText(text, cx, y);
+      c.restore();
+    }
+    // shrink a word until it fits the board with a margin
+    function fit(c, text, size) {
+      c.save(); c.font = `bold ${size}px ${FONT}`; const w = c.measureText(text).width; c.restore();
+      const max = ix1 - ix0 - 32;
+      return w > max ? Math.floor((size * max) / w) : size;
+    }
+    function pawIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round';
+      const shape = () => {
+        c.beginPath(); c.ellipse(0, s * 0.35, s * 0.62, s * 0.5, 0, 0, 7);
+        for (const [dx, dy] of [[-0.66, -0.28], [-0.24, -0.66], [0.24, -0.66], [0.66, -0.28]]) { c.moveTo(dx * s + s * 0.24, dy * s); c.ellipse(dx * s, dy * s, s * 0.24, s * 0.3, 0, 0, 7); }
+      };
+      c.strokeStyle = '#3a2814'; c.lineWidth = 5; shape(); c.stroke();
+      c.fillStyle = gold(c, -s, s); shape(); c.fill();
       c.restore();
     }
     function cup(c, x, y, s) {
@@ -407,6 +427,29 @@
       family: 'paint', particle: 'paint', region,
       tough: (x, y) => (x < ix0 + 12 || x > ix1 - 12 || y < iy0 + 12 || y > iy1 - 12 ? 1.35 : 1),
       decor(c) {
+        if (opts.farm) {
+          // barn-red boards, a hayloft door with straw poking out, and the farm gate
+          field(c, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 3, (x, y) => { const v = nz.fbm(x * 0.01, y * 0.04, 3); return [166 + v * 26, 72 + v * 16, 54 + v * 12]; });
+          for (let x = Math.floor(bleed.x0 / 24) * 24; x < bleed.x1; x += 24) {
+            c.fillStyle = 'rgba(60,20,12,0.35)'; c.fillRect(x, bleed.y0, 2, bleed.y1 - bleed.y0);
+            c.fillStyle = 'rgba(255,220,200,0.08)'; c.fillRect(x + 2, bleed.y0, 1.5, bleed.y1 - bleed.y0);
+          }
+          c.fillStyle = '#7a3426'; c.fillRect(130, bleed.y0, 100, 112 - bleed.y0);
+          c.strokeStyle = '#f4ecdc'; c.lineWidth = 6; c.strokeRect(133, 6, 94, 102);
+          c.beginPath(); c.moveTo(133, 6); c.lineTo(227, 108); c.moveTo(227, 6); c.lineTo(133, 108); c.stroke();
+          c.strokeStyle = '#e8c35a'; c.lineWidth = 1.6; c.lineCap = 'round';
+          for (let i = 0; i < 26; i++) { const x = 136 + r() * 88; c.beginPath(); c.moveTo(x, 110); c.lineTo(x + (r() - 0.5) * 14, 118 + r() * 12); c.stroke(); }
+          c.fillStyle = '#f4ecdc';
+          for (const x of [24, 324]) c.fillRect(x, 420, 12, bleed.y1 - 420);
+          for (const y of [436, 470, 504, 538]) c.fillRect(24, y, 312, 9);
+          c.save(); c.beginPath(); c.rect(36, 436, 288, 111); c.clip();
+          c.lineWidth = 9; c.strokeStyle = '#f4ecdc'; c.beginPath(); c.moveTo(36, 547); c.lineTo(324, 436); c.stroke();
+          c.restore();
+          c.fillStyle = 'rgba(0,0,0,0.15)'; for (const y of [445, 479, 513, 547]) c.fillRect(24, y, 312, 2);
+          const board = new Path2D(); board.rect(ox0, oy0, ox1 - ox0, oy1 - oy0);
+          softShadow(c, board, 12, 0.45, 4, 7);
+          return;
+        }
         bricks(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1);
         // a first-floor window with a box of geraniums
         c.fillStyle = '#efe7d8'; c.fillRect(118, bleed.y0, 124, 100 - bleed.y0);
@@ -451,14 +494,14 @@
           c.fillStyle = '#3a2814'; c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + 8, y); c.lineTo(x, y + 8); c.lineTo(x - 8, y); c.closePath(); c.fill();
           c.fillStyle = '#e9bd55'; c.beginPath(); c.moveTo(x, y - 5.5); c.lineTo(x + 5.5, y); c.lineTo(x, y + 5.5); c.lineTo(x - 5.5, y); c.closePath(); c.fill();
         }
-        cup(c, cx, iy0 + 44, 14);
-        letters(c, 'CAFÉ', iy0 + 112, 86);
-        letters(c, '· COFFEE & CAKE ·', iy1 - 32, 17);
+        if (opts.icon === 'paw') pawIcon(c, cx, iy0 + 46, 15); else cup(c, cx, iy0 + 44, 14);
+        letters(c, title, iy0 + 112, fit(c, title, 86));
+        letters(c, sub, iy1 - 32, fit(c, sub, 17));
       },
       dirt(c) {
         oldWood(c);
         // the ghost of the old lettering
-        letters(c, 'CAFE', iy0 + 112, 82, 'rgba(235,225,200,0.15)');
+        letters(c, ghostTitle, iy0 + 112, fit(c, ghostTitle, 82), 'rgba(235,225,200,0.15)');
         peelingPaint(c, r, ix0, iy0, ix1, iy1, 44, '#a3b7b1');
         for (const y of seams) { c.fillStyle = 'rgba(40,34,28,0.5)'; c.fillRect(ix0, y - 1.5, ix1 - ix0, 3); }
         c.strokeStyle = 'rgba(50,42,34,0.55)'; c.lineWidth = 0.9;

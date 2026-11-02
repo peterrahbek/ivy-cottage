@@ -419,6 +419,79 @@
       c.restore();
       glow(c, (x0 + x1) / 2, 260, 220, 'rgba(255,236,200,0.14)');
     },
+    // the animal rescue's office: photos of pets that found a home pinned to
+    // a corkboard, a desk with a lamp and a mug, a dog asleep in its bed
+    office(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      c.fillStyle = '#f1ead8'; c.fillRect(x0, y0, w, 300 - y0);
+      c.fillStyle = 'rgba(200,170,120,0.18)'; for (let x = x0 + 8; x < x1; x += 20) c.fillRect(x, y0, 6, 300 - y0);
+      c.fillStyle = '#a9c3a6'; c.fillRect(x0, 300, w, 452 - 300);
+      c.fillStyle = 'rgba(60,90,60,0.15)'; for (let x = x0 + 22; x < x1; x += 44) c.fillRect(x, 304, 2, 148);
+      c.fillStyle = '#7d9c7a'; c.fillRect(x0, 296, w, 8);
+      c.fillStyle = '#b98654'; c.fillRect(x0, 452, w, y1 - 452);
+      c.fillStyle = 'rgba(90,60,30,0.3)'; for (let y = 464; y < y1; y += 14) c.fillRect(x0, y, w, 1.5);
+      // the corkboard of happy endings
+      c.fillStyle = '#8a5a3c'; c.fillRect(x0 + 12, 110, 110, 116);
+      c.fillStyle = '#c99a62'; c.fillRect(x0 + 17, 115, 100, 106);
+      for (let i = 0; i < 160; i++) { c.fillStyle = r() < 0.5 ? 'rgba(120,80,40,0.3)' : 'rgba(255,230,190,0.3)'; c.fillRect(x0 + 17 + r() * 100, 115 + r() * 106, 1.4, 1.4); }
+      const bg = ['#a6d3d4', '#f2d88a', '#efb4ae', '#bba9df', '#9cc5a1', '#f4c9a8'];
+      const fur = ['#e2b36a', '#3b3533', '#a8754a', '#f4efe6', '#9ba5af', '#e39a52'];
+      for (let i = 0; i < 6; i++) {
+        const px = x0 + 34 + (i % 3) * 32, py = 140 + Math.floor(i / 3) * 50;
+        c.save(); c.translate(px, py); c.rotate((r() - 0.5) * 0.3);
+        c.fillStyle = 'rgba(40,30,20,0.25)'; c.fillRect(-11, -12, 25, 30);
+        c.fillStyle = '#ffffff'; c.fillRect(-13, -14, 25, 30);
+        c.fillStyle = bg[i]; c.fillRect(-10, -11, 19, 18);
+        const cat = i % 2 === 1;
+        c.fillStyle = fur[i];
+        if (cat) { c.beginPath(); c.moveTo(-6, -4); c.lineTo(-5, -10); c.lineTo(-2, -6); c.closePath(); c.fill(); c.beginPath(); c.moveTo(5, -4); c.lineTo(4, -10); c.lineTo(1, -6); c.closePath(); c.fill(); }
+        else { c.beginPath(); c.ellipse(-6, -2, 2.5, 4.5, 0.4, 0, 7); c.fill(); c.beginPath(); c.ellipse(5, -2, 2.5, 4.5, -0.4, 0, 7); c.fill(); }
+        c.beginPath(); c.arc(-0.5, -1, 5.5, 0, 7); c.fill();
+        c.fillStyle = '#2b2422'; c.fillRect(-3, -2.5, 1.4, 1.4); c.fillRect(1, -2.5, 1.4, 1.4); c.fillRect(-1.2, 0.5, 1.6, 1.2);
+        c.fillStyle = U.pick(r, ['#e2574c', '#3d86c6', '#f2c230']); c.beginPath(); c.arc(-0.5, -13, 2.2, 0, 7); c.fill();
+        c.restore();
+      }
+      // a note with a heart on it
+      c.fillStyle = '#fff6b8'; c.fillRect(x0 + 84, 192, 26, 24);
+      c.fillStyle = '#e2574c'; c.beginPath(); c.moveTo(x0 + 97, 210); c.bezierCurveTo(x0 + 86, 202, x0 + 92, 194, x0 + 97, 200); c.bezierCurveTo(x0 + 102, 194, x0 + 108, 202, x0 + 97, 210); c.fill();
+      // a clock, and leads hanging on hooks
+      c.fillStyle = '#f7f3ea'; c.beginPath(); c.arc(x1 - 92, 150, 22, 0, 7); c.fill();
+      c.strokeStyle = '#4b4a52'; c.lineWidth = 3; c.beginPath(); c.arc(x1 - 92, 150, 22, 0, 7); c.stroke();
+      c.lineWidth = 2; c.beginPath(); c.moveTo(x1 - 92, 150); c.lineTo(x1 - 92, 136); c.moveTo(x1 - 92, 150); c.lineTo(x1 - 82, 154); c.stroke();
+      c.fillStyle = '#7d5434'; c.fillRect(x1 - 58, 122, 46, 6);
+      ['#e2574c', '#3d86c6', '#4f9d7a'].forEach((col, i) => {
+        const hx = x1 - 52 + i * 15;
+        c.strokeStyle = col; c.lineWidth = 3; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(hx, 128); c.quadraticCurveTo(hx - 6, 190, hx + 2, 236); c.stroke();
+        c.beginPath(); c.ellipse(hx + 2, 244, 4, 8, 0, 0, 7); c.stroke();
+      });
+      // the desk, with a lamp, a mug of tea, a pile of folders and a pot plant
+      c.fillStyle = '#8a5a3c'; c.fillRect(x0 + 132, 372, w - 132, 12);
+      c.fillStyle = '#a77b56'; c.fillRect(x0 + 132, 368, w - 132, 8);
+      c.fillStyle = '#7d5434'; c.fillRect(x0 + 140, 384, 8, 68); c.fillRect(x1 - 14, 384, 8, 68);
+      c.fillStyle = '#3d5a86'; c.fillRect(x0 + 150, 348, 50, 10); c.fillStyle = '#f2d88a'; c.fillRect(x0 + 154, 338, 46, 10); c.fillStyle = '#e98a6e'; c.fillRect(x0 + 148, 328, 48, 10);
+      c.strokeStyle = '#4b4a52'; c.lineWidth = 3; c.beginPath(); c.moveTo(x0 + 222, 368); c.lineTo(x0 + 222, 330); c.lineTo(x0 + 236, 318); c.stroke();
+      c.fillStyle = '#4e7b5b'; c.beginPath(); c.moveTo(x0 + 226, 312); c.lineTo(x0 + 252, 312); c.lineTo(x0 + 246, 296); c.lineTo(x0 + 232, 296); c.closePath(); c.fill();
+      glow(c, x0 + 239, 318, 90, 'rgba(255,214,140,0.5)');
+      c.fillStyle = '#ffffff'; c.fillRect(x1 - 36, 348, 16, 20);
+      c.strokeStyle = '#ffffff'; c.lineWidth = 2.5; c.beginPath(); c.arc(x1 - 19, 358, 5, -1.2, 1.2); c.stroke();
+      c.fillStyle = '#c9474f'; c.fillRect(x1 - 33, 354, 10, 3);
+      for (let k = 0; k < 3; k++) { c.fillStyle = `rgba(255,255,255,${0.5 - k * 0.14})`; c.beginPath(); c.arc(x1 - 28 + k * 2, 338 - k * 10, 3 + k, 0, 7); c.fill(); }
+      c.fillStyle = '#d98b63'; c.fillRect(x0 + 262, 346, 16, 22);
+      for (let i = 0; i < 9; i++) { c.fillStyle = U.pick(r, ['#4f8a3a', '#62a042', '#7bb553']); c.beginPath(); c.ellipse(x0 + 270 + (r() - 0.5) * 22, 338 - r() * 22, 7, 3.5, r() * 3, 0, 7); c.fill(); }
+      // a dog bed on the floor with a sleeping dog curled up in it
+      c.fillStyle = 'rgba(40,30,20,0.2)'; c.beginPath(); c.ellipse(x0 + 72, 470, 60, 16, 0, 0, 7); c.fill();
+      c.fillStyle = '#c9474f'; c.beginPath(); c.ellipse(x0 + 70, 456, 58, 24, 0, 0, 7); c.fill();
+      c.fillStyle = '#f2d88a'; c.beginPath(); c.ellipse(x0 + 70, 452, 44, 15, 0, 0, 7); c.fill();
+      c.fillStyle = '#e2b36a'; c.beginPath(); c.ellipse(x0 + 74, 444, 32, 13, 0, 0, 7); c.fill();
+      c.beginPath(); c.arc(x0 + 46, 441, 11, 0, 7); c.fill();
+      c.fillStyle = '#c48c48'; c.beginPath(); c.ellipse(x0 + 40, 437, 5, 9, 0.6, 0, 7); c.fill();
+      c.strokeStyle = '#2b2422'; c.lineWidth = 1.4; c.beginPath(); c.arc(x0 + 49, 440, 2.5, 0.2, 2.9); c.stroke();
+      c.fillStyle = '#2b2422'; c.beginPath(); c.arc(x0 + 37, 444, 2, 0, 7); c.fill();
+      c.strokeStyle = '#c48c48'; c.lineWidth = 4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x0 + 104, 446); c.quadraticCurveTo(x0 + 112, 432, x0 + 98, 430); c.stroke();
+      c.fillStyle = 'rgba(80,100,150,0.7)'; c.font = '800 10px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.fillText('z', x0 + 56, 420); c.font = '800 13px ui-rounded, system-ui, sans-serif'; c.fillText('z', x0 + 66, 406);
+      glow(c, (x0 + x1) / 2, 300, 200, 'rgba(255,230,190,0.12)');
+    },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);

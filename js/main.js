@@ -36,13 +36,14 @@
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
     if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
-    out.coins = Math.max(0, Math.round(out.coins)); out.earned = Math.round(out.earned || 0);
+    out.coins = Math.max(0, Math.round(out.coins) || 0); out.earned = Math.round(out.earned || 0);
     return out;
   }
   function load() {
     try {
+      // a save is never thrown away over a broken coin count (NaN is stored as null)
       const s = JSON.parse(localStorage.getItem(SAVE_KEY));
-      if (s && typeof s.coins === 'number') return upgrade(s);
+      if (s && typeof s === 'object' && 'coins' in s && s.done) return upgrade(s);
     } catch (_) {}
     return fresh();
   }
@@ -92,8 +93,12 @@
   function renderPlace(id, st, opts) {
     if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
     if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
+    if (id === 'rescue' && typeof RESCUE !== 'undefined') return RESCUE.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
+  // the cottage's painted wall shows around its doors and windows; the café
+  // and the farmhouse at the rescue have walls of their own
+  const wallOpts = (c) => (c.place === 'cottage' || c.place === 'cove') && S.done.wall ? { wallColor: S.colours.wall } : {};
   // decorations plus the Christmas lights once they are up this winter
   function decorAt(pl) {
     const lit = jobsAt(pl).some((j) => /lights$/.test(j.base) && S.sdone[j.id]);
@@ -234,7 +239,7 @@
     try {
       const cv = U.canvas(128, 128), x = cv.getContext('2d'), k = cv.width / 360;
       x.setTransform(k, 0, 0, k, 0, -150 * k);
-      const sc = SCENES.build(c.scene, Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}), c.seed, { x0: -4, y0: -4, x1: 364, y1: 604 });
+      const sc = SCENES.build(c.scene, Object.assign({}, c.opts, wallOpts(c)), c.seed, { x0: -4, y0: -4, x1: 364, y1: 604 });
       sc.decor(x);
       if (c.color) { x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.clean(x, S.colours[c.color]); x.restore(); }
       x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.dirt(x); x.restore();
@@ -259,7 +264,7 @@
   function startChore(c, replay) {
     AUDIO.birds(false); foundThis = null;
     cur = c; isReplay = replay;
-    curValue = Math.round(c.value * (replay ? 0.6 : 1));
+    curValue = Math.round((c.value || 0) * (replay ? 0.6 : 1));
     earnedThis = 0; shownCoins = S.coins;
     show('play');
     $('#doneOverlay').classList.remove('on'); $('#toolPick').classList.remove('on');
@@ -275,8 +280,8 @@
     if (!resume) for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
     const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
-    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}) });
-    ENGINE.start(def, { tier: tierOf(fam, c.place), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.robots ? S.helpers : 0, insets, treasures, resume });
+    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, wallOpts(c)) });
+    ENGINE.start(def, { tier: tierOf(fam, c.place), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.robots ? S.helpers : 0, insets, treasures, resume, season: seasonName(), indoor: DATA.isIndoor(c) });
     setupBots();
     beforePic = ENGINE.picture(96);
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
@@ -388,6 +393,17 @@
     $('#progTxt').textContent = v + '%';
   }
 
+  const DONE_WORDS = {
+    tidy: ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!'],
+    plant: ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'],
+    build: ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'],
+    brew: ['Smells lovely!', 'Coffee is served!', 'Lovely!'],
+    feed: ['Yum!', 'Happy tummies!', 'Lovely!'],
+    walk: ['Good dogs!', 'What a lovely walk!', 'Happy dogs!'],
+    brush: ['So fluffy!', 'Purr-fect!', 'So soft!'],
+    groom: ['Squeaky clean!', 'So fluffy!', 'Good dog!'],
+    muck: ['So cosy!', 'Fresh and snug!', 'Lovely!'],
+  };
   function finishChore() {
     delete S.wips[cur.id];
     const bonus = Math.round(curValue * 0.25);
@@ -401,7 +417,7 @@
     sitting.jobs++; sitting.coins += earnedThis + bonus; if (foundThis) sitting.finds++;
     AUDIO.chime(); AUDIO.activity(0, false);
     const o = $('#doneOverlay');
-    $('#doneTitle').textContent = U.pick(Math.random, cur.family === 'plant' ? ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'] : cur.family === 'build' ? ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'] : ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
+    $('#doneTitle').textContent = U.pick(Math.random, DONE_WORDS[cur.family] || DONE_WORDS.tidy);
     $('#doneBtn').textContent = 'Back to ' + here().short;
     $('#doneBtn').className = lateHour() ? 'go soft' : 'go'; $('#doneStop').className = lateHour() ? 'go' : 'go soft';
     $('#doneName').textContent = cur.name;
@@ -520,7 +536,7 @@
   }
 
   ENGINE.init($('#cv'), {
-    onEarn(v) { S.coins += v; S.earned += v; earnedThis += v; },
+    onEarn(v) { if (!(v > 0)) return; S.coins += v; S.earned += v; earnedThis += v; },
     onCoinArrive(v) {
       shownCoins = Math.min(S.coins, shownCoins + v);
       updatePlayCoins(); updateUpPill();
@@ -985,13 +1001,28 @@
   document.addEventListener('gesturestart', (e) => e.preventDefault());
   document.addEventListener('dblclick', (e) => e.preventDefault());
 
+  // A game on the home screen can stay open for days, so a new version is
+  // looked for whenever it comes back to the front. Once one has arrived the
+  // page reloads the next time it goes to the background (or straight away
+  // on the title screen), never in the middle of a job.
+  let updateReady = false;
+  const reloadNow = () => { if ($('#play').classList.contains('on')) keepWip(); save(); location.reload(); };
   if ('serviceWorker' in navigator && location.protocol.startsWith('http') && location.hostname !== 'localhost') {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+    const hadOne = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('./sw.js').then((reg) => {
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadOne || updateReady) return;
+      updateReady = true;
+      if ($('#title').classList.contains('on')) reloadNow();
+    });
+    document.addEventListener('visibilitychange', () => { if (document.hidden && updateReady) reloadNow(); });
   }
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startJob: (c) => startChore(c, false),
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startJob: (c) => startChore(c, false),
     render: () => renderHome(), save, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
   };
 })();

@@ -6,8 +6,9 @@ colours, wash the windows, skim the pond, scrub moss off the roof and dust the
 attic. Every finished job restores a piece of the cottage and earns coins;
 coins buy better tools, little helper robots, decorations and new places:
 a little corner café to bring back to life with some light building and
-planting, and a seaside cove with a beach hut, a rowing boat, an old camper
-van and a lighthouse.
+planting, a seaside cove with a beach hut, a rowing boat, an old camper
+van and a lighthouse, and an animal rescue on an old farm, where dogs need
+feeding and walking, a cat wants brushing and the rabbits fresh straw.
 
 No timers, no losing, no ads, no accounts. Works offline once opened.
 
@@ -23,9 +24,13 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **Tools.** Each kind of job has its own tool line (shears to garden tractor,
   scrubbing brush to turbo washer, small brush to paint sprayer, dishcloth to
   steam cleaner for the coffee machine and the café tables, bath sponge to
-  bubble shower for the dog ...). Every place has its own toolbox: tools stay
-  where you buy them, a new place starts with simple tools, and tools cost
-  twice as much at the café and three times as much at the cove. The next
+  bubble shower for the dog, a coffee pot to a barista trolley for pouring,
+  a scoop to a feed trolley for feeding, one dog on a lead to a walking belt
+  with five, a soft brush to a double brush for the cat, a hand fork to a
+  wheelbarrow for mucking out ...). Every place has its own toolbox: tools
+  stay where you buy them, a new place starts with simple tools, and tools
+  cost twice as much at the café, three times as much at the cove and four
+  times as much at the rescue. The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
   Tap the tool at the bottom to switch to any tool you already own (the shears
   are sometimes nicer than the tractor).
@@ -49,7 +54,15 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   fly into a bin or a bucket), raking seaweed, a sandcastle, planting the
   dunes, a boardwalk and a jetty, the beach hut, the boat, the rock pool, the
   lighthouse, and a camper van in four steps: vacuum, wash, wax, polish.
-- **Music.** Three quiet tunes of the game's own, one per place, in a key that
+- **Bluebell Rescue.** Once the cove is restored the rescue is for sale
+  (30,000 coins). Its 17 jobs: breakfast and fresh water for the dogs (fill
+  every bowl), walk the dogs along a path (paw prints follow you), muck out
+  the rabbit hutch, bath a muddy puppy, tidy the dog toys into their box, brush
+  a fluffy cat, feed the seal pup, the duck pond, the paddock fence and grass,
+  new boards in the barn, carrots for the rabbits, and the farmhouse door,
+  office window and sign. The animals never need you: nothing goes hungry or
+  sad while you are away.
+- **Music.** Four quiet tunes of the game's own, one per place, in a key that
   follows the season and slower in the evening; volume in Settings.
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
   12-character cloud code; on another phone, I have a code picks the game up
@@ -59,8 +72,12 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   nicknames and which places each has restored, sorted by name, with no
   ranks or scores; the list adds up the places and keepsakes everyone has
   found together.
-- **Café extra.** Stock the drinks fridge: every shelf has its own drink and
-  every slot a coloured tag, so each bottle goes back in its place.
+- **Café extras.** Stock the drinks fridge: every shelf has its own drink and
+  every slot a coloured tag, so each bottle goes back in its place. In the
+  seasons the café also wants coffee poured for the guests (iced in summer,
+  hot chocolate in winter), napkin holders filled, and the tables and chairs
+  put out on their chalk marks. A hungry seal turns up at the cove now and
+  then.
 - **Christmas lights.** Every winter there is a job at each place to hang the
   lights, bulb by bulb; once they are up they shine in the place's picture.
 - **Seasons.** After the restoration the year turns. Each season picks a few
@@ -68,8 +85,11 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   regrowth, plus seasonal planting and building: sunflowers, tulip bulbs, a
   vegetable patch, window boxes, firewood, a jetty, a brick path). Never more
   than one mowing job a season, and last year's picks are pushed to the back.
+  The season carries on into the jobs: outdoor jobs get falling snow and a
+  cold light in winter, drifting leaves in autumn, petals in spring and a few
+  seeds on the air in summer.
 - **Decorate.** Sixteen things to buy for the cottage, from a garden gnome to a
-  hot-air balloon, and twelve for the café.
+  hot-air balloon, and twelve each for the café, the cove and the rescue.
 - **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
   new places take a while to save up for.
 - **Before and after.** The finish card shows a small before-and-after picture
@@ -82,7 +102,8 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   next job, the progress bar and the shop dots are hidden. Stopping shows one
   line on what comes next time, fades the sound and goes back to the title.
   It never interrupts a job and the pause card can be switched off in Settings.
-- **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath.
+- **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath, the
+  dog next door wants a walk, or the cat next door needs brushing.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
   your cottage, save or share a picture of it (camera button).
 - **Start again.** Settings > Start a new game begins from 0 coins with the
@@ -99,6 +120,10 @@ Safari and the Home Screen app keep separate saves, and iOS may clear a Safari
 tab's save after a week without a visit. Play from the Home Screen icon. To
 move a cottage (Safari to Home Screen, or to another phone), use Settings >
 Copy save code, then Paste save code on the other side.
+
+A home screen app looks for a new version whenever it comes back to the
+front, and reloads the next time it is put away (never in the middle of a
+job), so fixes arrive without closing the app.
 
 Works on iOS 15 and later (a small stand-in covers the canvas `roundRect` that
 iOS 15 lacks). Held sideways, the game pauses and asks to be turned upright.
@@ -135,18 +160,21 @@ then open http://localhost:8790.
 - `js/scenes7.js` cove scenes: seaweed, beach hut, boat, rock pool, lighthouse,
   lantern, camper van (vacuum, wash, wax, polish)
 - `js/scenes8.js` beach litter and shells (picked up, they fly to a bucket), the
-  sandcastle, Christmas lights, the drinks fridge
+  sandcastle, Christmas lights, the drinks fridge, the dog bath
+- `js/scenes9.js` coffee, napkins and tables at the café, the seal, dog bowls,
+  the dog walk, the cat and the rabbit hutch
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
 - `js/cove.js` the cove overview (SVG), same conventions
+- `js/rescue.js` the rescue overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
 - `js/data.js` places, jobs, season pools, finds, decorations, prices
-- `js/audio.js` synthesised sound and three composed tunes (no audio files)
+- `js/audio.js` synthesised sound and four composed tunes (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
 
 Bump `CACHE` in `sw.js` whenever a file changes.
 
-Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`,
+Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`, `__ivy.startRescue(i)`,
 `__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
 `__ivy.goPlace('cafe')`, `__ivy.reset()`.
