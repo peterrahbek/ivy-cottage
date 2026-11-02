@@ -98,8 +98,8 @@ const DATA = (() => {
   const FAMILY_OF = {
     lawn: 'mow', stones: 'scrub', roof: 'scrub', fence: 'paint', door: 'paint', wall: 'paint', shutters: 'paint', window: 'wash', roundWindow: 'wash',
     bed: 'weed', pond: 'skim', attic: 'dust', leaves: 'rake', plant: 'plant', build: 'build',
-    cafeFloor: 'dust', awning: 'wash', sign: 'paint', tables: 'wash', counter: 'scrub', fridge: 'arrange', lights: 'arrange',
-    dog: 'wash', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
+    cafeFloor: 'dust', awning: 'scrub', sign: 'paint', tables: 'wipe', counter: 'wipe', fridge: 'arrange', lights: 'arrange',
+    dog: 'groom', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
   };
   const familyOf = (scene) => FAMILY_OF[scene];
 
@@ -269,8 +269,9 @@ const DATA = (() => {
     if (fam === 'collect' || fam === 'polish') return coveValue(0);
     return cafeValue(0); // planting, building and arranging
   }
-  function toolCost(fam, tierIdx) {
-    const base = famBase(fam) * 2;
+  // every place has its own toolbox, and the later places are dearer
+  function toolCost(fam, tierIdx, place) {
+    const base = famBase(fam) * 2 * ((place && placeOf(place).toolPrice) || 1);
     return Math.round(TOOLS.COST_MULT[tierIdx] * base / 5) * 5;
   }
 
@@ -309,7 +310,7 @@ const DATA = (() => {
   };
 
   // what you do in each kind of job, for the first-time hint
-  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange' };
+  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog' };
 
   // decorations, bought in the shed once a few jobs are done at that place
   const DECOR = [
@@ -363,8 +364,8 @@ const DATA = (() => {
   // the places you can own; the picture of each is drawn by HOUSE or CAFE
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
-    { id: 'cafe', name: 'Marigold Café', short: 'the café', blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
-    { id: 'cove', name: 'Seashell Cove', short: 'the cove', blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
+    { id: 'cafe', name: 'Marigold Café', short: 'the café', toolPrice: 2, blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
+    { id: 'cove', name: 'Seashell Cove', short: 'the cove', toolPrice: 3, blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 

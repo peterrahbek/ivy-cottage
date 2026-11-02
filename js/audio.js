@@ -73,6 +73,10 @@ const AUDIO = (() => {
     polish: { type: 'bandpass', f: 2000, q: 1.6, vol: 0.12 },
     buffer: { type: 'bandpass', f: 1600, q: 0.9, vol: 0.1, engine: 95 },
     arrange: { type: 'bandpass', f: 1500, q: 1.2, vol: 0.07 },
+    wipe: { type: 'bandpass', f: 2100, q: 1.8, vol: 0.14 },
+    steam: { type: 'highpass', f: 2600, q: 0.5, vol: 0.08 },
+    groom: { type: 'bandpass', f: 1500, q: 1.4, vol: 0.15 },
+    shower: { type: 'highpass', f: 2200, q: 0.5, vol: 0.1 },
   };
   function setWork(k) {
     if (!ac || k === kind) return;

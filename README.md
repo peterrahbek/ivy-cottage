@@ -17,13 +17,22 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 
 - **Jobs.** Drag a finger over the mess. The tool sits just above your finger
   so you can see what you are doing. Coins fly to the counter as you clean.
-  At 97% the rest tidies itself up, so nobody hunts for the last speck; past
-  85% the leftover spots twinkle.
+  You finish a job yourself: past 90% the leftover spots twinkle (faster the
+  fewer there are), and only the last half percent of specks is swept up for
+  you, or the last 1.5% once you have hunted for it for five seconds.
 - **Tools.** Each kind of job has its own tool line (shears to garden tractor,
-  scrubbing brush to turbo washer, small brush to paint sprayer ...). The next
+  scrubbing brush to turbo washer, small brush to paint sprayer, dishcloth to
+  steam cleaner for the coffee machine and the café tables, bath sponge to
+  bubble shower for the dog ...). Every place has its own toolbox: tools stay
+  where you buy them, a new place starts with simple tools, and tools cost
+  twice as much at the café and three times as much at the cove. The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
   Tap the tool at the bottom to switch to any tool you already own (the shears
   are sometimes nicer than the tractor).
+- **Robots.** Tidy-bots from the shed help on every job; the robot button at
+  the top sends them home (or calls them back) in the middle of a job.
+- **Painting.** Picking another colour mid-job repaints what is already done
+  as well, so the door ends up the colour you chose.
 - **Finds.** Every job hides a keepsake under the mess (a ladybird, an old
   brass key, a friendly frog ...) plus a few coin stashes. The Finds shelf
   collects them.
@@ -76,6 +85,10 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
   your cottage, save or share a picture of it (camera button).
+- **Start again.** Settings > Start a new game begins from 0 coins with the
+  cottage overgrown again, simple tools and no robots. Settings, the cloud code
+  and the friends list stay; a round number keeps the cloud copy of the old
+  game from being picked up again.
 
 ## Play on iPhone
 

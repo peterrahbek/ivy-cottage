@@ -136,6 +136,25 @@ const TOOLS = (() => {
         { id: 'stockbot', name: 'Stock-bot', shape: 'rect', w: 64, h: 24, power: 1.7, speed: 240, sprite: 'robobuilder' },
       ],
     },
+    // the coffee machine and the café tables want kitchen things, not a squeegee
+    wipe: {
+      name: 'Café cloths', job: 'Wiping', icon: 'spraywipe',
+      tiers: [
+        { id: 'dishcloth', name: 'Dishcloth', shape: 'circle', r: 11, power: 1.0, speed: 170, sprite: 'dishcloth' },
+        { id: 'scourer', name: 'Scrubby sponge', shape: 'circle', r: 16, power: 1.15, speed: 190, sprite: 'sponge' },
+        { id: 'spray', name: 'Spray and wipe', shape: 'circle', r: 22, power: 1.35, speed: 215, sprite: 'spraywipe' },
+        { id: 'steam', name: 'Steam cleaner', shape: 'circle', r: 30, power: 1.7, speed: 240, sprite: 'steamer' },
+      ],
+    },
+    groom: {
+      name: 'Dog bath', job: 'Bathing', icon: 'shower',
+      tiers: [
+        { id: 'bathsponge', name: 'Bath sponge', shape: 'circle', r: 13, power: 1.0, speed: 165, sprite: 'bathsponge' },
+        { id: 'dogbrush', name: 'Dog brush', shape: 'rect', w: 30, h: 12, power: 1.15, speed: 190, sprite: 'dogbrush' },
+        { id: 'shower', name: 'Shower hose', shape: 'circle', r: 24, power: 1.4, speed: 215, sprite: 'shower' },
+        { id: 'bubbles', name: 'Bubble shower', shape: 'circle', r: 32, power: 1.75, speed: 240, sprite: 'bubbleshower' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -568,6 +587,70 @@ const TOOLS = (() => {
       c.fillStyle = '#5b636d'; rr(c, -h / 2, -w / 2 + 2, h, w - 4, 3); c.fill();
       const cols = ['#d9534f', '#f2c230', '#4f9d7a', '#3d86c6'];
       for (let i = 0; i < 4; i++) { c.fillStyle = cols[i]; rr(c, -h / 2 + 2, -w / 2 + 4 + i * (w - 8) / 4, h - 4, (w - 8) / 4 - 1.5, 2); c.fill(); }
+    },
+    dishcloth(c, t) {
+      const r = t.r;
+      c.save(); c.rotate(0.35);
+      c.fillStyle = '#f6f1e6'; rr(c, -r * 0.9, -r * 0.9, r * 1.8, r * 1.8, 4); c.fill();
+      c.fillStyle = 'rgba(214,84,79,0.5)';
+      for (let i = -1; i <= 1; i++) { c.fillRect(-r * 0.9, i * r * 0.55 - r * 0.11, r * 1.8, r * 0.22); c.fillRect(i * r * 0.55 - r * 0.11, -r * 0.9, r * 0.22, r * 1.8); }
+      c.strokeStyle = 'rgba(120,90,70,0.35)'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(-r * 0.6, r * 0.3); c.quadraticCurveTo(0, -r * 0.1, r * 0.6, r * 0.5); c.stroke();
+      c.restore();
+    },
+    spraywipe(c, t) {
+      const r = t.r;
+      c.fillStyle = '#f2c230'; rr(c, -r * 0.8, -r * 0.8, r * 1.6, r * 1.6, 5); c.fill();
+      c.fillStyle = '#f7d966'; rr(c, -r * 0.8, -r * 0.8, r * 1.6, r * 0.8, 5); c.fill();
+      // the spray bottle beside the cloth, and a puff of spray ahead
+      c.save(); c.translate(-r * 0.15, -r * 1.05);
+      c.fillStyle = '#4fb3c9'; rr(c, -r * 0.4, -r * 0.3, r * 0.85, r * 0.6, r * 0.22); c.fill();
+      c.fillStyle = '#ffffff'; rr(c, r * 0.42, -r * 0.15, r * 0.32, r * 0.3, 2); c.fill();
+      c.fillStyle = '#e2574c'; rr(c, r * 0.28, r * 0.08, r * 0.18, r * 0.34, 2); c.fill();
+      c.restore();
+      c.fillStyle = 'rgba(160,220,240,0.85)';
+      for (const [dx, dy] of [[0.95, -0.95], [1.12, -1.12], [1.08, -0.78]]) { disc(c, r * dx, r * dy, 1.7); c.fill(); }
+    },
+    steamer(c, t) {
+      const r = t.r;
+      c.fillStyle = 'rgba(255,255,255,0.4)';
+      for (const [dx, dy, s] of [[0.55, -0.5, 0.34], [0.75, 0.3, 0.28], [0.25, 0.62, 0.26]]) { disc(c, r * dx, r * dy, r * s); c.fill(); }
+      handle(c, -r * 0.45, -r * 1.6, 5, '#e9edf1');
+      c.fillStyle = '#5b636d'; disc(c, 0, 0, r * 0.62); c.fill();
+      c.fillStyle = '#e9edf1'; disc(c, 0, 0, r * 0.5); c.fill();
+      c.fillStyle = '#c94a4a'; disc(c, 0, 0, r * 0.2); c.fill();
+    },
+    bathsponge(c, t) {
+      const r = t.r;
+      c.fillStyle = 'rgba(255,255,255,0.75)';
+      for (const [dx, dy, s] of [[0.95, -0.6, 0.22], [1.05, 0.5, 0.16], [0.6, 0.98, 0.12]]) { disc(c, r * dx, r * dy, r * s); c.fill(); }
+      c.fillStyle = '#e9b46a'; c.beginPath();
+      for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2, k = r * (0.82 + (i % 3) * 0.08); c.lineTo(Math.cos(a) * k, Math.sin(a) * k); }
+      c.closePath(); c.fill();
+      c.fillStyle = '#c98d48';
+      for (const [dx, dy] of [[-0.3, -0.3], [0.25, -0.1], [-0.1, 0.35], [0.4, 0.4], [-0.5, 0.2]]) { disc(c, r * dx, r * dy, r * 0.11); c.fill(); }
+    },
+    dogbrush(c, t) {
+      const w = t.w, h = t.h;
+      handle(c, -h * 0.5, -h * 2.4, 4, '#c98a55');
+      c.fillStyle = '#9b6a42'; rr(c, -h * 0.5, -w / 2, h * 0.7, w, 3); c.fill();
+      bristles(c, h * 0.2, 0, h * 0.45, w - 4, '#f4ecdc', 10);
+    },
+    shower(c, t) {
+      const r = t.r;
+      c.fillStyle = 'rgba(150,210,235,0.35)'; disc(c, 0, 0, r); c.fill();
+      handle(c, -r * 0.45, -r * 1.5, 4, '#9aa3ad');
+      c.fillStyle = '#c7cdd4'; disc(c, 0, 0, r * 0.5); c.fill();
+      c.fillStyle = '#e9edf1'; disc(c, 0, 0, r * 0.4); c.fill();
+      c.fillStyle = '#7d8590';
+      for (let i = 0; i < 7; i++) { const a = (i / 7) * Math.PI * 2; disc(c, Math.cos(a) * r * 0.24, Math.sin(a) * r * 0.24, 1.2); c.fill(); }
+      disc(c, 0, 0, 1.2); c.fill();
+    },
+    bubbleshower(c, t) {
+      SPR.shower(c, t);
+      const r = t.r;
+      c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = 1.2; c.fillStyle = 'rgba(255,255,255,0.25)';
+      for (const [dx, dy, s] of [[0.7, -0.5, 0.16], [0.85, 0.35, 0.12], [0.45, 0.75, 0.1], [0.2, -0.85, 0.12]]) { disc(c, r * dx, r * dy, r * s); c.fill(); c.stroke(); }
     },
   };
 

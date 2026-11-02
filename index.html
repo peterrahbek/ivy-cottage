@@ -170,6 +170,10 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .doneRows div{display:flex;justify-content:space-between;align-items:center;padding:0 6px}
 .doneRows .tot{border-top:1.5px dashed var(--line);padding-top:8px;font-size:20px;font-weight:900}
 .doneRows span{display:flex;align-items:center}
+#btnBots svg{width:26px;height:26px}
+#btnBots.off svg{filter:grayscale(1);opacity:.4}
+#btnBots.off::after{content:'';position:absolute;width:28px;height:2.5px;border-radius:2px;background:var(--ink3);transform:rotate(-45deg)}
+#btnBots{position:relative}
 .doneEnd{display:flex;flex-direction:column;gap:8px}
 .doneEnd .go{width:100%}
 #toast{position:fixed;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;font-weight:800;
@@ -375,6 +379,7 @@ body.pausing .dock button.alert::after{display:none}
   <canvas id="cv"></canvas>
   <div id="hudTop">
     <button class="round" id="btnBack" aria-label="Back to the cottage">‹</button>
+    <button class="round" id="btnBots" aria-label="Send the robots home" hidden><svg viewBox="0 0 24 24"><path d="M12 5V2.8" stroke="#2b3a3f" stroke-width="1.4"/><circle cx="12" cy="2.6" r="1.5" fill="#ffcf5a"/><circle cx="12" cy="13.5" r="8.5" fill="#5fb8a8"/><circle cx="10" cy="11" r="5.5" fill="#8fdccd"/><rect x="7" y="11.5" width="10" height="5" rx="2.5" fill="#2b3a3f"/><circle cx="10" cy="14" r="1.2" fill="#c6fff4"/><circle cx="14" cy="14" r="1.2" fill="#c6fff4"/></svg></button>
     <div class="prog"><div class="fill" id="progFill"></div><div class="lbl"><b id="playTitle"></b><span id="progTxt">0%</span></div></div>
     <div class="coins" id="playCoins"></div>
   </div>

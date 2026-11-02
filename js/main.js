@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now() };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1 };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -18,6 +18,17 @@
     out.wips = out.wips || {};
     out.owned = Object.assign({ cottage: 1 }, s.owned);
     out.use = out.use || {};
+    // tools used to be shared by every place; each place now keeps its own,
+    // so an older save gets the tools it had at every place it already owns
+    const perPlace = (o) => {
+      const n = {};
+      for (const [k, v] of Object.entries(o)) {
+        if (k.includes(':')) n[k] = v;
+        else for (const pl of Object.keys(out.owned)) n[`${pl}:${k}`] = v;
+      }
+      return n;
+    };
+    out.tiers = perPlace(out.tiers || {}); out.use = perPlace(out.use);
     if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
     out.cloud = out.cloud || {};
     if (typeof out.pauses !== 'boolean') out.pauses = true;
@@ -43,11 +54,14 @@
     if (S.cloud.code && cloudSig() !== pushedSig) cloudSoon();
   }
 
-  // tierIdx = the best tool owned; useIdx = the one picked for work, which
-  // can be any owned tool (some days the shears are nicer than the tractor)
-  const tierIdx = (fam) => S.tiers[fam] || 0;
-  const useIdx = (fam) => Math.min(tierIdx(fam), S.use[fam] != null ? S.use[fam] : tierIdx(fam));
-  const tierOf = (fam) => TOOLS.FAM[fam].tiers[useIdx(fam)];
+  // Every place has its own toolbox: tools bought at the cottage stay there,
+  // and a new place starts with simple tools again (a little dearer).
+  // tierIdx = the best tool owned there; useIdx = the one picked for work,
+  // which can be any owned tool (some days the shears are nicer than the tractor)
+  const toolKey = (fam, pl = S.place) => `${pl}:${fam}`;
+  const tierIdx = (fam, pl) => S.tiers[toolKey(fam, pl)] || 0;
+  const useIdx = (fam, pl) => { const u = S.use[toolKey(fam, pl)]; return Math.min(tierIdx(fam, pl), u != null ? u : tierIdx(fam, pl)); };
+  const tierOf = (fam, pl) => TOOLS.FAM[fam].tiers[useIdx(fam, pl)];
 
   // ---------------------------------------------------------------- places
   // Each place has its own chores, picture and decorations; coins, tools,
@@ -64,14 +78,13 @@
   const nextRestore = (pl) => DATA.placeOf(pl).chores.find((c) => !S.done[c.id]);
   const nextChore = (pl = S.place) => nextRestore(pl) || (S.seasonNo > 0 ? jobsAt(pl).find((j) => !S.sdone[j.id]) : undefined);
   const seasonName = () => (S.seasonNo ? DATA.seasonOf(S.seasonNo) : 'spring');
-  const famUnlocked = (fam) => {
-    if (DATA.FAMILY_SEASON[fam] && S.seasonNo >= DATA.FAMILY_SEASON[fam]) return true;
-    if (seasonJobs().some((j) => j.family === fam)) return true;
-    return DATA.PLACES.some((p) => {
-      if (!owned(p.id)) return false;
-      const n = nextRestore(p.id), reach = n ? n.index : p.chores.length;
-      return p.chores.some((c) => c.family === fam && c.index <= reach);
-    });
+  // the tool families a place has had use for so far
+  const famUnlocked = (fam, pl = S.place) => {
+    if (!owned(pl)) return false;
+    if (jobsAt(pl).some((j) => j.family === fam)) return true;
+    if (DATA.FAMILY_SEASON[fam] && S.seasonNo >= DATA.FAMILY_SEASON[fam] && restored(pl)) return true;
+    const p = DATA.placeOf(pl), n = nextRestore(pl), reach = n ? n.index : p.chores.length;
+    return p.chores.some((c) => c.family === fam && c.index <= reach);
   };
   function placeOffer() {
     return DATA.PLACES.find((p) => !owned(p.id) && (!p.needs || restored(p.needs)));
@@ -96,10 +109,14 @@
     for (const j of jobsAt(pl)) if (!S.sdone[j.id] && j.part) pending[j.part] = j.pending;
     return pending;
   }
-  function nextUpgrade(fam) {
-    const t = tierIdx(fam), tiers = TOOLS.FAM[fam].tiers;
+  function nextUpgrade(fam, pl = S.place) {
+    const t = tierIdx(fam, pl), tiers = TOOLS.FAM[fam].tiers;
     if (t + 1 >= tiers.length) return null;
-    return { tier: tiers[t + 1], cost: DATA.toolCost(fam, t + 1) };
+    return { tier: tiers[t + 1], cost: DATA.toolCost(fam, t + 1, pl) };
+  }
+  function buyTool(fam, pl, u) {
+    const k = toolKey(fam, pl);
+    S.coins -= u.cost; S.tiers[k] = tierIdx(fam, pl) + 1; S.use[k] = S.tiers[k]; save();
   }
   function affordableSomething() {
     for (const fam of Object.keys(TOOLS.FAM)) {
@@ -164,9 +181,9 @@
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
-        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wips[n.id] ? 'Half done' : tierOf(n.family).name}</span></div></div>
+        <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wips[n.id] ? 'Half done' : tierOf(n.family, n.place).name}</span></div></div>
         <div class="nextPic"><img alt="" hidden><div class="nextIcon"></div></div><button class="go" id="goBtn">Start</button>`;
-      card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family), 46, S.colours[n.color]));
+      card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family, n.place), 46, S.colours[n.color]));
       card.dataset.job = n.id;
       const showThumb = (url) => {
         const img = card.querySelector('.nextPic img');
@@ -259,15 +276,29 @@
     const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
     const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, c.place !== 'cafe' && S.done.wall ? { wallColor: S.colours.wall } : {}) });
-    ENGINE.start(def, { tier: tierOf(fam), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.helpers, insets, treasures, resume });
+    ENGINE.start(def, { tier: tierOf(fam, c.place), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.robots ? S.helpers : 0, insets, treasures, resume });
+    setupBots();
     beforePic = ENGINE.picture(96);
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
     const hint = $('#hint');
     if (S.touched < 3 || c.verb) { hint.querySelector('span').textContent = 'Drag to ' + (c.verb || DATA.VERBS[fam]); hint.classList.add('on'); } else hint.classList.remove('on');
-    AUDIO.setWork(workSound(fam, tierOf(fam)));
+    AUDIO.setWork(workSound(fam, tierOf(fam, c.place)));
     setProgress(0);
   }
+  // the robots can be sent home in the middle of a job, and called back
+  function setupBots() {
+    const b = $('#btnBots');
+    b.hidden = !S.helpers;
+    b.classList.toggle('off', !S.robots);
+    b.setAttribute('aria-label', S.robots ? 'Send the robots home' : 'Call the robots back');
+  }
+  $('#btnBots').onclick = () => {
+    S.robots = !S.robots; save();
+    ENGINE.setHelpers(S.robots ? S.helpers : 0);
+    AUDIO.pop(); setupBots();
+    toast(S.robots ? 'The robots are back' : 'The robots went home');
+  };
   function hudInsets() {
     return { top: $('#hudTop').getBoundingClientRect().bottom + 6, bottom: window.innerHeight - $('#hudBottom').getBoundingClientRect().top + 6 };
   }
@@ -279,15 +310,17 @@
     if (fam === 'rake' && t.id === 'blower') return 'washer';
     if (fam === 'rake' && t.id === 'leafvac') return 'vacuum';
     if (fam === 'polish' && (t.id === 'buffer' || t.id === 'twin')) return 'buffer';
+    if (fam === 'wipe') return t.id === 'steam' ? 'steam' : 'wipe';
+    if (fam === 'groom') return t.id === 'shower' || t.id === 'bubbles' ? 'shower' : 'groom';
     return fam;
   }
   function setupBottom() {
-    const fam = cur.family, t = tierOf(fam);
+    const fam = cur.family, pl = cur.place, t = tierOf(fam, pl);
     const chip = $('#toolChip');
     chip.innerHTML = '';
     chip.appendChild(TOOLS.icon(t, 38, cur.color ? S.colours[cur.color] : null));
     const nm = document.createElement('span'); nm.textContent = t.name; chip.appendChild(nm);
-    if (tierIdx(fam) > 0) { const sw = document.createElement('b'); sw.className = 'swap'; sw.textContent = '⇄'; chip.appendChild(sw); }
+    if (tierIdx(fam, pl) > 0) { const sw = document.createElement('b'); sw.className = 'swap'; sw.textContent = '⇄'; chip.appendChild(sw); }
     updateUpPill();
     const pal = $('#palette');
     if (cur.color) {
@@ -297,22 +330,22 @@
         S.colours[cur.color] = b.dataset.c; save();
         pal.querySelectorAll('.sw').forEach((x) => x.classList.toggle('sel', x === b));
         ENGINE.setPaint(b.dataset.c); AUDIO.soft();
-        const chipCv = TOOLS.icon(tierOf(fam), 38, b.dataset.c); chip.replaceChild(chipCv, chip.firstChild);
+        const chipCv = TOOLS.icon(tierOf(fam, pl), 38, b.dataset.c); chip.replaceChild(chipCv, chip.firstChild);
       });
     } else { pal.classList.remove('on'); pal.innerHTML = ''; }
   }
   // pick any tool already owned, from the chip at the bottom
   function openToolPick() {
-    const fam = cur.family, pick = $('#toolPick');
-    if (pick.classList.contains('on') || tierIdx(fam) < 1) { pick.classList.remove('on'); if (tierIdx(fam) < 1) toast('Buy a better tool to have a choice'); return; }
+    const fam = cur.family, pl = cur.place, pick = $('#toolPick');
+    if (pick.classList.contains('on') || tierIdx(fam, pl) < 1) { pick.classList.remove('on'); if (tierIdx(fam, pl) < 1) toast('Buy a better tool to have a choice'); return; }
     pick.innerHTML = '';
-    TOOLS.FAM[fam].tiers.slice(0, tierIdx(fam) + 1).forEach((t, i) => {
+    TOOLS.FAM[fam].tiers.slice(0, tierIdx(fam, pl) + 1).forEach((t, i) => {
       const b = document.createElement('button');
-      if (i === useIdx(fam)) b.className = 'sel';
+      if (i === useIdx(fam, pl)) b.className = 'sel';
       b.appendChild(TOOLS.icon(t, 34, cur.color ? S.colours[cur.color] : null));
       const nm = document.createElement('span'); nm.textContent = t.name; b.appendChild(nm);
       b.onclick = () => {
-        S.use[fam] = i; save(); pick.classList.remove('on');
+        S.use[toolKey(fam, pl)] = i; save(); pick.classList.remove('on');
         ENGINE.setTier(t); AUDIO.pop(); AUDIO.setWork(workSound(fam, t)); setupBottom();
       };
       pick.appendChild(b);
@@ -322,7 +355,7 @@
   $('#toolChip').onclick = openToolPick;
   function updateUpPill() {
     const pill = $('#upPill');
-    const u = nextUpgrade(cur.family);
+    const u = nextUpgrade(cur.family, cur.place);
     if (!u) { pill.classList.remove('on'); return; }
     pill.classList.add('on');
     const can = S.coins >= u.cost;
@@ -331,12 +364,12 @@
     pill.style.setProperty('--p', Math.min(1, S.coins / u.cost));
   }
   $('#upPill').onclick = () => {
-    const u = nextUpgrade(cur.family);
+    const fam = cur.family, pl = cur.place, u = nextUpgrade(fam, pl);
     if (!u || S.coins < u.cost) { AUDIO.soft(); $('#upPill').classList.add('nope'); setTimeout(() => $('#upPill').classList.remove('nope'), 400); return; }
-    S.coins -= u.cost; S.tiers[cur.family] = tierIdx(cur.family) + 1; S.use[cur.family] = S.tiers[cur.family]; save();
+    buyTool(fam, pl, u);
     shownCoins = Math.min(shownCoins, S.coins);
-    ENGINE.setTier(tierOf(cur.family));
-    AUDIO.buy(); AUDIO.setWork(workSound(cur.family, tierOf(cur.family)));
+    ENGINE.setTier(tierOf(fam, pl));
+    AUDIO.buy(); AUDIO.setWork(workSound(fam, tierOf(fam, pl)));
     setupBottom(); updatePlayCoins();
     toast(`${u.tier.name}!`);
   };
@@ -613,11 +646,12 @@
     }
     const h = helperOffer();
     if (totalDone() >= DATA.HELPER_UNLOCK) {
-      rows.push(`<div class="shedRow helperRow"><div class="ic bot"></div><div class="sInfo"><div class="eyebrow">Helpers</div><div class="sName">${S.helpers ? S.helpers + ' tidy-bot' + (S.helpers > 1 ? 's' : '') : 'No helpers yet'}</div><div class="sub">They tidy alongside you on every job</div></div>
+      rows.push(`<div class="shedRow helperRow"><div class="ic bot"></div><div class="sInfo"><div class="eyebrow">Helpers</div><div class="sName">${S.helpers ? S.helpers + ' tidy-bot' + (S.helpers > 1 ? 's' : '') : 'No helpers yet'}</div><div class="sub">They tidy alongside you. Tap the robot button on a job to send them home.</div></div>
         ${h ? `<button class="buy${S.coins >= h.cost ? ' can' : ''}" data-helper="1"><span>${S.helpers ? 'Another' : 'Hire one'}</span><span class="price">${coinHtml(h.cost)}</span></button>` : '<div class="maxed">Full team</div>'}</div>`);
     }
     const tabs = doneCount() >= DATA.DECOR_UNLOCK ? `<div class="tabs"><button class="tab on">Tools</button><button class="tab" id="tabDecor">Decorate</button></div>` : '';
-    openSheet('The shed', tabs + `<div class="shedCoins">${coinHtml(S.coins)}</div>` + rows.join(''), (body) => {
+    const note = `<div class="setNote">These tools are for ${here().short}. Every place has its own toolbox${S.place === 'cottage' ? '' : ', and they cost a little more out here'}.</div>`;
+    openSheet('The shed', tabs + `<div class="shedCoins">${coinHtml(S.coins)}</div>` + note + rows.join(''), (body) => {
       const td = body.querySelector('#tabDecor'); if (td) td.onclick = () => { AUDIO.soft(); openDecor(); };
       body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(TOOLS.FAM[row.dataset.fam].tiers[tierIdx(row.dataset.fam)], 52)));
       body.querySelectorAll('.buy').forEach((b) => b.onclick = () => {
@@ -627,7 +661,7 @@
         }
         const fam = b.dataset.fam, u = nextUpgrade(fam);
         if (!u || S.coins < u.cost) return nope(b);
-        S.coins -= u.cost; S.tiers[fam] = tierIdx(fam) + 1; S.use[fam] = S.tiers[fam]; save(); AUDIO.buy(); toast(`${u.tier.name}!`); openShed();
+        buyTool(fam, S.place, u); AUDIO.buy(); toast(`${u.tier.name}!`); openShed();
       });
     });
   }
@@ -694,7 +728,9 @@
       <button class="go" id="setLoad" hidden>Load this cottage</button>
       ${cloudHtml()}
       <div class="setStats">Coins earned in total: ${U.fmt(S.earned)}</div>
-      <button class="danger" id="setReset">Start the cottage over</button>`, (body) => {
+      <div class="setHead">Start again</div>
+      <div class="setNote">A new game from 0 coins: the cottage overgrown again, simple tools and no robots. Your music, cloud code and friends list stay.</div>
+      <button class="danger" id="setReset">Start a new game</button>`, (body) => {
       cloudBind(body);
       body.querySelector('#setSfx').onchange = (e) => { S.sfx = e.target.checked; AUDIO.set('sfx', S.sfx); save(); };
       body.querySelector('#setMusic').onchange = (e) => { S.music = e.target.checked; AUDIO.set('music', S.music); save(); };
@@ -719,8 +755,8 @@
         } catch (_) { toast('That code did not work'); }
       };
       body.querySelector('#setReset').onclick = (e) => {
-        if (e.target.dataset.sure) { S = fresh(); save(); closeSheet(); toast('A fresh start'); return; }
-        e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to really start over';
+        if (e.target.dataset.sure) { newGame(); closeSheet(); toast('A fresh start'); return; }
+        e.target.dataset.sure = '1'; e.target.textContent = 'Tap again to start from 0 coins';
       };
     });
   }
@@ -758,9 +794,12 @@
     if (!S.cloud.code || $('#play').classList.contains('on')) return;
     try {
       const d = await cloudCall('GET', '/save');
-      if (!(d.earned > S.earned) || $('#play').classList.contains('on')) return;
-      const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, wips: S.wips, cloud: S.cloud };
-      S = upgrade(Object.assign(JSON.parse(d.data), keep)); pushedSig = cloudSig(); save();
+      if ($('#play').classList.contains('on')) return;
+      // a game started afresh on another phone, or more progress in this one
+      const data = JSON.parse(d.data), round = data.round || 1;
+      if (round < S.round || (round === S.round && !(d.earned > S.earned))) return;
+      const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, wips: round === S.round ? S.wips : {}, cloud: S.cloud };
+      S = upgrade(Object.assign(data, keep)); pushedSig = cloudSig(); save();
       if ($('#home').classList.contains('on')) renderHome(); else renderTitle();
       toast('Picked up where you left off');
     } catch (_) {}
@@ -769,6 +808,15 @@
     const d = await cloudCall('POST', '/save', { data: cloudData(), earned: S.earned, stats: cloudStats() });
     S.cloud = { code: d.code, at: Date.now() }; pushedSig = cloudSig(); save();
     return d.code;
+  }
+  // A new game from 0 coins keeps the settings, the cloud code and the
+  // friends list. The round number tells the cloud copy of the old game apart,
+  // so it is never picked up again by mistake.
+  function newGame() {
+    const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, evening: S.evening, pauses: S.pauses, name: S.name, cloud: S.cloud, round: (S.round || 1) + 1 };
+    S = Object.assign(fresh(), keep);
+    save(); renderHome();
+    cloudPush();
   }
   function cloudHtml() {
     if (!S.cloud.code) {
@@ -890,7 +938,7 @@
       return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}"><div class="pic"><img alt="" src="${pic}"></div>
         <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
     }).join('');
-    openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, keepsakes and decorations. Your coins, tools and helpers come along everywhere.</div>`, (body) => {
+    openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, tools, keepsakes and decorations. Your coins and robots come along everywhere.</div>`, (body) => {
       body.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => goPlace(b.dataset.go));
       body.querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => {
         const p = DATA.placeOf(b.dataset.buy);

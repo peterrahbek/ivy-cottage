@@ -21,7 +21,7 @@ const ENGINE = (() => {
   const tool = { x: 180, y: 480, a: -Math.PI / 2, tx: 180, ty: 480, down: false, pid: null, vib: 0 };
   let parts = [], coins = [], helpers = [];
   let running = false, raf = 0, last = 0, clock = 0, finishing = null, done = false;
-  let activity = 0, smoothAct = 0, insets = { top: 70, bottom: 110 };
+  let activity = 0, smoothAct = 0, insets = { top: 70, bottom: 110 }, stuckT = 0;
   let speedMult = 1, stamped = false;
 
   function init(canvas, callbacks) {
@@ -612,7 +612,7 @@ const ENGINE = (() => {
     const left = [];
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) left.push(k);
     for (let i = left.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [left[i], left[j]] = [left[j], left[i]]; }
-    finishing = { t: 0, dur: 1.1, cells: left, idx: 0, hold: 0 };
+    finishing = { t: 0, dur: 0.6, cells: left, idx: 0, hold: 0 };
     cb.onAutoFinish && cb.onAutoFinish();
   }
   function stepFinish(dt) {
@@ -638,16 +638,16 @@ const ENGINE = (() => {
     }
   }
 
-  // near the end, make the last dirty spots twinkle so nobody has to hunt
-  let hintT = 0;
+  // near the end, make the last dirty spots twinkle so nobody has to hunt,
+  // faster the fewer there are
+  let hintT = 0, scanT = 0, leftCells = [];
   function hintLeftovers(dt) {
-    hintT -= dt;
-    if (hintT > 0) return;
-    hintT = 0.12;
-    for (let s = 0; s < 400; s++) {
-      const k = (Math.random() * GW * GH) | 0;
-      if (inReg[k] && hp[k] > 0) { sparkle(((k % GW) + 0.5) * CELL, (((k / GW) | 0) + 0.5) * CELL); return; }
-    }
+    hintT -= dt; scanT -= dt;
+    if (scanT <= 0) { scanT = 0.5; leftCells = []; for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) leftCells.push(k); }
+    if (hintT > 0 || !leftCells.length) return;
+    hintT = cleaned / total > 0.97 ? 0.05 : 0.12;
+    const k = leftCells[(Math.random() * leftCells.length) | 0];
+    if (hp[k] > 0) sparkle(((k % GW) + 0.5) * CELL, (((k / GW) | 0) + 0.5) * CELL);
   }
 
   // ------------------------------------------------------------------- loop
@@ -660,10 +660,15 @@ const ENGINE = (() => {
     clock += dt;
     activity = 0;
     if (!finishing) {
+      const before = cleaned;
       activity += stepTool(dt);
       if (helpers.length) stepHelpers(dt);
-      if (cleaned / total >= 0.97) beginFinish();
-      else if (cleaned / total > 0.85) hintLeftovers(dt);
+      // she finishes a job herself: only the last specks are swept up for her,
+      // or the last bit once she has hunted for it for a few seconds
+      if (cleaned > before) stuckT = 0; else if (tool.down) stuckT += dt;
+      const p = cleaned / total;
+      if (p >= 0.995 || (p >= 0.985 && stuckT > 5)) beginFinish();
+      else if (p > 0.9) hintLeftovers(dt);
     } else stepFinish(dt);
     stepGems(dt);
     if (growing.length) stepUnits(dt);
@@ -761,7 +766,7 @@ const ENGINE = (() => {
     makeHelpers(o.helpers || 0);
     placeTreasures(o.treasures);
     tool.x = tool.tx = 180; tool.y = tool.ty = Math.min(500, H - 60); tool.a = -Math.PI / 2; tool.down = false; tool.pid = null;
-    finishing = null; done = false; clock = 0;
+    finishing = null; done = false; clock = 0; stuckT = 0; scanT = 0; leftCells = [];
     running = true; last = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(frame);
@@ -774,8 +779,17 @@ const ENGINE = (() => {
     coins = [];
   }
   function setTier(t) { tier = t; for (let i = 0; i < 14; i++) sparkle(tool.x + (Math.random() - 0.5) * 40, tool.y + (Math.random() - 0.5) * 40); }
-  function setPaint(c) { paint = c; }
-  function setHelpers(n) { while (helpers.length < n) helpers.push({ x: tool.x, y: tool.y, a: 0, tx: tool.x, ty: tool.y, timer: 0, bob: Math.random() * 6 }); }
+  // a new colour covers what is painted already too, the way the door will
+  // look on the house; otherwise the robots' first strokes stay the old colour
+  function setPaint(c) {
+    paint = c;
+    if (L && def && def.color) scene.clean(L.clean.x, paint);
+  }
+  // robots come along, or go home in a puff of sparkles
+  function setHelpers(n) {
+    while (helpers.length > n) { const h = helpers.pop(); for (let i = 0; i < 8; i++) sparkle(h.x + (Math.random() - 0.5) * 22, h.y - 5 + (Math.random() - 0.5) * 22); }
+    while (helpers.length < n) helpers.push({ x: tool.x, y: tool.y, a: 0, tx: tool.x, ty: tool.y, timer: 0, bob: Math.random() * 6 });
+  }
   const progress = () => (total ? cleaned / total : 0);
 
   // test hook: sweep the board in rows with the current tool
