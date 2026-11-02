@@ -24,6 +24,7 @@
 html,body{height:100%;margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font-family:var(--font);
   overscroll-behavior:none;-webkit-text-size-adjust:100%;user-select:none;-webkit-user-select:none;position:fixed;inset:0}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
+[hidden]{display:none !important}
 .screen{position:fixed;inset:0;display:none}
 .screen.on{display:flex}
 
@@ -169,7 +170,8 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .doneRows div{display:flex;justify-content:space-between;align-items:center;padding:0 6px}
 .doneRows .tot{border-top:1.5px dashed var(--line);padding-top:8px;font-size:20px;font-weight:900}
 .doneRows span{display:flex;align-items:center}
-#doneBtn{width:100%}
+.doneEnd{display:flex;flex-direction:column;gap:8px}
+.doneEnd .go{width:100%}
 #toast{position:fixed;left:50%;top:calc(70px + var(--safe-t));transform:translate(-50%,-20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;font-weight:800;
   padding:10px 18px;border-radius:999px;transition:all .25s ease;z-index:50}
 #toast.on{opacity:1;transform:translate(-50%,0)}
@@ -225,9 +227,17 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .orb.in{transform:scale(1)}
 .orb.out{transform:scale(.62);transition-duration:6s}
 .breathTxt{font-weight:800;color:var(--ink2);min-height:20px}
-.pauseBye{font-weight:800;color:var(--ink2);margin:4px 0 14px;line-height:1.4}
-.pauseBtns{display:flex;gap:8px;justify-content:center}
-.linkBtn{margin-top:12px;font-weight:800;font-size:14px;color:var(--ink3);text-decoration:underline;background:none;border:0}
+.pauseBye{font-weight:800;color:var(--ink2);margin:4px 0 8px;line-height:1.4}
+.pauseBye .byeNext{color:var(--ink);margin-bottom:6px}
+.pauseBtns{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
+.pauseEnd{display:flex;gap:8px}
+.pauseEnd .go{flex:1;padding:14px 8px;font-size:16px;white-space:nowrap}
+@media (max-width:340px){.pauseEnd .go{font-size:14.5px;padding:14px 6px}}
+.go.soft{background:var(--paper2);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line),0 4px 0 #d6c6a9}
+.go.soft:active{box-shadow:inset 0 0 0 1.5px var(--line),0 1px 0 #d6c6a9}
+/* while a pause card is up, nothing on the home screen asks for the next job */
+body.pausing #nextCard,body.pausing #home .restored{visibility:hidden}
+body.pausing .dock button.alert::after{display:none}
 #doneBA{display:flex;align-items:center;justify-content:center;gap:10px;margin:0 0 12px}
 #doneBA:empty{display:none}
 #doneBA figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -308,10 +318,13 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 .listCode{font-family:ui-monospace,Menlo,monospace;letter-spacing:.06em;color:var(--ink)}
 .friendRow{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;margin-bottom:7px}
 .friendRow.me{border-color:var(--sage-d);box-shadow:0 2px 0 #3f6b3c}
-.friendRow .rank{width:20px;font-weight:900;color:var(--ink3);text-align:center}
-.friendRow .fnick{flex:1;min-width:0;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.friendRow .fav{flex:none;width:34px;height:34px;border-radius:50%;background:var(--c);color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.12)}
+.friendRow .fwho{flex:1;min-width:0}
+.friendRow .fnick{font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .friendRow .fnick small{color:var(--ink3);font-weight:700}
-.friendRow .fstat{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;color:var(--ink2);white-space:nowrap}
+.friendRow .fwhat{font-size:12.5px;font-weight:700;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.together{background:#eef5e6;border-radius:14px;padding:10px 12px;margin:0 0 10px;font-weight:700;color:var(--ink2);line-height:1.4}
+.together b{color:#46623f}
 .topRight #btnFriends svg{width:22px;height:22px}
 .jobArea{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin:12px 4px 6px}
 .jobRow{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:10px 10px 10px 12px;margin-bottom:7px}
@@ -344,7 +357,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 <section id="home" class="screen">
   <header class="topbar">
     <div class="brand"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/></svg><span id="brandName">Ivy Cottage</span><b class="chev" id="brandChev" hidden>▾</b></div>
-    <div class="topRight"><button class="round small" id="btnFriends" aria-label="Friends"><svg viewBox="0 0 24 24"><path d="M7 4h10v4.5a5 5 0 0 1-10 0z" fill="#e0a526"/><path d="M7 5.5H4.5a3 3 0 0 0 3 3.6M17 5.5h2.5a3 3 0 0 1-3 3.6" stroke="#c98a1a" stroke-width="1.6" fill="none"/><rect x="10.6" y="13" width="2.8" height="3.4" fill="#c98a1a"/><rect x="8" y="16.4" width="8" height="3" rx="1" fill="#7d7264"/></svg></button><button class="round small" id="btnPhoto" aria-label="Save a picture of the cottage"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3" fill="#7d7264"/><path d="M8 7 l1.5 -2.5 h5 L16 7z" fill="#7d7264"/><circle cx="12" cy="13.5" r="4" fill="#fffaf1"/><circle cx="12" cy="13.5" r="2.4" fill="#7d7264"/></svg></button><div class="coins" id="homeCoins"></div></div>
+    <div class="topRight"><button class="round small" id="btnFriends" aria-label="Friends"><svg viewBox="0 0 24 24"><circle cx="16" cy="8.2" r="3.1" fill="#8fb08a"/><path d="M10.8 19.6c.3-3.4 2.4-5.6 5.2-5.6s4.9 2.2 5.2 5.6z" fill="#8fb08a"/><g fill="#d98b63" stroke="#fffaf1" stroke-width="1.3"><circle cx="9" cy="8.8" r="3.6"/><path d="M2.8 20.4c.3-3.9 2.8-6.4 6.2-6.4s5.9 2.5 6.2 6.4z"/></g></svg></button><button class="round small" id="btnPhoto" aria-label="Save a picture of the cottage"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="3" fill="#7d7264"/><path d="M8 7 l1.5 -2.5 h5 L16 7z" fill="#7d7264"/><circle cx="12" cy="13.5" r="4" fill="#fffaf1"/><circle cx="12" cy="13.5" r="2.4" fill="#7d7264"/></svg></button><div class="coins" id="homeCoins"></div></div>
   </header>
   <div id="sceneWrap"><div id="scene"></div></div>
   <div class="restored"><div class="bar"><i id="restoredBar"></i></div><span id="restoredTxt"></span></div>
@@ -383,7 +396,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
         <div class="tot"><span>Total</span><span id="doneTotal"></span></div>
       </div>
       <div id="doneFind"></div>
-      <button class="go" id="doneBtn">Back to the cottage</button>
+      <div class="doneEnd"><button class="go" id="doneBtn">Back to the cottage</button><button class="go soft" id="doneStop">Done for now</button></div>
     </div>
   </div>
 </section>
@@ -397,9 +410,9 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
     <div class="pauseSum"></div>
     <div class="pausePics"></div>
     <div class="breath"><div class="orb"></div><div class="breathTxt"></div></div>
-    <div class="pauseBye" hidden>Everything will be right here when you come back.</div>
-    <div class="pauseBtns"><button class="closeBtn" id="pauseBreathe">Three slow breaths</button><button class="go" id="pauseGo">Keep tidying</button></div>
-    <button class="linkBtn" id="pauseStop">Done for now</button>
+    <div class="pauseBye" hidden></div>
+    <div class="pauseBtns"><button class="closeBtn" id="pauseBreathe">Three slow breaths</button></div>
+    <div class="pauseEnd"><button class="go soft" id="pauseStop">Done for now</button><button class="go" id="pauseGo">Keep tidying</button></div>
   </div>
 </div>
 <div id="rotate"><div class="phone"></div><b>Turn your phone upright</b><span>The cottage is made for holding it tall.</span></div>

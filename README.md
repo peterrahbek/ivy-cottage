@@ -45,9 +45,11 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
   12-character cloud code; on another phone, I have a code picks the game up
   again, and a phone that finds more progress in the cloud carries on from it.
-  The trophy button opens friends lists: pick a nickname, start a list and
+  The friends button opens friends lists: pick a nickname, start a list and
   share its 6-character code, or join a friend's list. Friends see only
-  nicknames and numbers (coins earned, keepsakes, places restored).
+  nicknames and which places each has restored, sorted by name, with no
+  ranks or scores; the list adds up the places and keepsakes everyone has
+  found together.
 - **Café extra.** Stock the drinks fridge: every shelf has its own drink and
   every slot a coloured tag, so each bottle goes back in its place.
 - **Christmas lights.** Every winter there is a job at each place to hang the
@@ -63,11 +65,14 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   new places take a while to save up for.
 - **Before and after.** The finish card shows a small before-and-after picture
   of the job, and the next-job card shows a little picture of the mess.
-- **Pauses.** After four jobs and at least twelve minutes, a quiet card
-  suggests a pause: what this sitting has done, three slow breaths (in for
-  four seconds, out for six) if you like, or "Done for now", which fades the
-  music and goes back to the title. It never interrupts a job and can be
-  switched off in Settings.
+- **Pauses and stopping.** After four jobs and at least twelve minutes, a
+  quiet card suggests a pause: what this sitting has done, three slow breaths
+  (in for four seconds, out for six) if you like, and two equal buttons,
+  "Done for now" and "Keep tidying". The finish card has "Done for now" too.
+  After 9 pm, stopping is the main (green) button. While the card is up, the
+  next job, the progress bar and the shop dots are hidden. Stopping shows one
+  line on what comes next time, fades the sound and goes back to the title.
+  It never interrupts a job and the pause card can be switched off in Settings.
 - **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
   your cottage, save or share a picture of it (camera button).
@@ -90,7 +95,8 @@ iOS 15 lacks). Held sideways, the game pauses and asks to be turned upright.
 `cloud/` is a small Cloudflare Worker with one KV namespace, at
 https://ivy-cottage.rahbek.workers.dev. No accounts:
 a random cloud code (sent in the `X-Ivy-Code` header) is the key to a save;
-a friends list has its own short code and only shows nicknames and numbers.
+a friends list has its own short code and only shows nicknames and a few
+numbers (the game shows places restored and totals, never a ranking).
 Uploads happen at most every two minutes while playing and when the app is
 put away; half-done jobs stay on the phone. Deploy from `cloud/` with
 `wrangler deploy` (an API token for the account in `CLOUDFLARE_API_TOKEN`).

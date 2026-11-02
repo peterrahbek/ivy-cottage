@@ -123,6 +123,8 @@
   }
 
   const isEvening = () => { const h = new Date().getHours(); return S.evening && (h >= 20 || h < 6); };
+  // after nine in the evening, stopping is the main button
+  const lateHour = () => { const h = new Date().getHours(); return h >= 21 || h < 5; };
   const cottageName = () => S.name || 'Ivy Cottage';
 
   function coinHtml(n) { return `<i class="coin"></i><span>${U.fmt(n)}</span>`; }
@@ -368,6 +370,7 @@
     const o = $('#doneOverlay');
     $('#doneTitle').textContent = U.pick(Math.random, cur.family === 'plant' ? ['Lovely!', 'So green!', 'Blooming lovely!', 'Beautiful!'] : cur.family === 'build' ? ['Well built!', 'Solid work!', 'Lovely!', 'Wonderful!'] : ['Lovely!', 'So tidy!', 'Beautiful!', 'All clean!', 'Wonderful!']);
     $('#doneBtn').textContent = 'Back to ' + here().short;
+    $('#doneBtn').className = lateHour() ? 'go soft' : 'go'; $('#doneStop').className = lateHour() ? 'go' : 'go soft';
     $('#doneName').textContent = cur.name;
     const ba = $('#doneBA');
     afterPic = ENGINE.picture(96);
@@ -389,41 +392,51 @@
     tick();
     shownCoins = S.coins; updatePlayCoins(); updateUpPill();
   }
-  $('#doneBtn').onclick = () => { AUDIO.pop(); leavePlay(); maybePause(); };
+  $('#doneBtn').onclick = () => {
+    AUDIO.pop();
+    const due = pauseDue();
+    if (due) document.body.classList.add('pausing'); // so the next job never peeks out first
+    leavePlay();
+    if (due) setTimeout(openPause, 700);
+  };
+  $('#doneStop').onclick = () => { AUDIO.soft(); leavePlay(); openPause(); stopNow(); };
 
   // --------------------------------------------------------------- pauses
   // After a few jobs a quiet card suggests a pause: what this sitting has
   // done, three slow breaths if you like, and an easy way to stop. It never
   // comes in the middle of a job, and it can be switched off in Settings.
+  // While it is up, the next job, the progress bar and the shop dots are
+  // hidden: the pull to go on is strongest right before a reward.
   const sitting = { jobs: 0, coins: 0, finds: 0, pics: [], since: Date.now(), atJobs: 0 };
-  function maybePause() {
-    if (!S.pauses || sitting.jobs - sitting.atJobs < 4 || Date.now() - sitting.since < 12 * 60000) return;
-    setTimeout(openPause, 700);
-  }
+  const pauseDue = () => S.pauses && sitting.jobs - sitting.atJobs >= 4 && Date.now() - sitting.since >= 12 * 60000;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
   function openPause() {
     const mins = Math.max(1, Math.round((Date.now() - sitting.since) / 60000));
     const jobs = sitting.jobs - sitting.atJobs;
     sitting.atJobs = sitting.jobs; sitting.since = Date.now();
     const el = $('#pause');
-    el.querySelector('.pauseSum').innerHTML = `${jobs} jobs in ${mins} minutes<span class="dot">·</span>${coinHtml(sitting.coins)}${sitting.finds ? `<span class="dot">·</span>${sitting.finds} keepsake${sitting.finds > 1 ? 's' : ''}` : ''}`;
+    el.querySelector('.pauseSum').innerHTML = `${plural(jobs, 'job')} in ${plural(mins, 'minute')}<span class="dot">·</span>${coinHtml(sitting.coins)}${sitting.finds ? `<span class="dot">·</span>${plural(sitting.finds, 'keepsake')}` : ''}`;
     const pics = el.querySelector('.pausePics'); pics.innerHTML = '';
     for (const p of sitting.pics) pics.appendChild(p);
     sitting.coins = 0; sitting.finds = 0; sitting.pics = [];
     el.querySelector('.breathTxt').textContent = '';
     el.querySelector('.orb').className = 'orb';
-    el.querySelector('.pauseBtns').hidden = false; el.querySelector('#pauseStop').hidden = false;
+    $('#pauseBreathe').textContent = 'Three slow breaths';
+    el.querySelector('.pauseBtns').hidden = false; el.querySelector('.pauseEnd').hidden = false; $('#pauseGo').hidden = false;
+    $('#pauseStop').className = lateHour() ? 'go' : 'go soft'; $('#pauseGo').className = lateHour() ? 'go soft' : 'go';
     el.querySelector('.pauseBye').hidden = true;
+    document.body.classList.add('pausing');
     el.classList.add('on'); AUDIO.soft();
   }
-  function closePause() { $('#pause').classList.remove('on'); clearTimeout(breathT); }
+  function closePause() { $('#pause').classList.remove('on'); document.body.classList.remove('pausing'); clearTimeout(breathT); }
   // slow breathing: in for four seconds, out for six, three times
   let breathT = 0;
   $('#pauseBreathe').onclick = () => {
     const el = $('#pause'), orb = el.querySelector('.orb'), txt = el.querySelector('.breathTxt');
-    el.querySelector('.pauseBtns').hidden = true;
+    el.querySelector('.pauseBtns').hidden = true; $('#pauseGo').hidden = true;
     let n = 0;
     const step = () => {
-      if (n === 6) { txt.textContent = 'Lovely.'; orb.className = 'orb'; AUDIO.chime(); el.querySelector('.pauseBtns').hidden = false; $('#pauseBreathe').textContent = 'Again'; return; }
+      if (n === 6) { txt.textContent = 'Lovely.'; orb.className = 'orb'; AUDIO.chime(); el.querySelector('.pauseBtns').hidden = false; $('#pauseGo').hidden = false; $('#pauseBreathe').textContent = 'Again'; return; }
       const inhale = n % 2 === 0;
       orb.className = 'orb ' + (inhale ? 'in' : 'out');
       txt.textContent = inhale ? 'Breathe in…' : 'and slowly out…';
@@ -433,14 +446,29 @@
     step();
   };
   $('#pauseGo').onclick = () => { AUDIO.pop(); closePause(); };
-  $('#pauseStop').onclick = () => {
+  $('#pauseStop').onclick = () => { AUDIO.soft(); stopNow(); };
+  // stopping: one line on what comes next time (a plan quiets the pull of an
+  // unfinished job), then the sound fades and the title screen comes back
+  function stopNow() {
     const el = $('#pause');
     clearTimeout(breathT);
-    el.querySelector('.pauseBtns').hidden = true; $('#pauseStop').hidden = true;
-    el.querySelector('.pauseBye').hidden = false;
-    AUDIO.volume(0);
-    setTimeout(() => { closePause(); show('title'); renderTitle(); }, 3200);
-  };
+    el.querySelector('.breathTxt').textContent = ''; el.querySelector('.orb').className = 'orb';
+    el.querySelector('.pauseBtns').hidden = true; el.querySelector('.pauseEnd').hidden = true;
+    const bye = el.querySelector('.pauseBye');
+    bye.innerHTML = byeHtml(); bye.hidden = false;
+    AUDIO.volume(0); AUDIO.birds(false);
+    setTimeout(() => { closePause(); show('title'); renderTitle(); }, 5000);
+  }
+  function byeHtml() {
+    const n = nextChore(), other = DATA.PLACES.find((p) => p.id !== S.place && owned(p.id) && nextChore(p.id));
+    let plan;
+    if (n) plan = `<b>${n.name}</b>${S.wips[n.id] ? ', half done' : ''}`;
+    else if (other) plan = `a few jobs at <b>${placeName(other.id)}</b>`;
+    else plan = `<b>${DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)]}</b> arrives, with new jobs`;
+    const h = new Date().getHours();
+    const bye = lateHour() ? 'Sleep well.' : h >= 17 ? 'Have a lovely evening.' : 'Enjoy the rest of your day.';
+    return `<div class="byeNext">Next time: ${plan}</div>Everything will be right here when you come back. ${bye}`;
+  }
   $('#btnBack').onclick = () => { AUDIO.soft(); leavePlay(); };
   function keepWip() {
     if (!cur || $('#doneOverlay').classList.contains('on')) return;
@@ -700,7 +728,7 @@
   // ----------------------------------------------------------------- cloud
   // An optional copy of the save on a small Cloudflare service (cloud/): a
   // cloud code carries the game over to another phone, and friends lists show
-  // nicknames and a few numbers. Everything else works without it, offline.
+  // nicknames and what everyone has restored. Everything else works offline.
   const CLOUD = 'https://ivy-cottage.rahbek.workers.dev/api';
   let pushedSig = '', cloudTimer = 0, cloudBusy = false;
   const cloudSig = () => `${S.earned}:${S.coins}:${S.jobsDone}:${Object.keys(S.finds).length}`;
@@ -776,9 +804,28 @@
     if (now) now.onclick = async () => { await cloudPush(); toast(pushedSig === cloudSig() ? 'Saved' : 'No connection right now'); openSettings(); };
   }
 
-  // friends lists: a nickname, a list code to share, and everyone's numbers
+  // friends lists: a nickname, a list code to share, and what everyone has
+  // restored. No ranks or scores (being compared is what makes lists like
+  // this stressful), so it is sorted by name and adds everyone up together.
+  const FRIEND_COLS = ['#6f9a6a', '#c97a52', '#c4901c', '#5f8fbf', '#9a72b0', '#c46a7c'];
+  function friendCol(nick) { let h = 7; for (const ch of nick) h = (h * 31 + ch.codePointAt(0)) % 9973; return FRIEND_COLS[h % FRIEND_COLS.length]; }
+  // places open one after another, so a count says which ones
+  function friendWhat(m) {
+    const done = DATA.PLACES.slice(0, m.places).map((p) => p.short);
+    if (!done.length) return `Restoring ${DATA.PLACES[0].short}`;
+    if (done.length === DATA.PLACES.length) return `Restored all ${done.length} places`;
+    return `Restored ${done.join(' and ')}`;
+  }
+  function togetherHtml(members) {
+    if (members.length < 2) return '';
+    const sum = (k) => members.reduce((n, m) => n + (m[k] || 0), 0);
+    const bits = [];
+    if (sum('places')) bits.push(`restored ${plural(sum('places'), 'place')}`);
+    if (sum('finds')) bits.push(`found ${plural(sum('finds'), 'keepsake')}`);
+    return `<div class="together"><b>Together</b> ${bits.length ? `you have ${bits.join(' and ')}.` : 'you are just getting started.'}</div>`;
+  }
   async function openFriends() {
-    const intro = '<div class="setNote">Make a friends list and share its code, or join a friend\'s list. Friends see only your nickname and your numbers, so use a nickname, not your real name.</div>';
+    const intro = '<div class="setNote">Make a friends list and share its code, or join a friend\'s list. Friends see only your nickname and which places you have restored, so use a nickname, not your real name.</div>';
     if (!S.cloud.code) {
       openSheet('Friends', `${intro}<div class="setNote">Friends lists use the cloud save.</div><button class="go wide" id="frCloud">Turn on cloud save</button>`, (body) => {
         body.querySelector('#frCloud').onclick = async (e) => { e.target.disabled = true; try { await cloudStart(); openFriends(); } catch (_) { e.target.disabled = false; toast('No connection right now'); } };
@@ -807,9 +854,10 @@
       });
       return;
     }
-    const rows = d.members.map((m, i) => `<div class="friendRow${m.me ? ' me' : ''}"><div class="rank">${i + 1}</div><div class="fnick">${m.nick.replace(/</g, '&lt;')}${m.me ? ' <small>(you)</small>' : ''}</div>
-      <div class="fstat">${coinHtml(m.earned)}<span title="Keepsakes">⭐ ${m.finds}</span><span title="Places restored">🏡 ${m.places}</span></div></div>`).join('');
-    openSheet('Friends', `<div class="setNote">Your friends list: <b class="listCode">${d.list}</b>. Share the code so friends can join. Ranked by coins earned.</div>${rows}
+    const members = d.members.slice().sort((a, b) => a.nick.localeCompare(b.nick, undefined, { sensitivity: 'base' }));
+    const rows = members.map((m) => `<div class="friendRow${m.me ? ' me' : ''}"><div class="fav" style="--c:${friendCol(m.nick)}">${([...m.nick][0] || '?').toUpperCase().replace(/</g, '&lt;')}</div>
+      <div class="fwho"><div class="fnick">${m.nick.replace(/</g, '&lt;')}${m.me ? ' <small>(you)</small>' : ''}</div><div class="fwhat">${friendWhat(m)}</div></div></div>`).join('');
+    openSheet('Friends', `<div class="setNote">Your friends list: <b class="listCode">${d.list}</b>. Share the code so friends can join.</div>${togetherHtml(members)}${rows}
       <div class="codeRow"><button class="closeBtn" id="frRefresh">Refresh</button><button class="closeBtn" id="frLeave">Leave the list</button></div>`, (body) => {
       body.querySelector('#frRefresh').onclick = () => { AUDIO.soft(); openFriends(); };
       body.querySelector('#frLeave').onclick = async (e) => {
