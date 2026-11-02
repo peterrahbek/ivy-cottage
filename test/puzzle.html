@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Puzzle bench</title>
+<style>
+html,body{margin:0;height:100%;background:#f6efe3;overflow:hidden}
+#cv{position:fixed;inset:0;touch-action:none}
+.bar{position:fixed;left:0;right:0;background:rgba(255,250,241,.8);color:#a89c8b;font:800 12px system-ui;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#hudT{top:0;height:70px;border-bottom:1px solid #e5d9c6}
+#hudB{bottom:0;height:110px;border-top:1px solid #e5d9c6}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="bar" id="hudT">top of the screen (HUD)</div>
+<div class="bar" id="hudB">bottom of the screen (HUD)</div>
+<script src="../js/util.js"></script>
+<script src="../js/scenes.js"></script>
+<script src="../js/puzzles.js"></script>
+<script>
+'use strict';
+// A test bench for one puzzle scene, standing in for the engine: the same
+// fit between the HUD bars, the same pointer handling, and fx counted
+// instead of paid. test/run.mjs drives it in headless Chrome.
+//   puzzle.html?file=../js/pz-cups.js&kind=cups&seed=3[&state={json}]
+(() => {
+  const q = new URLSearchParams(location.search);
+  const H = window.H = { ready: false, errors: [], goods: [], sounds: [], frames: 0, drawMs: [] };
+  window.addEventListener('error', (e) => H.errors.push(String(e.message || e)));
+  const s = document.createElement('script');
+  s.src = q.get('file');
+  s.onload = start;
+  s.onerror = () => H.errors.push('could not load ' + q.get('file'));
+  document.body.appendChild(s);
+
+  function start() {
+    const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+    const W = 360, BH = 600, insets = { top: 70, bottom: 110 };
+    let dpr, vw, vh, scale, ox, oy;
+    function measure() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2); vw = innerWidth; vh = innerHeight;
+      const availH = vh - insets.top - insets.bottom;
+      scale = Math.min(vw / W, availH / BH);
+      ox = (vw - W * scale) / 2; oy = insets.top + (availH - BH * scale) / 2;
+      cv.width = Math.round(vw * dpr); cv.height = Math.round(vh * dpr);
+      cv.style.width = vw + 'px'; cv.style.height = vh + 'px';
+    }
+    measure();
+    const bleed = { x0: -ox / scale - 4, y0: -oy / scale - 4, x1: (vw - ox) / scale + 4, y1: (vh - oy) / scale + 4 };
+    const kind = q.get('kind'), seed = +(q.get('seed') || 1);
+    let scene;
+    try { scene = SCENES.build(kind, {}, seed, bleed); } catch (e) { H.errors.push('build: ' + e.message); return; }
+    H.scene = scene;
+    const sparks = [];
+    const burst = (x, y, n) => { for (let i = 0; i < n; i++) sparks.push({ x, y, vx: (Math.random() - 0.5) * 70, vy: -20 - Math.random() * 45, t: 0 }); };
+    scene.fx = {
+      good: (x, y) => { H.goods.push([Math.round(x), Math.round(y)]); burst(x, y, 10); },
+      sound: (k) => H.sounds.push(k),
+      sparkle: (x, y) => burst(x, y, 1),
+    };
+    try { if (q.get('state')) scene.load(JSON.parse(q.get('state'))); } catch (e) { H.errors.push('load: ' + e.message); }
+    let decorCv;
+    try {
+      decorCv = U.canvas(cv.width, cv.height);
+      const x = decorCv.getContext('2d');
+      x.setTransform(scale * dpr, 0, 0, scale * dpr, ox * dpr, oy * dpr);
+      scene.decor(x);
+    } catch (e) { H.errors.push('decor: ' + e.message); }
+    const toBoard = (e) => ({ x: (e.clientX - ox) / scale, y: (e.clientY - oy) / scale });
+    let pid = null;
+    const guard = (name, fn) => { try { fn(); } catch (e) { H.errors.push(name + ': ' + e.message); } };
+    cv.addEventListener('pointerdown', (e) => {
+      if (pid !== null) return;
+      pid = e.pointerId;
+      try { cv.setPointerCapture(pid); } catch (_) {}
+      const p = toBoard(e); guard('down', () => scene.down(p.x, p.y)); e.preventDefault();
+    });
+    cv.addEventListener('pointermove', (e) => { if (e.pointerId !== pid) return; const p = toBoard(e); guard('move', () => scene.move(p.x, p.y)); e.preventDefault(); });
+    const end = (e) => {
+      if (e.pointerId !== pid) return;
+      pid = null;
+      if (e.type === 'pointerup') { const p = toBoard(e); guard('up', () => scene.up(p.x, p.y)); } else guard('cancel', () => scene.cancel());
+    };
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) cv.addEventListener(ev, end);
+    let last = performance.now(), clock = 0;
+    function frame(now) {
+      requestAnimationFrame(frame);
+      const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; clock += dt;
+      try {
+        if (scene.step) scene.step(dt);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+        if (decorCv) ctx.drawImage(decorCv, 0, 0);
+        ctx.setTransform(scale * dpr, 0, 0, scale * dpr, ox * dpr, oy * dpr);
+        const t0 = performance.now();
+        scene.draw(ctx, clock, false);
+        H.drawMs.push(performance.now() - t0); if (H.drawMs.length > 240) H.drawMs.shift();
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const p = sparks[i]; p.t += dt;
+          if (p.t > 0.7) { sparks.splice(i, 1); continue; }
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          ctx.fillStyle = `rgba(255,226,120,${1 - p.t / 0.7})`; ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, 7); ctx.fill();
+        }
+      } catch (e) { if (H.errors.length < 20) H.errors.push('frame: ' + e.message); }
+      H.frames++;
+    }
+    requestAnimationFrame(frame);
+    H.toClient = (x, y) => ({ x: ox + x * scale, y: oy + y * scale });
+    // the before and after picture, made the way the engine makes it
+    H.picture = (w = 192) => {
+      const crop = scene.crop || { x: 0, y: 120, w: 360, h: 360 };
+      const h = Math.round((w * crop.h) / crop.w), c = U.canvas(w * 2, h * 2), x = c.getContext('2d'), k = c.width / crop.w;
+      x.setTransform(k, 0, 0, k, -crop.x * k, -crop.y * k);
+      scene.decor(x); scene.draw(x, clock, true);
+      return c.toDataURL('image/png');
+    };
+    // synthetic pointer events, to run many seeds quickly
+    H.fire = (type, x, y) => {
+      const p = H.toClient(x, y);
+      cv.dispatchEvent(new PointerEvent(type, { clientX: p.x, clientY: p.y, pointerId: 7, bubbles: true, isPrimary: true, pointerType: 'touch' }));
+    };
+    H.ready = true;
+  }
+})();
+</script>
+</body>
+</html>

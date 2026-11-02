@@ -1,6 +1,8 @@
 'use strict';
 // The chore engine: one full-screen canvas, a grid of dirt cells, a tool that
 // follows the finger and wipes cells, particles, helper robots, coins.
+// Thinking jobs (js/puzzles.js) skip the grid, the tool and the robots: the
+// scene draws itself every frame and takes the finger directly.
 //
 // Layers (all full-screen canvases at device resolution, same transform):
 //   decor -> clean -> cleanOver -> live (per frame) -> dirt masked by grid
@@ -23,6 +25,9 @@ const ENGINE = (() => {
   let running = false, raf = 0, last = 0, clock = 0, finishing = null, done = false;
   let activity = 0, smoothAct = 0, insets = { top: 70, bottom: 110 }, stuckT = 0;
   let speedMult = 1, stamped = false;
+  // a thinking job (js/puzzles.js) in progress: what it pays, how much of
+  // that is paid, where the last right move was and the keepsake it holds
+  let puz = null;
 
   function init(canvas, callbacks) {
     cv = canvas; ctx = cv.getContext('2d');
@@ -65,6 +70,15 @@ const ENGINE = (() => {
 
   function paintLayers(keepClean) {
     const old = L;
+    if (puz) {
+      // a puzzle paints its background once and draws the rest every frame
+      L = { decor: layer() };
+      scene.decor(L.decor.x);
+      paintWeather();
+      L.k = scale * dpr; L.ox = ox * dpr; L.oy = oy * dpr;
+      release(old);
+      return;
+    }
     L = { decor: layer(), clean: layer(), dirt: layer(), comp: layer() };
     scene.decor(L.decor.x);
     if (keepClean && old) {
@@ -92,7 +106,7 @@ const ENGINE = (() => {
   if (window.matchMedia) {
     const mq = window.matchMedia(SIDEWAYS);
     sideways = mq.matches;
-    const onChange = () => { sideways = mq.matches; if (sideways) { tool.down = false; tool.pid = null; } };
+    const onChange = () => { sideways = mq.matches; if (sideways) { tool.down = false; tool.pid = null; if (puz && running) scene.cancel(); } };
     if (mq.addEventListener) mq.addEventListener('change', onChange); else if (mq.addListener) mq.addListener(onChange);
   }
   function relayout() {
@@ -311,26 +325,32 @@ const ENGINE = (() => {
 
   // --------------------------------------------------------------- pointer
   function toBoard(e) { return { x: (e.clientX - ox) / scale, y: (e.clientY - oy) / scale }; }
+  // a puzzle gets the finger itself, exactly where it is; once it is solved
+  // nothing more can be moved
   function onDown(e) {
-    if (!running || done || tool.pid !== null) return;
+    if (!running || done || tool.pid !== null || (puz && finishing)) return;
     tool.pid = e.pointerId;
     try { cv.setPointerCapture(e.pointerId); } catch (_) {}
     const p = toBoard(e);
+    cb.onTouch && cb.onTouch();
+    e.preventDefault();
+    if (puz) { if (!sideways) scene.down(p.x, p.y); return; }
     tool.tx = U.clamp(p.x, -10, W + 10); tool.ty = U.clamp(p.y - OFFSET, -10, H + 10);
     tool.x = tool.tx; tool.y = tool.ty;
     tool.down = true;
-    cb.onTouch && cb.onTouch();
-    e.preventDefault();
   }
   function onMove(e) {
     if (e.pointerId !== tool.pid) return;
     const p = toBoard(e);
-    tool.tx = U.clamp(p.x, -10, W + 10); tool.ty = U.clamp(p.y - OFFSET, -10, H + 10);
     e.preventDefault();
+    if (puz) { if (!finishing) scene.move(p.x, p.y); return; }
+    tool.tx = U.clamp(p.x, -10, W + 10); tool.ty = U.clamp(p.y - OFFSET, -10, H + 10);
   }
   function onUp(e) {
     if (e.pointerId !== tool.pid) return;
     tool.pid = null; tool.down = false;
+    if (!puz || done) return;
+    if (e.type === 'pointerup') { const p = toBoard(e); scene.up(p.x, p.y); } else scene.cancel();
   }
 
   // ------------------------------------------------------------- particles
@@ -716,6 +736,89 @@ const ENGINE = (() => {
     }
   }
 
+  // ---------------------------------------------------------------- puzzles
+  // Thinking jobs (js/puzzles.js): the scene draws itself and takes the
+  // finger. Each right move pays its share of the job; whatever is left is
+  // paid when it is solved, and the keepsake pops up where the last move was.
+  function pay(x, y, v, n = 3) {
+    if (!(v > 0)) return;
+    earn(v);
+    const s = toScreen(x, y), tgt = cb.coinTarget ? cb.coinTarget() : { x: vw - 40, y: 30 };
+    for (let k = 0; k < n; k++) coins.push({ x: s.x, y: s.y, sx: s.x + (Math.random() - 0.5) * 26, sy: s.y + (Math.random() - 0.5) * 18, tx: tgt.x, ty: tgt.y, t: -k * 0.07, dur: 0.6 + Math.random() * 0.2, lift: 40 + Math.random() * 45, v: v / n });
+  }
+  function good(x, y) {
+    if (!puz || done) return;
+    const v = Math.min(puz.value / scene.steps, puz.value - puz.paid);
+    puz.x = x; puz.y = y;
+    for (let k = 0; k < 8; k++) sparkle(x + (Math.random() - 0.5) * 30, y + (Math.random() - 0.5) * 24);
+    if (v < 0.01) return;
+    puz.paid += v;
+    pay(x, y, v);
+  }
+  function startPuzzle(o) {
+    puz = { value: o.value || 0, paid: 0, x: W / 2, y: H / 2, find: (o.treasures || []).find((g) => g.kind === 'find') || null };
+    hp = null; units = []; growing = []; cellUnit = null; total = 0; cleaned = 0; gems = []; helpers = [];
+    scene.fx = { good, sound: (k) => cb.onSound && cb.onSound(k), sparkle };
+    // a half-done puzzle only comes back onto the layout it was left on (one
+    // played again is a new layout, and so is one solved on another phone)
+    let resumed = false;
+    if (typeof o.resume === 'string' && o.resume[0] === 'P') {
+      try {
+        const d = JSON.parse(o.resume.slice(1));
+        if (d.seed === def.seed) { scene.load(d.s); puz.paid = U.clamp(+d.paid || 0, 0, puz.value); resumed = true; }
+      } catch (_) {}
+    }
+    // how it looks untouched: leaving without a move keeps nothing
+    puz.fresh = resumed ? null : JSON.stringify(scene.save());
+    weather = makeWeather(o.season, o.indoor || scene.indoor);
+    paintLayers(false);
+    parts = []; coins = []; earnAcc = 0; coinAcc = 0; stamped = false;
+    tool.down = false; tool.pid = null;
+    finishing = null; done = false; clock = 0;
+    running = true; last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(frame);
+  }
+  function stepPuzzle(dt) {
+    if (scene.step) scene.step(dt);
+    if (!finishing && scene.solved()) {
+      finishing = { t: 0 };
+      const rest = puz.value - puz.paid;
+      if (rest >= 0.5) { puz.paid = puz.value; pay(puz.x, puz.y, rest); }
+      const f = puz.find;
+      if (f) {
+        const g = Object.assign({ x: U.clamp(puz.x, 40, W - 40), y: U.clamp(puz.y - 36, 50, H - 40), state: 1, t: 0, rot: 0 }, f);
+        gems.push(g);
+        for (let k = 0; k < 16; k++) sparkle(g.x + (Math.random() - 0.5) * 26, g.y + (Math.random() - 0.5) * 26);
+        pay(g.x, g.y, g.value);
+        cb.onFind && cb.onFind(g);
+      }
+      cb.onAutoFinish && cb.onAutoFinish();
+    } else if (finishing) {
+      finishing.t += dt;
+      if (finishing.t > (puz.find ? 1.8 : 1.1) && !done) { done = true; tool.pid = null; flushEarn(); cb.onDone && cb.onDone(); }
+    }
+    stepGems(dt); stepParts(dt); stepCoins(dt);
+    if (weather) stepWeather(dt);
+    cb.onProgress && cb.onProgress(scene.progress());
+  }
+  function renderPuzzle() {
+    const S = scale * dpr;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(L.decor.c, 0, 0);
+    ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr);
+    scene.draw(ctx, clock, false);
+    if (weather) {
+      if (L.wx) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(L.wx.c, 0, 0); ctx.setTransform(S, 0, 0, S, ox * dpr, oy * dpr); }
+      drawWeather(ctx);
+    }
+    for (const g of gems) if (g.state === 1) drawGem(ctx, g, true);
+    drawParts(ctx);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawCoins(ctx);
+  }
+
   // ------------------------------------------------------------------- loop
   function frame(now) {
     if (!running) return;
@@ -724,6 +827,7 @@ const ENGINE = (() => {
     last = now;
     if (sideways) return; // paused while the phone is on its side
     clock += dt;
+    if (puz) { stepPuzzle(dt); renderPuzzle(); return; }
     activity = 0;
     if (!finishing) {
       const before = cleaned;
@@ -773,9 +877,18 @@ const ENGINE = (() => {
   }
 
   // a small picture of the board without the tool, for the before and after
-  // on the finish card; crop in board units
-  function picture(w, crop = { x: 0, y: 120, w: W, h: 360 }) {
+  // on the finish card; crop in board units (a puzzle may pick its own)
+  function picture(w, crop) {
     if (!L) return null;
+    if (puz) {
+      crop = crop || scene.crop || { x: 0, y: 120, w: W, h: 360 };
+      const h = Math.round((w * crop.h) / crop.w), c = U.canvas(w * 2, h * 2), x = c.getContext('2d'), k = c.width / crop.w;
+      x.setTransform(k, 0, 0, k, -crop.x * k, -crop.y * k);
+      scene.decor(x); scene.draw(x, clock, true);
+      c.style.width = w + 'px'; c.style.height = h + 'px';
+      return c;
+    }
+    crop = crop || { x: 0, y: 120, w: W, h: 360 };
     if (maskDirty) updateComp();
     const h = Math.round((w * crop.h) / crop.w), c = U.canvas(w * 2, h * 2), x = c.getContext('2d');
     const k = scale * dpr, sx = ox * dpr + crop.x * k, sy = oy * dpr + crop.y * k;
@@ -826,6 +939,8 @@ const ENGINE = (() => {
     insets = o.insets || insets;
     measure();
     scene = SCENES.build(def.scene, def.opts, def.seed, bleed());
+    puz = null;
+    if (scene.puzzle) return startPuzzle(o);
     buildGrid();
     if (o.resume) restoreGrid(o.resume);
     setupUnits();
@@ -862,7 +977,17 @@ const ENGINE = (() => {
     while (helpers.length > n) { const h = helpers.pop(); for (let i = 0; i < 8; i++) sparkle(h.x + (Math.random() - 0.5) * 22, h.y - 5 + (Math.random() - 0.5) * 22); }
     while (helpers.length < n) helpers.push({ x: tool.x, y: tool.y, a: 0, tx: tool.x, ty: tool.y, timer: 0, bob: Math.random() * 6 });
   }
-  const progress = () => (total ? cleaned / total : 0);
+  const progress = () => (puz ? scene.progress() : total ? cleaned / total : 0);
+  // the hint button on a puzzle: one right move glows for a moment
+  function hint() { if (puz && running && !finishing) scene.hint(); }
+  // a solved puzzle counts at once if play stops before its finish card
+  // comes up (Back, or the phone putting the game away in that second)
+  function finishNow() {
+    if (!puz || done || !running || !scene.solved()) return false;
+    if (!finishing) stepPuzzle(0);
+    done = true; tool.pid = null; flushEarn(); cb.onDone && cb.onDone();
+    return true;
+  }
 
   // test hook: sweep the board in rows with the current tool
   function debugSweep(mode) {
@@ -881,8 +1006,14 @@ const ENGINE = (() => {
 
   // ------------------------------------------------------- half-done jobs
   // The dirt grid packed as one hex digit per cell, so a job left halfway can
-  // pick up where it was.
+  // pick up where it was; a puzzle keeps its own small state, its layout and
+  // what it has paid so far, behind a 'P'.
   function snapshot() {
+    if (puz) {
+      if (done) return null;
+      const s = scene.save();
+      return JSON.stringify(s) === puz.fresh ? null : 'P' + JSON.stringify({ seed: def.seed, s, paid: Math.round(puz.paid * 100) / 100 });
+    }
     if (!hp || done) return null;
     let out = '';
     for (let k = 0; k < GW * GH; k++) out += inReg[k] ? Math.min(15, Math.ceil(hp[k] * 15)).toString(16) : '-';
@@ -904,11 +1035,16 @@ const ENGINE = (() => {
 
   // test hook: finish at once without waiting for animation frames
   function debugFinish() {
+    if (puz) {
+      if (!scene.solved()) scene.solveAll();
+      finishNow();
+      return;
+    }
     for (let k = 0; k < GW * GH; k++) if (inReg[k] && hp[k] > 0) clearCell(k);
     for (let i = 0; i < units.length; i++) if (!units[i].done) completeUnit(i, true);
     stepGems(0);
     if (!done) { done = true; flushEarn(); cb.onDone && cb.onDone(); }
   }
 
-  return { init, start, stop, setTier, setPaint, setHelpers, progress, toScreen, debugSweep, debugStroke, debugFinish, snapshot, picture, get scale() { return scale; }, get total() { return total; } };
+  return { init, start, stop, setTier, setPaint, setHelpers, progress, hint, finishNow, toScreen, debugSweep, debugStroke, debugFinish, snapshot, picture, get scale() { return scale; }, get total() { return total; }, get scene() { return scene; } };
 })();

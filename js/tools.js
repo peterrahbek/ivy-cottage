@@ -203,6 +203,13 @@ const TOOLS = (() => {
         { id: 'barrow', name: 'Wheelbarrow', shape: 'rect', w: 60, h: 24, power: 1.7, speed: 235, sprite: 'barrow' },
       ],
     },
+    // the puzzle room needs no tools and no machines: it is all done by hand
+    think: {
+      name: 'Your hands', job: 'Thinking', icon: 'hand', hands: true,
+      tiers: [
+        { id: 'hands', name: 'Your own two hands', shape: 'circle', r: 12, power: 1.0, speed: 200, sprite: 'hand' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -791,6 +798,18 @@ const TOOLS = (() => {
     walk4(c, t) { walkers(c, t.r, [[0.05, -0.7, 0.38], [0.24, -0.24, 0.4], [0.2, 0.24, 0.38], [0.02, 0.7, 0.38], [-0.32, 0, 0.34]]); },
 
     // ---- pet brushes
+    // an open hand, fingers forward, with a sage cuff
+    hand(c, t) {
+      const r = t.r;
+      const limb = (x0, y0, x1, y1, w) => { c.lineWidth = w; c.lineCap = 'round'; c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke(); };
+      for (const [col, k] of [['#d39a6e', 0.1], ['#f4cba6', 0]]) {
+        c.strokeStyle = col; c.fillStyle = col;
+        for (const [fy, len] of [[-0.4, 0.62], [-0.13, 0.8], [0.14, 0.76], [0.41, 0.58]]) limb(r * 0.2, r * fy, r * (0.2 + len), r * fy * 1.1, r * (0.26 + k));
+        limb(-r * 0.15, -r * 0.42, r * 0.28, -r * 0.94, r * (0.28 + k));
+        rr(c, -r * (0.75 + k / 2), -r * (0.58 + k / 2), r * (1.15 + k), r * (1.16 + k), r * 0.4); c.fill();
+      }
+      c.fillStyle = '#9cc5a1'; rr(c, -r * 1.15, -r * 0.52, r * 0.44, r * 1.04, r * 0.16); c.fill();
+    },
     softbrush(c, t) {
       const r = t.r;
       handle(c, -r * 0.7, -r * 1.6, 4, '#ef8aa6');

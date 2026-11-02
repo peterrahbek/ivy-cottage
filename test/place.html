@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Place bench</title>
+<style>
+body{margin:0;background:#f6efe3;display:grid;grid-template-columns:repeat(3,400px);gap:14px;padding:14px;font:700 12px system-ui;color:#6b6157}
+figure{margin:0}
+figure svg{display:block;border-radius:10px;box-shadow:0 2px 8px rgba(80,60,30,.15)}
+figcaption{padding:5px 2px}
+</style>
+</head>
+<body>
+<script src="../js/util.js"></script>
+<script>
+'use strict';
+// A test bench for a place picture: the same render in six states.
+//   place.html?file=../js/beta.js&obj=BETA&parts=cups,feed,hose,beds
+(() => {
+  const q = new URLSearchParams(location.search);
+  const H = window.H = { ready: false, errors: [] };
+  window.addEventListener('error', (e) => H.errors.push(String(e.message || e)));
+  const s = document.createElement('script');
+  s.src = q.get('file');
+  s.onload = go;
+  s.onerror = () => H.errors.push('could not load ' + q.get('file'));
+  document.head.appendChild(s);
+  function go() {
+    const obj = window[q.get('obj')] || (0, eval)(q.get('obj'));
+    const parts = (q.get('parts') || '').split(',').filter(Boolean);
+    const all = Object.fromEntries(parts.map((p) => [p, true]));
+    const some = Object.fromEntries(parts.slice(0, 2).map((p) => [p, true]));
+    const states = [
+      ['nothing done · spring', {}, { season: 'spring', pct: 0 }],
+      ['two done, the second just now · summer', some, { season: 'summer', pct: 0.5, fresh: parts[1] }],
+      ['all done · autumn', all, { season: 'autumn', pct: 1 }],
+      ['all done · winter', all, { season: 'winter', pct: 1 }],
+      ['all done · evening', all, { season: 'summer', pct: 1, night: true }],
+      ['on the Places list (uid p)', some, { season: 'spring', pct: 0.5, uid: 'p' }],
+    ];
+    for (const [label, st, opts] of states) {
+      const f = document.createElement('figure');
+      try {
+        f.innerHTML = obj.render(st, {}, Object.assign({ pending: {}, decor: {} }, opts)).replace('<svg ', '<svg width="400" height="540" ') + `<figcaption>${label}</figcaption>`;
+      } catch (e) { H.errors.push(label + ': ' + e.message); }
+      document.body.appendChild(f);
+    }
+    H.parts = [...document.querySelectorAll('figure:first-of-type [data-part]')].map((el) => el.dataset.part);
+    H.ready = true;
+  }
+})();
+</script>
+</body>
+</html>

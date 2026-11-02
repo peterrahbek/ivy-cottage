@@ -177,6 +177,23 @@ const AUDIO = (() => {
     }
   }
   function soft() { if (!ac) return; tone(520, ac.currentTime, 0.12, 'triangle', 0.05, sfx, 0.15); }
+  // puzzles: a kind "not there" (two soft falling notes, never a buzzer),
+  // food pouring into a bowl, and the click of a pipe turning
+  function nope() {
+    if (!ac) return;
+    const t = ac.currentTime;
+    tone(466, t, 0.14, 'triangle', 0.045, sfx, 0.15); tone(392, t + 0.1, 0.2, 'triangle', 0.04, sfx, 0.2);
+  }
+  function noiseBurst(t, dur, f0, f1, vol, q = 1.2) {
+    const src = ac.createBufferSource(), g = ac.createGain(), bp = ac.createBiquadFilter();
+    src.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = q;
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + Math.min(0.04, dur / 3)); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(sfx);
+    src.start(t, Math.random()); src.stop(t + dur + 0.02);
+  }
+  function pour() { if (!ac) return; const t = ac.currentTime; noiseBurst(t, 0.38, 2200, 650, 0.1); tone(330, t + 0.18, 0.12, 'sine', 0.03, sfx, 0.2); }
+  function turn() { if (!ac) return; const t = ac.currentTime; noiseBurst(t, 0.05, 3200, 2400, 0.08, 3); tone(294, t, 0.09, 'triangle', 0.05, sfx, 0.05); }
   function buy() {
     if (!ac) return;
     const t = ac.currentTime;
@@ -403,5 +420,5 @@ const AUDIO = (() => {
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, debugRender };
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, nope, pour, turn, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, debugRender };
 })();

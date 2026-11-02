@@ -8,7 +8,9 @@ coins buy better tools, little helper robots, decorations and new places:
 a little corner café to bring back to life with some light building and
 planting, a seaside cove with a beach hut, a rowing boat, an old camper
 van and a lighthouse, and an animal rescue on an old farm, where dogs need
-feeding and walking, a cat wants brushing and the rabbits fresh straw.
+feeding and walking, a cat wants brushing and the rabbits fresh straw. A
+puzzle room, open from the start, tries out jobs with a little thinking
+instead of a tool.
 
 No timers, no losing, no ads, no accounts. Works offline once opened.
 
@@ -62,6 +64,15 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   new boards in the barn, carrots for the rabbits, and the farmhouse door,
   office window and sign. The animals never need you: nothing goes hungry or
   sad while you are away.
+- **The Puzzle Room (beta).** Open from the start, first on the Places list.
+  Jobs done by hand with a little thinking, with no tools and no robots: put
+  the cups away (each shelf one kind, each coaster one glaze), feeding time
+  (follow the chart: the right food and the right number of scoops for each
+  animal), water the greenhouse (tap the pipes to turn them until the water
+  reaches every pot) and who sleeps where (tuck the animals in so every note on
+  the board holds). A move that is not right just glides back; Hint at the
+  bottom shows one right move. Every puzzle comes out different each time, a
+  half-done one is kept for later, and they can be taken in any order.
 - **Music.** Four quiet tunes of the game's own, one per place, in a key that
   follows the season and slower in the evening; volume in Settings.
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
@@ -149,7 +160,8 @@ then open http://localhost:8790.
 
 - `index.html` markup and styles
 - `js/engine.js` the cleaning engine: layered canvases, a 120x200 dirt grid,
-  the tool, stamping, particles, flying coins, hidden treasures, auto-finish
+  the tool, stamping, particles, flying coins, hidden treasures, auto-finish;
+  puzzles skip the grid and the tool and draw themselves
 - `js/scenes.js` lawn and stone path scenes plus shared painters
 - `js/scenes2.js` fence, windows (rooms behind the glass), door, wall
 - `js/scenes3.js` flower beds, pond with koi, roof, shutters, attic, round window
@@ -163,6 +175,11 @@ then open http://localhost:8790.
   sandcastle, Christmas lights, the drinks fridge, the dog bath
 - `js/scenes9.js` coffee, napkins and tables at the café, the seal, dog bowls,
   the dog walk, the cat and the rabbit hutch
+- `js/puzzles.js` the contract every puzzle follows, its house rules (calm, no
+  timers, nothing ever wrong for long) and a few shared helpers
+- `js/pz-cups.js`, `js/pz-feed.js`, `js/pz-hose.js`, `js/pz-beds.js` the
+  four puzzles in the puzzle room
+- `js/beta.js` the puzzle room overview (SVG): a pinboard of puzzle cards
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
 - `js/cove.js` the cove overview (SVG), same conventions
@@ -172,9 +189,15 @@ then open http://localhost:8790.
 - `js/audio.js` synthesised sound and four composed tunes (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
+- `test/` a bench that plays one puzzle in headless Chrome with real touches
+  (half, saved, reloaded, finished, then many more layouts) and draws a place
+  picture in six states; `test/example-puzzle.js` is a tiny puzzle to copy
 
 Bump `CACHE` in `sw.js` whenever a file changes.
 
+    node test/run.mjs puzzle js/pz-cups.js cups --seeds 20
+    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds
+
 Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`, `__ivy.startRescue(i)`,
-`__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
-`__ivy.goPlace('cafe')`, `__ivy.reset()`.
+`__ivy.startBeta(i)`, `__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
+`__ivy.ENGINE.scene.debugPlan()` (a puzzle's solving gestures), `__ivy.goPlace('cafe')`, `__ivy.reset()`.

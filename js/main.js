@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1 };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1 };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -16,7 +16,8 @@
     if (s.wip && s.wip.id && !s.wips) out.wips = { [s.wip.id]: s.wip.grid };
     delete out.wip;
     out.wips = out.wips || {};
-    out.owned = Object.assign({ cottage: 1 }, s.owned);
+    // the puzzle room is open to everyone from the start
+    out.owned = Object.assign({ cottage: 1, beta: 1 }, s.owned);
     out.use = out.use || {};
     // tools used to be shared by every place; each place now keeps its own,
     // so an older save gets the tools it had at every place it already owns
@@ -66,13 +67,18 @@
 
   // ---------------------------------------------------------------- places
   // Each place has its own chores, picture and decorations; coins, tools,
-  // helpers and the turning year are shared.
+  // helpers and the turning year are shared. The puzzle room (beta) stands
+  // outside the order the places are restored in: it is never bought, has no
+  // seasons and never calls you over.
   const here = () => DATA.placeOf(S.place);
   const owned = (id) => !!S.owned[id];
+  const MAIN = DATA.PLACES.filter((p) => !p.beta);
   const doneCount = (pl = S.place) => DATA.placeOf(pl).chores.filter((c) => S.done[c.id]).length;
   const totalDone = () => DATA.PLACES.reduce((n, p) => n + doneCount(p.id), 0);
   const restored = (pl) => doneCount(pl) === DATA.placeOf(pl).chores.length;
-  const restoredPlaces = () => DATA.PLACES.filter((p) => owned(p.id) && restored(p.id)).map((p) => p.id);
+  const restoredPlaces = () => MAIN.filter((p) => owned(p.id) && restored(p.id)).map((p) => p.id);
+  // a puzzle comes out different every time it is played again
+  const seedFor = (c) => (c.puzzle ? c.seed + (S.done[c.id] || 0) * 977 : c.seed);
   const placeName = (pl = S.place) => (pl === 'cottage' ? cottageName() : DATA.placeOf(pl).name);
   const seasonJobs = () => DATA.seasonJobs(S.seasonNo, restoredPlaces());
   const jobsAt = (pl) => seasonJobs().filter((j) => j.place === pl);
@@ -88,9 +94,10 @@
     return p.chores.some((c) => c.family === fam && c.index <= reach);
   };
   function placeOffer() {
-    return DATA.PLACES.find((p) => !owned(p.id) && (!p.needs || restored(p.needs)));
+    return MAIN.find((p) => !owned(p.id) && (!p.needs || restored(p.needs)));
   }
   function renderPlace(id, st, opts) {
+    if (id === 'beta' && typeof BETA !== 'undefined') return BETA.render(st, S.colours, opts);
     if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
     if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
     if (id === 'rescue' && typeof RESCUE !== 'undefined') return RESCUE.render(st, S.colours, opts);
@@ -124,6 +131,7 @@
     S.coins -= u.cost; S.tiers[k] = tierIdx(fam, pl) + 1; S.use[k] = S.tiers[k]; save();
   }
   function affordableSomething() {
+    if (here().beta) return false; // nothing to buy in the puzzle room
     for (const fam of Object.keys(TOOLS.FAM)) {
       if (!famUnlocked(fam)) continue;
       const u = nextUpgrade(fam);
@@ -169,7 +177,8 @@
     const jobs = jobsAt(pl.id);
     if (!restored(pl.id) || S.seasonNo === 0 || !jobs.length) {
       $('#restoredBar').style.width = (pct * 100).toFixed(1) + '%';
-      $('#restoredTxt').textContent = pct >= 1 ? `${placeName()} is restored` : `${doneCount()} of ${pl.chores.length} jobs done`;
+      if (pl.beta) $('#restoredTxt').textContent = pct >= 1 ? pl.done : `${doneCount()} of ${pl.chores.length} puzzles solved`;
+      else $('#restoredTxt').textContent = pct >= 1 ? `${placeName()} is restored` : `${doneCount()} of ${pl.chores.length} jobs done`;
     } else {
       const d = jobs.filter((j) => S.sdone[j.id]).length;
       $('#restoredBar').style.width = ((d / jobs.length) * 100).toFixed(1) + '%';
@@ -181,7 +190,7 @@
     const n = nextChore();
     const card = $('#nextCard');
     // season jobs still waiting somewhere else
-    const elsewhere = S.seasonNo > 0 && DATA.PLACES.find((p) => p.id !== pl.id && owned(p.id) && nextChore(p.id));
+    const elsewhere = S.seasonNo > 0 && MAIN.find((p) => p.id !== pl.id && owned(p.id) && nextChore(p.id));
     if (n) {
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
@@ -198,6 +207,11 @@
       if (thumbs.has(thumbKey(n))) showThumb(thumbs.get(thumbKey(n)));
       else setTimeout(() => showThumb(jobThumb(n)), 80);
       $('#goBtn').onclick = () => { AUDIO.pop(); startChore(n, false); };
+    } else if (pl.beta) {
+      card.dataset.job = '';
+      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">All solved</div><div class="nextName">Every puzzle comes out new each time</div>
+        <div class="nextMeta">Play any of them again from the list.</div></div><button class="go" id="goBtn">Puzzles</button>`;
+      $('#goBtn').onclick = () => { AUDIO.pop(); openJobs(); };
     } else if (elsewhere) {
       card.dataset.job = '';
       const what = nextRestore(elsewhere.id) ? 'Jobs are waiting' : `${DATA.SEASON_NAMES[seasonName()]} jobs are waiting`;
@@ -225,21 +239,30 @@
         const part = el.dataset.part;
         const sj = jobsAt(pl.id).find((j) => j.part === part && !S.sdone[j.id]);
         const c = sj || pl.chores.find((x) => x.part === part);
-        if (c && (sj || S.done[c.id])) { AUDIO.soft(); openJobs(c.id); }
+        if (c && (sj || S.done[c.id] || pl.beta)) { AUDIO.soft(); openJobs(c.id); }
       });
     });
   }
   // a little picture of the mess for the next-job card, drawn once per job
   const thumbs = new Map();
-  const thumbKey = (c) => `${c.id}|${c.seed}`;
+  const thumbKey = (c) => `${c.id}|${seedFor(c)}`;
   function jobThumb(c) {
     const key = thumbKey(c);
     if (thumbs.has(key)) return thumbs.get(key);
     let url = null;
     try {
       const cv = U.canvas(128, 128), x = cv.getContext('2d'), k = cv.width / 360;
+      const sc = SCENES.build(c.scene, Object.assign({}, c.opts, wallOpts(c)), seedFor(c), { x0: -4, y0: -4, x1: 364, y1: 604 });
+      if (sc.puzzle) {
+        // a puzzle shows the square it picks for pictures, as it starts
+        const cr = sc.crop || { x: 0, y: 120, w: 360, h: 360 }, kk = cv.width / cr.w;
+        x.setTransform(kk, 0, 0, kk, -cr.x * kk, -cr.y * kk);
+        sc.decor(x); sc.draw(x, 0, true);
+        url = cv.toDataURL('image/jpeg', 0.82);
+        thumbs.set(key, url);
+        return url;
+      }
       x.setTransform(k, 0, 0, k, 0, -150 * k);
-      const sc = SCENES.build(c.scene, Object.assign({}, c.opts, wallOpts(c)), c.seed, { x0: -4, y0: -4, x1: 364, y1: 604 });
       sc.decor(x);
       if (c.color) { x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.clean(x, S.colours[c.color]); x.restore(); }
       x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.dirt(x); x.restore();
@@ -280,21 +303,23 @@
     if (!resume) for (let k = 0; k < 3; k++) treasures.push({ kind: 'coin', value: Math.max(2, Math.round(curValue * 0.05)) });
     const f = c.find || DATA.FINDS[c.id], fid = c.findId || c.id;
     if (f && !S.finds[fid]) treasures.push({ kind: 'find', id: fid, emoji: f[0], name: f[1], value: Math.round(curValue * 0.15) });
-    const def = Object.assign({}, c, { opts: Object.assign({}, c.opts, wallOpts(c)) });
-    ENGINE.start(def, { tier: tierOf(fam, c.place), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.robots ? S.helpers : 0, insets, treasures, resume, season: seasonName(), indoor: DATA.isIndoor(c) });
+    const def = Object.assign({}, c, { seed: seedFor(c), opts: Object.assign({}, c.opts, wallOpts(c)) });
+    // no robots for a puzzle: it is done by hand
+    ENGINE.start(def, { tier: tierOf(fam, c.place), paint: c.color ? S.colours[c.color] : null, value: curValue, helpers: S.robots && !c.puzzle ? S.helpers : 0, insets, treasures, resume, season: seasonName(), indoor: DATA.isIndoor(c) });
     setupBots();
     beforePic = ENGINE.picture(96);
     const cvs = $('#cv'); cvs.classList.remove('fadein'); void cvs.offsetWidth; cvs.classList.add('fadein');
     lastMilestone = 0;
     const hint = $('#hint');
-    if (S.touched < 3 || c.verb) { hint.querySelector('span').textContent = 'Drag to ' + (c.verb || DATA.VERBS[fam]); hint.classList.add('on'); } else hint.classList.remove('on');
-    AUDIO.setWork(workSound(fam, tierOf(fam, c.place)));
+    if (c.puzzle) { hint.querySelector('span').textContent = c.how; hint.classList.add('on'); }
+    else if (S.touched < 3 || c.verb) { hint.querySelector('span').textContent = 'Drag to ' + (c.verb || DATA.VERBS[fam]); hint.classList.add('on'); } else hint.classList.remove('on');
+    if (c.puzzle) AUDIO.stopWork(); else AUDIO.setWork(workSound(fam, tierOf(fam, c.place)));
     setProgress(0);
   }
   // the robots can be sent home in the middle of a job, and called back
   function setupBots() {
     const b = $('#btnBots');
-    b.hidden = !S.helpers;
+    b.hidden = !S.helpers || !!cur.puzzle;
     b.classList.toggle('off', !S.robots);
     b.setAttribute('aria-label', S.robots ? 'Send the robots home' : 'Call the robots back');
   }
@@ -322,6 +347,15 @@
   function setupBottom() {
     const fam = cur.family, pl = cur.place, t = tierOf(fam, pl);
     const chip = $('#toolChip');
+    // a puzzle has no tools to pick: the chip asks for a hint instead
+    if (cur.puzzle) {
+      chip.innerHTML = '<span class="bulb" aria-hidden="true">💡</span><span>Hint</span>';
+      chip.setAttribute('aria-label', 'Show a hint');
+      $('#upPill').classList.remove('on');
+      $('#palette').classList.remove('on'); $('#palette').innerHTML = '';
+      return;
+    }
+    chip.setAttribute('aria-label', 'Choose a tool');
     chip.innerHTML = '';
     chip.appendChild(TOOLS.icon(t, 38, cur.color ? S.colours[cur.color] : null));
     const nm = document.createElement('span'); nm.textContent = t.name; chip.appendChild(nm);
@@ -341,6 +375,7 @@
   }
   // pick any tool already owned, from the chip at the bottom
   function openToolPick() {
+    if (cur && cur.puzzle) { AUDIO.soft(); ENGINE.hint(); return; }
     const fam = cur.family, pl = cur.place, pick = $('#toolPick');
     if (pick.classList.contains('on') || tierIdx(fam, pl) < 1) { pick.classList.remove('on'); if (tierIdx(fam, pl) < 1) toast('Buy a better tool to have a choice'); return; }
     pick.innerHTML = '';
@@ -403,6 +438,7 @@
     brush: ['So fluffy!', 'Purr-fect!', 'So soft!'],
     groom: ['Squeaky clean!', 'So fluffy!', 'Good dog!'],
     muck: ['So cosy!', 'Fresh and snug!', 'Lovely!'],
+    think: ['Clever!', 'Well worked out!', 'All in the right place!', 'Lovely thinking!'],
   };
   function finishChore() {
     delete S.wips[cur.id];
@@ -509,7 +545,7 @@
     setTimeout(() => { closePause(); show('title'); renderTitle(); }, 5000);
   }
   function byeHtml() {
-    const n = nextChore(), other = DATA.PLACES.find((p) => p.id !== S.place && owned(p.id) && nextChore(p.id));
+    const n = nextChore(), other = MAIN.find((p) => p.id !== S.place && owned(p.id) && nextChore(p.id));
     let plan;
     if (n) plan = `<b>${n.name}</b>${S.wips[n.id] ? ', half done' : ''}`;
     else if (other) plan = `a few jobs at <b>${placeName(other.id)}</b>`;
@@ -521,6 +557,9 @@
   $('#btnBack').onclick = () => { AUDIO.soft(); leavePlay(); };
   function keepWip() {
     if (!cur || $('#doneOverlay').classList.contains('on')) return;
+    // a puzzle solved a moment ago is done, even if play stops before its
+    // finish card comes up
+    if (cur.puzzle && ENGINE.finishNow()) return;
     const g = ENGINE.snapshot();
     if (!g || ENGINE.progress() <= 0.02) return;
     delete S.wips[cur.id];
@@ -558,8 +597,21 @@
       AUDIO.chime();
       foundBanner(g);
     },
+    onSound: puzzleSound,
     onDone: finishChore,
   });
+  // what the thinking jobs sound like
+  function puzzleSound(k) {
+    if (k === 'pick') AUDIO.pop();
+    else if (k === 'clink') AUDIO.unit('clink');
+    else if (k === 'drop') AUDIO.unit('drop');
+    else if (k === 'nope') AUDIO.nope();
+    else if (k === 'pour') AUDIO.pour();
+    else if (k === 'turn') AUDIO.turn();
+    else if (k === 'happy') AUDIO.unit('collect');
+    else if (k === 'chime') AUDIO.chime();
+    else AUDIO.soft();
+  }
 
   // ------------------------------------------------------------ photo
   // Draw the cottage picture into a PNG and hand it to the share sheet.
@@ -614,7 +666,8 @@
       const got = all.filter((c) => S.finds[c.id]).length;
       const cells = all.map((c) => {
         const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
-        return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : 'Hidden in ' + c.name.replace(/^The /, 'the ')}</span></div>`;
+        const where = p.beta ? `A reward for “${c.name}”` : 'Hidden in ' + c.name.replace(/^The /, 'the ');
+        return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : where}</span></div>`;
       }).join('');
       places += `<div class="findsHead">${placeName(p.id)} · ${got} of ${all.length}</div><div class="findsGrid">${cells}</div>`;
     }
@@ -650,9 +703,13 @@
   $('#sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet') closeSheet(); });
 
   function openShed() {
+    if (here().beta) {
+      openSheet('The shed', `<div class="shedCoins">${coinHtml(S.coins)}</div><div class="setNote">No tools and no robots in the puzzle room: every puzzle here is done by hand, with a little thinking. Stuck? Tap <b>Hint</b> at the bottom of a puzzle.</div>`);
+      return;
+    }
     const rows = [];
     for (const [fam, F] of Object.entries(TOOLS.FAM)) {
-      if (!famUnlocked(fam)) continue;
+      if (F.hands || !famUnlocked(fam)) continue;
       const t = F.tiers[tierIdx(fam)], u = nextUpgrade(fam);
       const dots = F.tiers.map((_, i) => `<i class="${i <= tierIdx(fam) ? 'on' : ''}"></i>`).join('');
       const width = (x) => (x.shape === 'rect' ? x.w : x.r * 2);
@@ -702,10 +759,10 @@
   function nope(b) { AUDIO.soft(); b.classList.add('nope'); setTimeout(() => b.classList.remove('nope'), 400); }
 
   function openJobs(focus) {
-    const n = nextChore();
+    const n = nextChore(), free = here().beta; // puzzles can be taken in any order
     let html = '', lastArea = '';
     const row = (c, doneN) => {
-      const done = !!doneN, isNext = n && n.id === c.id, locked = !done && !isNext;
+      const done = !!doneN, isNext = n && n.id === c.id, locked = !done && !isNext && !free;
       const v = done ? Math.round(c.value * 0.6) : c.value;
       return `<div class="jobRow${locked ? ' locked' : ''}${focus === c.id ? ' focus' : ''}" id="job-${c.id}"><div class="jState">${done ? '✓' : isNext ? '•' : ''}</div>
         <div class="jName">${c.name}<div class="sub">${TOOLS.FAM[c.family].job}${done ? ' · done' + (doneN > 1 ? ' ×' + doneN : '') : ''}</div></div>
@@ -875,9 +932,9 @@
   function friendCol(nick) { let h = 7; for (const ch of nick) h = (h * 31 + ch.codePointAt(0)) % 9973; return FRIEND_COLS[h % FRIEND_COLS.length]; }
   // places open one after another, so a count says which ones
   function friendWhat(m) {
-    const done = DATA.PLACES.slice(0, m.places).map((p) => p.short);
-    if (!done.length) return `Restoring ${DATA.PLACES[0].short}`;
-    if (done.length === DATA.PLACES.length) return `Restored all ${done.length} places`;
+    const done = MAIN.slice(0, m.places).map((p) => p.short);
+    if (!done.length) return `Restoring ${MAIN[0].short}`;
+    if (done.length === MAIN.length) return `Restored all ${done.length} places`;
     return `Restored ${done.join(' and ')}`;
   }
   function togetherHtml(members) {
@@ -937,12 +994,16 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
   function openPlaces() {
-    const cards = DATA.PLACES.map((p) => {
+    // the puzzle room first, so it is easy to find while it is new
+    const cards = DATA.PLACES.filter((p) => p.beta).concat(MAIN).map((p) => {
       const own = owned(p.id), isHere = S.place === p.id;
       const pic = placePic(p.id, own ? partsDone(p.id) : {}, { season: seasonName(), pending: own ? pendingAt(p.id) : {}, decor: own ? S.decor : {}, pct: own ? doneCount(p.id) / p.chores.length : 0, forSale: !own, uid: 'p' });
       const n = p.chores.length, d = doneCount(p.id);
       let sub, action;
-      if (own) {
+      if (p.beta) {
+        sub = `${p.blurb} ${d} of ${n} solved.`;
+        action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
+      } else if (own) {
         const waiting = jobsAt(p.id).filter((j) => !S.sdone[j.id]).length;
         sub = d < n ? `${d} of ${n} jobs done` : waiting ? `Restored · ${waiting} ${DATA.SEASON_NAMES[seasonName()].toLowerCase()} job${waiting > 1 ? 's' : ''} waiting` : 'Restored and tidy';
         action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
@@ -951,8 +1012,8 @@
         sub = ready ? p.blurb : `${p.blurb} For sale once ${placeName(p.needs)} is restored.`;
         action = ready ? `<button class="buy${S.coins >= p.price ? ' can' : ''}" data-buy="${p.id}"><span>Buy</span><span class="price">${coinHtml(p.price)}</span></button>` : '<div class="lock">Later</div>';
       }
-      return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}"><div class="pic"><img alt="" src="${pic}"></div>
-        <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
+      return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}${p.beta ? ' beta' : ''}"><div class="pic"><img alt="" src="${pic}"></div>
+        <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}${p.beta ? ' <span class="betaTag">Beta</span>' : ''}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
     }).join('');
     openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, tools, keepsakes and decorations. Your coins and robots come along everywhere.</div>`, (body) => {
       body.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => goPlace(b.dataset.go));
@@ -1022,7 +1083,7 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startJob: (c) => startChore(c, false),
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
     render: () => renderHome(), save, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
   };
 })();

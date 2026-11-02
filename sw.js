@@ -1,10 +1,11 @@
 // Caches the game so it works offline once it has been opened.
 // Bump CACHE whenever a file changes, or phones keep the old version.
-const CACHE = "ivy-cottage-v18";
+const CACHE = "ivy-cottage-v19";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
   "./js/util.js", "./js/tools.js", "./js/scenes.js", "./js/scenes2.js", "./js/scenes3.js", "./js/scenes4.js", "./js/scenes5.js", "./js/scenes6.js", "./js/scenes7.js", "./js/scenes8.js", "./js/scenes9.js",
-  "./js/data.js", "./js/house.js", "./js/cafe.js", "./js/cove.js", "./js/rescue.js", "./js/audio.js", "./js/engine.js", "./js/main.js",
+  "./js/puzzles.js", "./js/pz-cups.js", "./js/pz-feed.js", "./js/pz-hose.js", "./js/pz-beds.js",
+  "./js/data.js", "./js/house.js", "./js/cafe.js", "./js/cove.js", "./js/rescue.js", "./js/beta.js", "./js/audio.js", "./js/engine.js", "./js/main.js",
 ];
 // how long to wait for the network before falling back to the cached copy
 const PATIENCE = 2500;

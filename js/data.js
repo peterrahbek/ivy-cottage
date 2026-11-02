@@ -9,6 +9,7 @@ const DATA = (() => {
     inside: 'Inside the café', front: 'The café front', terrace: 'The terrace',
     beach: 'The beach', hutarea: 'The beach hut', sea: 'By the sea', van: 'The camper van', lighthouse: 'The lighthouse',
     kennels: 'The kennels', farmyard: 'The farmyard', dogwalk: 'The dog walk', barn: 'The barn', farmhouse: 'The farmhouse', paddock: 'The paddock', pool: 'The seal pool',
+    fromCafe: 'From the café', fromRescue: 'From the rescue', fromGarden: 'From the garden',
   };
 
   // part = which piece of the place's picture this chore restores
@@ -101,6 +102,16 @@ const DATA = (() => {
     { id: 'rescue-sign', area: 'farmyard', part: 'sign', name: 'Paint the rescue sign', scene: 'sign', opts: { title: 'RESCUE', sub: '· BLUEBELL FARM ·', icon: 'paw', farm: true }, seed: 517, color: 'rescueSign' },
   ];
 
+  // The puzzle room, a beta place open from the start: jobs with a little
+  // thinking instead of a tool (js/puzzles.js). No machines, no robots, a
+  // new layout every time, and they can be taken in any order.
+  const BETA_CHORES = [
+    { id: 'beta-cups', area: 'fromCafe', part: 'cups', name: 'Put the cups away', scene: 'cups', opts: {}, seed: 601, how: 'Each cup to its own shelf and colour' },
+    { id: 'beta-feed', area: 'fromRescue', part: 'feed', name: 'Feeding time', scene: 'feeding', opts: {}, seed: 602, how: 'Feed everyone what the chart says' },
+    { id: 'beta-beds', area: 'fromRescue', part: 'beds', name: 'Who sleeps where?', scene: 'beds', opts: {}, seed: 604, how: 'Read the notes, then tuck everyone in' },
+    { id: 'beta-hose', area: 'fromGarden', part: 'hose', name: 'Water the greenhouse', scene: 'hose', opts: {}, seed: 603, how: 'Tap the pipes to turn them' },
+  ];
+
   // Jobs that only turn up in the seasons, for variety: planting and
   // building around the cottage, serving at the café, a seal at the cove.
   // They have no part in the picture.
@@ -133,6 +144,7 @@ const DATA = (() => {
     cafeFloor: 'dust', awning: 'scrub', sign: 'paint', tables: 'wipe', counter: 'wipe', fridge: 'arrange', lights: 'arrange',
     dog: 'groom', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
     coffee: 'brew', serve: 'arrange', seal: 'feed', bowls: 'feed', walk: 'walk', cat: 'brush', hutch: 'muck',
+    cups: 'think', feeding: 'think', hose: 'think', beds: 'think',
   };
   const familyOf = (scene) => FAMILY_OF[scene];
 
@@ -146,11 +158,15 @@ const DATA = (() => {
   function cafeValue(i) { return Math.round(150 * Math.pow(1.1, i)); }
   function coveValue(i) { return Math.round(260 * Math.pow(1.08, i)); }
   function rescueValue(i) { return Math.round(380 * Math.pow(1.07, i)); }
+  // puzzles pay like a job in the middle of the cottage: worth doing, but
+  // never a shortcut past the other places
+  function betaValue(i) { return Math.round(70 * Math.pow(1.15, i)); }
 
   CHORES.forEach((c, i) => { c.index = i; c.place = 'cottage'; c.family = familyOf(c.scene); c.value = choreValue(i); });
   CAFE_CHORES.forEach((c, i) => { c.index = i; c.place = 'cafe'; c.family = familyOf(c.scene); c.value = cafeValue(i); });
   COVE_CHORES.forEach((c, i) => { c.index = i; c.place = 'cove'; c.family = c.family || familyOf(c.scene); c.value = coveValue(i); });
   RESCUE_CHORES.forEach((c, i) => { c.index = i; c.place = 'rescue'; c.family = c.family || familyOf(c.scene); c.value = rescueValue(i); });
+  BETA_CHORES.forEach((c, i) => { c.index = i; c.place = 'beta'; c.family = familyOf(c.scene); c.value = betaValue(i); c.puzzle = true; });
   EXTRAS.forEach((c) => { c.place = c.place || 'cottage'; c.family = familyOf(c.scene); c.extra = true; });
 
   // first cottage chore that uses each family sets the price level of its tools
@@ -380,10 +396,12 @@ const DATA = (() => {
     'rescue-pond': ['🦆', 'A duckling'], 'rescue-seal': ['🐚', 'A pearly shell'], 'rescue-floor': ['🏷️', 'An old name tag'],
     'rescue-veg': ['🥬', 'The first lettuce'], 'rescue-meadow': ['🌼', 'A daisy chain'], 'rescue-door': ['📜', 'The farm\'s old deed'],
     'rescue-window': ['📷', 'A photo of a happy adoption'], 'rescue-sign': ['🔨', 'Grandad\'s old hammer'],
+    'beta-cups': ['🥐', 'A croissant for later'], 'beta-feed': ['🍖', 'A bone-shaped biscuit'], 'beta-hose': ['🌱', 'A seedling of your own'],
+    'beta-beds': ['🌙', 'A little moon night-light'],
   };
 
   // what you do in each kind of job, for the first-time hint
-  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog', brew: 'pour', feed: 'feed', walk: 'walk', brush: 'brush', muck: 'muck out' };
+  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog', brew: 'pour', feed: 'feed', walk: 'walk', brush: 'brush', muck: 'muck out', think: 'think' };
 
   // decorations, bought in the shed once a few jobs are done at that place
   const DECOR = [
@@ -448,17 +466,19 @@ const DATA = (() => {
   ];
   const DECOR_UNLOCK = 6;
 
-  // the places you can own; the picture of each is drawn by HOUSE, CAFE, COVE or RESCUE
+  // the places you can own; the picture of each is drawn by HOUSE, CAFE, COVE, RESCUE or BETA
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
     { id: 'cafe', name: 'Marigold Café', short: 'the café', toolPrice: 2, blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
     { id: 'cove', name: 'Seashell Cove', short: 'the cove', toolPrice: 3, blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
     { id: 'rescue', name: 'Bluebell Rescue', short: 'the rescue', toolPrice: 4, blurb: 'An old farm that takes in dogs, cats, rabbits and the odd seal pup. Feed them, walk them, brush them and mend the place.', price: 30000, needs: 'cove', chores: RESCUE_CHORES, decor: RESCUE_DECOR, done: 'The animals are at home again', lights: 'r-lights' },
+    // open from the start and outside the order above: never bought, never in the seasons
+    { id: 'beta', name: 'The Puzzle Room', short: 'the puzzle room', beta: true, blurb: 'New kinds of jobs to try: no tools, just a little thinking. Each one comes out different every time.', price: 0, chores: BETA_CHORES, decor: [], done: 'Every puzzle is solved' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
-    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS, DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, DECOR_UNLOCK, SEASON_NAMES,
+    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS, DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, DECOR_UNLOCK, SEASON_NAMES,
     seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();
