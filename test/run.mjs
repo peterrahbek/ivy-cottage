@@ -2,8 +2,9 @@
 // Plays a puzzle scene (or draws a place picture) in headless Chrome and
 // prints a JSON report; screenshots go to --out (default: a new temp folder).
 //
-//   node test/run.mjs puzzle js/pz-cups.js cups [--seeds 12] [--out dir]
+//   node test/run.mjs puzzle js/pz-cups.js cups [--seeds 12] [--opts '{"where":"pottery"}'] [--out dir]
 //   node test/run.mjs place js/beta.js BETA cups,feed,hose,beds [--out dir]
+//   node test/run.mjs scene stones '{"shape":"yard"}' [--seed 5] [--out dir]
 //
 // The puzzle run checks the contract in js/puzzles.js: seed 1 is played with
 // real touches through Chrome's input (half, then saved, loaded into a fresh
@@ -47,13 +48,14 @@ async function gesture(b, g) {
 
 async function puzzle() {
   const seeds = +opt('seeds', 12);
-  const report = { file, kind: name, out, problems: [], seed1: {}, seeds: [], shots: [] };
+  const report = { file, kind: name, opts: opt('opts', '') || undefined, out, problems: [], seed1: {}, seeds: [], shots: [] };
   const problem = (s) => { if (!report.problems.includes(s)) report.problems.push(s); };
   const b = await launch();
   try {
     await phone(b);
     const url = (seed, state) => pathToFileURL(join(root, 'test/puzzle.html')).href +
-      `?file=${encodeURIComponent('../' + file)}&kind=${encodeURIComponent(name)}&seed=${seed}` + (state ? '&state=' + encodeURIComponent(JSON.stringify(state)) : '');
+      `?file=${encodeURIComponent('../' + file)}&kind=${encodeURIComponent(name)}&seed=${seed}` + (opt('opts', '') ? '&opts=' + encodeURIComponent(opt('opts', '')) : '') +
+      (state ? '&state=' + encodeURIComponent(JSON.stringify(state)) : '');
 
     // seed 1 with real touches
     await open(b, url(1)); await sleep(500);
@@ -145,6 +147,25 @@ async function place() {
   return report;
 }
 
-const report = mode === 'place' ? await place() : mode === 'puzzle' ? await puzzle() : { problems: ['usage: run.mjs puzzle <file> <kind> | place <file> <obj> <parts>'] };
+// a tool job (not a puzzle) drawn the way the engine layers it: dirty, then clean
+async function scene() {
+  const kind = file, opts = name && !name.startsWith('--') ? name : '{}', seed = +opt('seed', 5);
+  const report = { kind, opts: JSON.parse(opts), seed, out, problems: [], shots: [] };
+  const b = await launch();
+  try {
+    await b.send('Page.enable'); await b.send('Runtime.enable');
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1180, height: 680, deviceScaleFactor: 1, mobile: false });
+    await open(b, pathToFileURL(join(root, 'test/scene.html')).href + `?kind=${encodeURIComponent(kind)}&opts=${encodeURIComponent(opts)}&seed=${seed}&paint=${encodeURIComponent(opt('paint', ''))}`);
+    await sleep(500);
+    const r = await js(b, '({ errors: H.errors, info: H.info })');
+    report.problems.push(...r.errors);
+    report.info = r.info;
+    report.shots.push(await shotTo(b, join(out, `scene-${kind}-${seed}.png`)));
+  } catch (e) { report.problems.push('bench: ' + e.message); }
+  finally { b.close(); }
+  return report;
+}
+
+const report = mode === 'place' ? await place() : mode === 'puzzle' ? await puzzle() : mode === 'scene' ? await scene() : { problems: ['usage: run.mjs puzzle <file> <kind> | place <file> <obj> <parts> | scene <kind> <opts json>'] };
 console.log(JSON.stringify(report, null, 1));
 process.exit(report.problems.length ? 1 : 0);

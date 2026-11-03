@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {} };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {}, goodnight: true };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -33,6 +33,7 @@
     if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
     out.cloud = out.cloud || {};
     if (typeof out.pauses !== 'boolean') out.pauses = true;
+    if (typeof out.goodnight !== 'boolean') out.goodnight = true;
     if (typeof out.jobsDone !== 'number') out.jobsDone = Object.values(out.done).reduce((a, b) => a + b, 0) + Object.keys(out.sdone).length;
     if (!out.owned[out.place]) out.place = 'cottage';
     // seasons used to be one fixed list of eight; the varied ones start afresh
@@ -91,8 +92,25 @@
   const placeName = (pl = S.place) => (pl === 'cottage' ? cottageName() : DATA.placeOf(pl).name);
   const seasonJobs = () => DATA.seasonJobs(S.seasonNo, restoredPlaces());
   const jobsAt = (pl) => seasonJobs().filter((j) => j.place === pl);
+  // a restored place with no jobs this season is resting (the season budget, data.js)
+  const resting = (pl) => !DATA.placeOf(pl).beta && S.seasonNo > 0 && owned(pl) && restored(pl) && !jobsAt(pl).length;
+  // after nine in the evening the thinking jobs come last in the season (never skipped)
+  const seasonOrder = (pl) => {
+    const js = jobsAt(pl);
+    return lateHour() ? js.filter((j) => j.family !== 'think').concat(js.filter((j) => j.family === 'think')) : js;
+  };
   const nextRestore = (pl) => DATA.placeOf(pl).chores.find((c) => !S.done[c.id]);
-  const nextChore = (pl = S.place) => nextRestore(pl) || (S.seasonNo > 0 ? jobsAt(pl).find((j) => !S.sdone[j.id]) : undefined);
+  const nextChore = (pl = S.place) => nextRestore(pl) || (S.seasonNo > 0 ? seasonOrder(pl).find((j) => !S.sdone[j.id]) : undefined);
+  // the next place round the village with something to do, after the one you
+  // are at, so a season is a walk round the places rather than always the cottage first
+  function nextPlaceWithJobs(from = S.place) {
+    const i = MAIN.findIndex((p) => p.id === from), n = MAIN.length;
+    for (let k = 1; k <= n; k++) {
+      const p = MAIN[(i + k + n) % n];
+      if (p.id !== from && owned(p.id) && nextChore(p.id)) return p;
+    }
+    return null;
+  }
   const seasonName = () => (S.seasonNo ? DATA.seasonOf(S.seasonNo) : 'spring');
   // the tool families a place has had use for so far
   const famUnlocked = (fam, pl = S.place) => {
@@ -107,7 +125,7 @@
   // then a few seasons of looking after it (a whole year for the later ones),
   // and the coins. Seasons only turn when their jobs are done, never on their
   // own, so the wait is always in your own hands and nothing is ever lost.
-  const NEWER = new Set(['canal', 'books']); // older saves wait for these only
+  const NEWER = new Set(['canal', 'books', 'pottery', 'halt']); // older saves wait for these only
   const yearOf = (n) => 1 + Math.floor(n / 4);
   const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
   const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
@@ -144,6 +162,8 @@
     if (id === 'glasshouse' && typeof GLASSHOUSE !== 'undefined') return GLASSHOUSE.render(st, S.colours, opts);
     if (id === 'canal' && typeof CANAL !== 'undefined') return CANAL.render(st, S.colours, opts);
     if (id === 'books' && typeof BOOKS !== 'undefined') return BOOKS.render(st, S.colours, opts);
+    if (id === 'pottery' && typeof POTTERY !== 'undefined') return POTTERY.render(st, S.colours, opts);
+    if (id === 'halt' && typeof HALT !== 'undefined') return HALT.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -195,9 +215,11 @@
     for (const el of document.querySelectorAll('.screen')) el.classList.toggle('on', el.id === id);
   }
 
-  const isEvening = () => { const h = new Date().getHours(); return S.evening && (h >= 20 || h < 6); };
+  let fakeHour = null; // test hook: __ivy.setHour(h)
+  const hourNow = () => (fakeHour != null ? fakeHour : new Date().getHours());
+  const isEvening = () => { const h = hourNow(); return S.evening && (h >= 20 || h < 6); };
   // after nine in the evening, stopping is the main button
-  const lateHour = () => { const h = new Date().getHours(); return h >= 21 || h < 5; };
+  const lateHour = () => { const h = hourNow(); return h >= 21 || h < 5; };
   const cottageName = () => S.name || 'Ivy Cottage';
 
   function coinHtml(n) { return `<i class="coin"></i><span>${U.fmt(n)}</span>`; }
@@ -218,10 +240,11 @@
     }
     freshPart = null;
     $('#homeCoins').innerHTML = coinHtml(S.coins);
-    const jobs = jobsAt(pl.id);
+    const jobs = jobsAt(pl.id), quiet = resting(pl.id);
     if (!restored(pl.id) || S.seasonNo === 0 || !jobs.length) {
       $('#restoredBar').style.width = (pct * 100).toFixed(1) + '%';
       if (pl.beta) $('#restoredTxt').textContent = pct >= 1 ? pl.done : `${doneCount()} of ${pl.chores.length} puzzles solved`;
+      else if (quiet) $('#restoredTxt').textContent = `All quiet at ${pl.id === 'cottage' ? placeName() : pl.short} this ${seasonName()}`;
       else $('#restoredTxt').textContent = pct >= 1 ? `${placeName()} is restored` : `${doneCount()} of ${pl.chores.length} jobs done`;
     } else {
       const d = jobs.filter((j) => S.sdone[j.id]).length;
@@ -233,8 +256,8 @@
     AUDIO.birds((seasonName() === 'spring' || seasonName() === 'summer') && !isEvening());
     const n = nextChore();
     const card = $('#nextCard');
-    // season jobs still waiting somewhere else
-    const elsewhere = S.seasonNo > 0 && MAIN.find((p) => p.id !== pl.id && owned(p.id) && nextChore(p.id));
+    // season jobs still waiting somewhere else: the next place round the village
+    const elsewhere = S.seasonNo > 0 && nextPlaceWithJobs(pl.id);
     if (n) {
       const fam = TOOLS.FAM[n.family];
       const where = n.seasonNo ? DATA.SEASON_NAMES[n.season] : DATA.AREAS[n.area];
@@ -259,8 +282,8 @@
     } else if (elsewhere) {
       card.dataset.job = '';
       const what = nextRestore(elsewhere.id) ? 'Jobs are waiting' : `${DATA.SEASON_NAMES[seasonName()]} jobs are waiting`;
-      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">All tidy here</div><div class="nextName">${what} at ${placeName(elsewhere.id)}</div>
-        <div class="nextMeta">Everything here is done for now.</div></div><button class="go" id="goBtn">Go there</button>`;
+      card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${quiet ? `Quiet this ${seasonName()}` : 'All tidy here'}</div><div class="nextName">${what} at ${placeName(elsewhere.id)}</div>
+        <div class="nextMeta">${quiet ? 'Nothing needs doing here this season.' : 'Everything here is done for now.'}</div></div><button class="go" id="goBtn">Go there</button>`;
       $('#goBtn').onclick = () => { AUDIO.pop(); goPlace(elsewhere.id); };
     } else {
       card.dataset.job = '';
@@ -330,7 +353,7 @@
   }
 
   // ---------------------------------------------------------------- play
-  let cur = null, curValue = 0, earnedThis = 0, shownCoins = 0, isReplay = false;
+  let cur = null, curValue = 0, earnedThis = 0, shownCoins = 0, isReplay = false, justOne = false;
   let foundThis = null, beforePic = null, afterPic = null;
   function startChore(c, replay) {
     AUDIO.birds(false); foundThis = null;
@@ -487,6 +510,7 @@
     groom: ['Squeaky clean!', 'So fluffy!', 'Good dog!'],
     muck: ['So cosy!', 'Fresh and snug!', 'Lovely!'],
     think: ['Clever!', 'Well worked out!', 'All in the right place!', 'Lovely thinking!'],
+    craft: ['Beautiful!', 'Made by hand!', 'Lovely work!', 'So pretty!'],
   };
   function finishChore() {
     delete S.wips[cur.id];
@@ -503,7 +527,9 @@
     const o = $('#doneOverlay');
     $('#doneTitle').textContent = U.pick(Math.random, DONE_WORDS[cur.family] || DONE_WORDS.tidy);
     $('#doneBtn').textContent = 'Back to ' + here().short;
-    $('#doneBtn').className = lateHour() ? 'go soft' : 'go'; $('#doneStop').className = lateHour() ? 'go' : 'go soft';
+    // after nine, or after "Just one job", stopping is the main button
+    const stopFirst = lateHour() || justOne;
+    $('#doneBtn').className = stopFirst ? 'go soft' : 'go'; $('#doneStop').className = stopFirst ? 'go' : 'go soft';
     $('#doneName').textContent = cur.name;
     const ba = $('#doneBA');
     afterPic = ENGINE.picture(96);
@@ -582,7 +608,10 @@
   $('#pauseStop').onclick = () => { AUDIO.soft(); stopNow(); };
   // stopping: one line on what comes next time (a plan quiets the pull of an
   // unfinished job), then the sound fades and the title screen comes back
+  let stoppedNow = false; // once stopped, the title does not offer "Just one job" again
   function stopNow() {
+    stoppedNow = true;
+    if (lateHour() && S.goodnight) { goodnight(); return; }
     const el = $('#pause');
     clearTimeout(breathT);
     el.querySelector('.breathTxt').textContent = ''; el.querySelector('.orb').className = 'orb';
@@ -592,15 +621,75 @@
     AUDIO.volume(0); AUDIO.birds(false);
     setTimeout(() => { closePause(); show('title'); renderTitle(); }, 5000);
   }
+  // what comes next time, in a few words
+  function planHtml() {
+    const n = here().beta ? null : nextChore(), other = nextPlaceWithJobs();
+    if (n) return `<b>${n.name}</b>${S.wips[n.id] ? ', half done' : ''}`;
+    if (other) return `a few jobs at <b>${placeName(other.id)}</b>`;
+    return `<b>${DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)]}</b> arrives, with new jobs`;
+  }
   function byeHtml() {
-    const n = nextChore(), other = MAIN.find((p) => p.id !== S.place && owned(p.id) && nextChore(p.id));
-    let plan;
-    if (n) plan = `<b>${n.name}</b>${S.wips[n.id] ? ', half done' : ''}`;
-    else if (other) plan = `a few jobs at <b>${placeName(other.id)}</b>`;
-    else plan = `<b>${DATA.SEASON_NAMES[DATA.seasonOf(S.seasonNo + 1)]}</b> arrives, with new jobs`;
-    const h = new Date().getHours();
+    const h = hourNow();
     const bye = lateHour() ? 'Sleep well.' : h >= 17 ? 'Have a lovely evening.' : 'Enjoy the rest of your day.';
-    return `<div class="byeNext">Next time: ${plan}</div>Everything will be right here when you come back. ${bye}`;
+    return `<div class="byeNext">Next time: ${planHtml()}</div>Everything will be right here when you come back. ${bye}`;
+  }
+
+  // Goodnight: after nine, stopping ends on the place in the evening. Its
+  // lights go out one by one, each with a soft falling note, while the music
+  // fades; then the plan for next time and "Sleep well." About six seconds,
+  // no reward and nothing to count, and it can be switched off in Settings.
+  let gnTimers = [];
+  // the lights in a place picture at night: whatever glows in its night layer,
+  // grouped into at most six lamps or windows, left to right
+  function lightGroups(svg) {
+    const night = svg.querySelector('g.night');
+    if (!night) return [];
+    const warm = /glow|#ffd98a|#ffe2a0|#ffe9b0|#fff3c4|#ffefb0/i;
+    const els = [...night.querySelectorAll('*')].filter((e) => !e.closest('mask') && e.tagName !== 'mask' && warm.test(e.getAttribute('fill') || ''));
+    const pts = [];
+    for (const e of els) { try { const b = e.getBBox(); if (b.width * b.height < 400 * 540 * 0.5) pts.push({ e, x: b.x + b.width / 2, y: b.y + b.height / 2 }); } catch (_) {} }
+    const groups = [];
+    for (const p of pts.sort((a, b) => a.x - b.x)) {
+      const g = groups.find((q) => Math.abs(q.x - p.x) < 46 && Math.abs(q.y - p.y) < 70);
+      if (g) { g.els.push(p.e); g.x = (g.x * (g.els.length - 1) + p.x) / g.els.length; } else groups.push({ x: p.x, y: p.y, els: [p.e] });
+    }
+    groups.sort((a, b) => a.x - b.x);
+    while (groups.length > 6) {
+      let best = 0;
+      for (let i = 1; i < groups.length - 1; i++) if (groups[i + 1].x - groups[i].x < groups[best + 1].x - groups[best].x) best = i;
+      const [a, b] = groups.splice(best, 2);
+      groups.splice(best, 0, { x: (a.x + b.x) / 2, y: a.y, els: a.els.concat(b.els) });
+    }
+    return groups.map((g) => g.els);
+  }
+  function goodnight() {
+    gnTimers.forEach(clearTimeout); gnTimers = [];
+    clearTimeout(breathT); closePause();
+    const el = $('#goodnight'), pl = here();
+    el.querySelector('.gnPic').innerHTML = renderPlace(pl.id, partsDone(pl.id), { season: seasonName(), pending: pendingAt(pl.id), decor: decorAt(pl.id), pct: doneCount() / pl.chores.length, night: true, uid: 'gn' });
+    el.querySelector('.gnNext').innerHTML = `Next time: ${planHtml()}`;
+    el.querySelector('.gnText').classList.remove('on');
+    el.classList.add('on');
+    AUDIO.birds(false); AUDIO.fade(5);
+    const svg = el.querySelector('svg');
+    const groups = svg ? lightGroups(svg) : [];
+    let dim = null;
+    if (svg) {
+      dim = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      dim.setAttribute('width', '400'); dim.setAttribute('height', '540'); dim.setAttribute('fill', '#0c1230'); dim.setAttribute('class', 'gnDim');
+      svg.appendChild(dim);
+    }
+    const steps = Math.max(1, groups.length);
+    el.dataset.lights = groups.length;
+    groups.forEach((g, i) => gnTimers.push(setTimeout(() => {
+      g.forEach((e) => e.classList.add('gnOff'));
+      if (dim) dim.style.opacity = (0.42 * (i + 1)) / steps;
+      AUDIO.lightOff(i);
+    }, 700 + i * 600)));
+    if (!groups.length && dim) gnTimers.push(setTimeout(() => { dim.style.opacity = 0.42; }, 700));
+    const outAt = 700 + steps * 600;
+    gnTimers.push(setTimeout(() => el.querySelector('.gnText').classList.add('on'), Math.min(outAt, 3600)));
+    gnTimers.push(setTimeout(() => { el.classList.remove('on'); show('title'); renderTitle(); }, Math.max(6000, outAt + 1800)));
   }
   $('#btnBack').onclick = () => { AUDIO.soft(); leavePlay(); };
   function keepWip() {
@@ -616,6 +705,7 @@
     while (ids.length > 5) delete S.wips[ids.shift()];
   }
   function leavePlay() {
+    justOne = false;
     keepWip();
     ENGINE.stop(); AUDIO.stopWork(); save();
     show('home'); renderHome();
@@ -816,7 +906,7 @@
         <div class="jName">${c.name}<div class="sub">${TOOLS.FAM[c.family].job}${done ? ' · done' + (doneN > 1 ? ' ×' + doneN : '') : ''}</div></div>
         ${locked ? '<div class="lock">Later</div>' : `<button class="jGo" data-id="${c.id}">${done ? 'Again' : 'Start'} ${coinHtml(v)}</button>`}</div>`;
     };
-    const sj = jobsAt(S.place), list = here().chores;
+    const sj = seasonOrder(S.place), list = here().chores;
     if (sj.length) {
       html += `<div class="jobArea">${DATA.SEASON_NAMES[seasonName()]}</div>`;
       for (const j of sj) html += row(j, S.sdone[j.id]);
@@ -843,6 +933,7 @@
       <label class="setRow nameRow"><span>Name of the cottage</span><input type="text" id="setName" maxlength="22" placeholder="Ivy Cottage" value="${(S.name || '').replace(/"/g, '&quot;')}"></label>
       <label class="setRow"><span>Evening light after 8 pm</span><input type="checkbox" id="setEvening" ${S.evening ? 'checked' : ''}></label>
       <label class="setRow"><span>Suggest a pause now and then</span><input type="checkbox" id="setPauses" ${S.pauses ? 'checked' : ''}></label>
+      <label class="setRow"><span>Goodnight lights after 9 pm</span><input type="checkbox" id="setGoodnight" ${S.goodnight ? 'checked' : ''}></label>
       <div class="setNote">Tip: on iPhone, tap Share and then <b>Add to Home Screen</b> to play full screen and offline. Safari and the Home Screen app keep separate saves; move yours with a save code.</div>
       <div class="codeRow"><button class="closeBtn" id="setExport">Copy offline save code</button><button class="closeBtn" id="setImport">Paste save code</button></div>
       <textarea id="setCode" rows="3" placeholder="Paste a save code here" hidden></textarea>
@@ -859,6 +950,7 @@
       body.querySelector('#setName').oninput = (e) => { S.name = e.target.value.trim().slice(0, 22); save(); };
       body.querySelector('#setEvening').onchange = (e) => { S.evening = e.target.checked; save(); };
       body.querySelector('#setPauses').onchange = (e) => { S.pauses = e.target.checked; save(); };
+      body.querySelector('#setGoodnight').onchange = (e) => { S.goodnight = e.target.checked; save(); };
       const codeBox = body.querySelector('#setCode'), loadBtn = body.querySelector('#setLoad');
       body.querySelector('#setExport').onclick = () => {
         const code = 'IVY1:' + btoa(unescape(encodeURIComponent(JSON.stringify(Object.assign({}, S, { wips: {} })))));
@@ -934,7 +1026,7 @@
   // friends list. The round number tells the cloud copy of the old game apart,
   // so it is never picked up again by mistake.
   function newGame() {
-    const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, evening: S.evening, pauses: S.pauses, name: S.name, cloud: S.cloud, round: (S.round || 1) + 1 };
+    const keep = { sfx: S.sfx, music: S.music, musicVol: S.musicVol, evening: S.evening, pauses: S.pauses, goodnight: S.goodnight, name: S.name, cloud: S.cloud, round: (S.round || 1) + 1 };
     S = Object.assign(fresh(), keep);
     save(); renderHome();
     cloudPush();
@@ -1054,7 +1146,8 @@
         action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
       } else if (own) {
         const waiting = jobsAt(p.id).filter((j) => !S.sdone[j.id]).length;
-        sub = d < n ? `${d} of ${n} jobs done` : waiting ? `Restored · ${waiting} ${DATA.SEASON_NAMES[seasonName()].toLowerCase()} job${waiting > 1 ? 's' : ''} waiting` : 'Restored and tidy';
+        sub = d < n ? `${d} of ${n} jobs done` : waiting ? `Restored · ${waiting} ${DATA.SEASON_NAMES[seasonName()].toLowerCase()} job${waiting > 1 ? 's' : ''} waiting`
+          : resting(p.id) ? `Restored · quiet this ${seasonName()}` : 'Restored and tidy';
         action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
       } else {
         const ready = opened(p);
@@ -1062,7 +1155,7 @@
         action = ready ? `<button class="buy${S.coins >= p.price ? ' can' : ''}" data-buy="${p.id}"><span>Buy</span><span class="price">${coinHtml(p.price)}</span></button>` : '<div class="lock">Later</div>';
       }
       return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}${p.beta ? ' beta' : ''}"><div class="pic"><img alt="" src="${pic}"></div>
-        <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}${p.beta ? ' <span class="betaTag">Beta</span>' : ''}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
+        <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}${p.beta ? ' <span class="betaTag">Beta</span>' : ''}${own && !p.beta && nextChore(p.id) ? ' <i class="jobDot" title="Jobs waiting"></i>' : ''}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
     }).join('');
     openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, tools, keepsakes and decorations. Your coins and robots come along everywhere. New places open as the years go by: a season only turns when its jobs are done, never on its own.</div>`, (body) => {
       body.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => goPlace(b.dataset.go));
@@ -1092,6 +1185,15 @@
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const tip = $('#homeTip');
     if (tip) tip.hidden = !(ios && !standalone);
+    // in the evening: one job and then stop
+    $('#justOne').hidden = stoppedNow || !(eveningHour() && oneJob());
+  }
+  const eveningHour = () => { const h = hourNow(); return h >= 20 || h < 6; };
+  // the job "Just one job" starts: the next one here, or round the village
+  function oneJob() {
+    let pl = S.place, n = here().beta ? null : nextChore(pl);
+    if (!n) { const p = nextPlaceWithJobs(pl); if (p) { pl = p.id; n = nextChore(pl); } }
+    return n ? { pl, n } : null;
   }
   renderTitle();
   cloudPull();
@@ -1100,6 +1202,16 @@
     AUDIO.pop();
     $('#titleScene').innerHTML = '';
     show('home'); renderHome();
+  });
+  $('#justOne').addEventListener('click', (e) => {
+    e.stopPropagation();
+    AUDIO.volume(S.musicVol); AUDIO.unlock(); AUDIO.set('sfx', S.sfx); AUDIO.set('music', S.music);
+    AUDIO.pop();
+    $('#titleScene').innerHTML = '';
+    const o = oneJob();
+    if (o && o.pl !== S.place) { S.place = o.pl; save(); }
+    show('home'); renderHome();
+    if (o) { startChore(o.n, false); justOne = true; }
   });
   // iOS only counts touchend and click as a gesture that may wake the sound up
   for (const ev of ['pointerdown', 'touchend', 'click']) document.addEventListener(ev, () => AUDIO.unlock(), { passive: true });
@@ -1132,7 +1244,8 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
     render: () => renderHome(), save, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
+    setHour(h) { fakeHour = h; }, renderTitle, nextChore, nextPlaceWithJobs, resting, stopNow, oneJob,
   };
 })();

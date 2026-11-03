@@ -7,8 +7,13 @@
 // new jobs, the glasshouse in every season, the newer puzzles at the older
 // places, how new places open (an older save, a new game, a year of waiting
 // for the canal), the canal and the bookshop in every season, and every
-// other job in the game straight through. Prints a JSON report; pictures go
-// to --out.
+// other job in the game straight through. Since v22 also: the pottery and the
+// station bought by the opening rule and seen in every season, their puzzles
+// (and the one made by hand) played in place, the newer puzzles at the older
+// places, older saves planted for a page load, the season budget (no season
+// past 37 jobs, places taking turns), the walk round the village, the evening
+// (thinking jobs last, Goodnight, Just one job) and the money a year brings in
+// with 7, 9, 10 and 17 places. Prints a JSON report; pictures go to --out.
 //
 //   node test/game.mjs [--out dir]
 
@@ -152,10 +157,10 @@ try {
   // the puzzles out in the places: each is the next job once the jobs before
   // it are done, started from the next-job card and played with real touches
   report.placed = [];
-  for (const id of ['cafe-cups', 'rescue-feed', 'rescue-beds', 'gh-water', 'gh-cutting', 'canal-hold', 'books-shelves']) {
+  for (const id of ['cafe-cups', 'rescue-feed', 'rescue-beds', 'gh-water', 'gh-cutting', 'canal-hold', 'books-shelves', 'pot-throw', 'pot-glaze', 'pot-firing', 'halt-lost', 'halt-parcels', 'halt-shelves']) {
     const c = await js(b, `(() => { const c = DATA.PLACES.flatMap((p) => p.chores).find((x) => x.id === '${id}'); return c && { place: c.place, index: c.index, value: c.value, puzzle: !!c.puzzle, family: c.family }; })()`);
     if (!c) { problem(`${id}: not in any place`); continue; }
-    if (!c.puzzle || c.family !== 'think') problem(`${id}: not a puzzle in its place`);
+    if (!c.puzzle || !['think', 'craft'].includes(c.family)) problem(`${id}: not a puzzle in its place`);
     await js(b, `(() => { const S = __ivy.S, p = DATA.placeOf('${c.place}'); S.owned['${c.place}'] = 1; for (const x of p.chores) { if (x.index < ${c.index}) S.done[x.id] = 1; else delete S.done[x.id]; delete S.wips[x.id]; } __ivy.save(); __ivy.goPlace('${c.place}'); })()`);
     await sleep(1200);
     const card = await js(b, `({ job: document.querySelector('#nextCard').dataset.job, text: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' '), pic: !!(document.querySelector('#nextCard .nextPic img') || {}).src })`);
@@ -165,6 +170,7 @@ try {
     await js(b, `document.querySelector('#goBtn').click()`); await sleep(900);
     const hud = await js(b, `({ chip: document.querySelector('#toolChip').textContent, bots: document.querySelector('#btnBots').hidden, hint: document.querySelector('#hint span').textContent, puzzle: !!__ivy.ENGINE.scene.puzzle })`);
     if (!hud.puzzle || !hud.chip.includes('Hint') || !hud.bots) problem(`${id}: does not play as a puzzle (${JSON.stringify(hud)})`);
+    await pic(b, `placed-${id}-start`);
     for (const g of await js(b, '__ivy.ENGINE.scene.debugPlan()')) await gesture(b, g);
     await sleep(3000);
     await pic(b, `placed-${id}-done`);
@@ -223,11 +229,13 @@ try {
 
   // the newer puzzles turn up in the seasons at the older places too
   report.extraPuzzles = [];
-  for (const [id, place] of [['x-cove-pack', 'cove'], ['x-cottage-books', 'cottage']]) {
-    const j = await js(b, `(() => { for (let n = 1; n <= 24; n++) { const j = DATA.seasonJobs(n, ['cottage', 'cove']).find((x) => x.base === '${id}'); if (j) return { n, id: j.id, puzzle: !!j.puzzle, family: j.family, opts: j.opts }; } return null; })()`);
+  for (const [id, place] of [['x-cove-pack', 'cove'], ['x-cottage-books', 'cottage'], ['x-cafe-owners', 'cafe'], ['x-rescue-owners', 'rescue'], ['x-books-post', 'books'],
+    ['x-cottage-seek', 'cottage'], ['x-cafe-seek', 'cafe'], ['x-books-seek', 'books'], ['x-rescue-seek', 'rescue']]) {
+    const pls = JSON.stringify(place === 'cottage' ? ['cottage', 'cove'] : ['cottage', place]);
+    const j = await js(b, `(() => { for (let n = 1; n <= 24; n++) { const j = DATA.seasonJobs(n, ${pls}).find((x) => x.base === '${id}'); if (j) return { n, id: j.id, puzzle: !!j.puzzle, family: j.family, opts: j.opts }; } return null; })()`);
     if (!j) { problem(`${id}: never in a season`); continue; }
     if (!j.puzzle || j.family !== 'think') problem(`${id}: not a puzzle in the seasons`);
-    await js(b, `(() => { const S = __ivy.S; S.owned.${place} = 1; S.seasonNo = ${j.n}; S.sdone = {}; __ivy.save(); __ivy.startJob(DATA.seasonJobs(${j.n}, ['cottage', 'cove']).find((x) => x.base === '${id}')); })()`);
+    await js(b, `(() => { const S = __ivy.S; S.owned.${place} = 1; S.seasonNo = ${j.n}; S.sdone = {}; __ivy.save(); __ivy.startJob(DATA.seasonJobs(${j.n}, ${pls}).find((x) => x.base === '${id}')); })()`);
     await sleep(900);
     await pic(b, `${id}-start`);
     const hud = await js(b, `({ chip: document.querySelector('#toolChip').textContent, puzzle: !!__ivy.ENGINE.scene.puzzle })`);
@@ -313,12 +321,252 @@ try {
       for (const p of want) if (!parts.includes(p)) problem(`${pl}: no part "${p}" in the picture`);
     }
   }
+  // the pottery and the station open by the same rule: a year after the place
+  // before is restored, with the coins; turning the season that opens one says so
+  {
+    const open = async (id, name, prev) => {
+      const r = {};
+      await js(b, `(() => { const S = __ivy.S; S.coins = 250000; for (const c of DATA.placeOf('${prev}').chores) S.done[c.id] = 1; S.owned['${prev}'] = S.owned['${prev}'] || 1; delete S.restoredAt['${prev}']; __ivy.save(); __ivy.goPlace('${prev}'); __ivy.openPlaces(); })()`);
+      await sleep(800);
+      r.at = await js(b, `({ season: __ivy.S.seasonNo, restoredAt: __ivy.S.restoredAt['${prev}'] })`);
+      r.waiting = await card(name);
+      if (!r.waiting || r.waiting.buy || !r.waiting.opens.some((t) => /4 seasons to go/.test(t))) problem(`${id}: does not wait a year after ${prev} ` + JSON.stringify(r.waiting));
+      await js(b, `[...document.querySelectorAll('.placeCard')].find((c) => c.textContent.includes('${name}')).scrollIntoView({ block: 'center' })`); await sleep(300);
+      await pic(b, `opening-${id}-waiting`);
+      await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+      // three more seasons done, then the fourth turns from the season-done card
+      await js(b, `(() => { const S = __ivy.S; S.seasonNo = S.restoredAt['${prev}'] + 3; S.sdone = {}; for (const j of __ivy.seasonJobs()) S.sdone[j.id] = 1; __ivy.save(); __ivy.goPlace('${prev}'); })()`); await sleep(900);
+      r.seasonDone = await js(b, `document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ')`);
+      await js(b, `document.querySelector('#goBtn').click()`); await sleep(3400);
+      r.toast = await js(b, `document.querySelector('#toast').textContent`);
+      if (!new RegExp(name + ' is for sale now').test(r.toast)) problem(`${id}: no word when it opened (${r.toast})`);
+      await js(b, `__ivy.openPlaces()`); await sleep(800);
+      r.open = await card(name);
+      if (!r.open || !r.open.buy) problem(`${id}: no buy button once open ` + JSON.stringify(r.open));
+      const coins0 = await js(b, '__ivy.S.coins');
+      await js(b, `[...document.querySelectorAll('.placeCard')].find((c) => c.textContent.includes('${name}')).querySelector('[data-buy]').click()`); await sleep(1500);
+      r.afterBuy = await js(b, `({ place: __ivy.S.place, paid: ${coins0} - __ivy.S.coins, price: DATA.placeOf('${id}').price, brand: document.querySelector('#brandName').textContent, next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ') })`);
+      if (r.afterBuy.place !== id) problem(`${id}: buying did not take her there`);
+      if (r.afterBuy.paid !== r.afterBuy.price) problem(`${id}: bought for ${r.afterBuy.paid}, the price is ${r.afterBuy.price}`);
+      await sleep(2500);
+      await pic(b, `${id}-new`);
+      return r;
+    };
+    o.pottery = await open('pottery', 'Kiln Lane Pottery', 'books');
+    o.halt = await open('halt', 'Halfpenny Halt', 'pottery');
+    // both restored, in every season, by day and at night; every job part in the picture
+    for (const [pl, list] of [['pottery', 'POTTERY_CHORES'], ['halt', 'HALT_CHORES']]) {
+      const n0 = await js(b, `4 * Math.ceil((__ivy.S.seasonNo + 1) / 4)`);
+      for (const [k, season] of [[1, 'summer'], [2, 'autumn'], [3, 'winter'], [4, 'spring']]) {
+        await js(b, `(() => { const S = __ivy.S; S.owned.${pl} = 1; for (const c of DATA.${list}) S.done[c.id] = 1; S.seasonNo = ${n0} + ${k}; S.sdone = {}; __ivy.save(); __ivy.goPlace('${pl}'); })()`);
+        await sleep(800);
+        await pic(b, `${pl}-${season}`);
+        const parts = await js(b, `[...new Set([...document.querySelectorAll('#scene [data-part]')].map((e) => e.dataset.part))]`);
+        const want = await js(b, `DATA.${list}.map((c) => c.part)`);
+        for (const p of want) if (!parts.includes(p)) problem(`${pl} (${season}): no part "${p}" in the picture`);
+        // the season's mess shows on the picture where a season job waits
+        const pend = await js(b, `Object.keys(Object.fromEntries(__ivy.seasonJobs().filter((j) => j.place === '${pl}' && j.part).map((j) => [j.part, 1])))`);
+        o[pl + '-' + season] = { jobs: await js(b, `__ivy.seasonJobs().filter((j) => j.place === '${pl}').map((j) => j.name + ' (' + j.family + ')')`), pendingParts: pend, bar: await js(b, `document.querySelector('#restoredTxt').textContent`) };
+      }
+      await js(b, `(() => { const S = __ivy.S; S.evening = true; __ivy.setHour(21); __ivy.render(); })()`); await sleep(700);
+      await pic(b, `${pl}-evening`);
+      await js(b, `(() => { __ivy.setHour(null); __ivy.render(); })()`);
+      // every decoration on, in winter with the lights up
+      await js(b, `(() => { const S = __ivy.S; for (const d of DATA.placeOf('${pl}').decor) S.decor[d.id] = 1; S.seasonNo = ${n0} + 3; S.sdone = {}; for (const j of __ivy.seasonJobs()) S.sdone[j.id] = 1; __ivy.save(); __ivy.render(); })()`); await sleep(700);
+      await pic(b, `${pl}-decorated-winter`);
+      for (const e of await js(b, 'window.__errs')) problem(`${pl}: page error: ` + e);
+    }
+  }
+
+  // the season budget: with all nine places restored no season grows past 37
+  // jobs, the cottage and the newest place are always awake, the others take
+  // turns and never rest two seasons running; with seven places nothing changes
+  {
+    const bud = report.budget = await js(b, `(() => {
+      const all = DATA.PLACES.filter((p) => !p.beta).map((p) => p.id), out = { seasons: [], bad: [] };
+      const restSeasons = {};
+      for (let n = 1; n <= 16; n++) {
+        const aw = DATA.awakePlaces(n, all), jobs = DATA.seasonJobs(n, all);
+        out.seasons.push(n + ': ' + jobs.length + ' jobs, resting ' + all.filter((p) => !aw.includes(p)).join(' '));
+        if (jobs.length > DATA.SEASON_BUDGET) out.bad.push('season ' + n + ' has ' + jobs.length + ' jobs');
+        if (!aw.includes('cottage') || !aw.includes('halt')) out.bad.push('season ' + n + ': the cottage or the newest place is resting');
+        for (const p of all) if (!aw.includes(p)) { if (restSeasons[p] === n - 1) out.bad.push(p + ' rests two seasons running (' + n + ')'); restSeasons[p] = n; }
+        for (const p of aw) if (!jobs.some((j) => j.place === p)) out.bad.push('season ' + n + ': ' + p + ' is awake with no jobs');
+        const per = {}; for (const j of jobs) per[j.place] = per[j.place] || { think: 0, craft: 0 }, j.family in per[j.place] && per[j.place][j.family]++;
+        for (const [p, c] of Object.entries(per)) if (c.think > 1 || c.craft > 1) out.bad.push('season ' + n + ': ' + p + ' has ' + JSON.stringify(c));
+      }
+      const seven = all.slice(0, 7);
+      for (let n = 1; n <= 8; n++) if (DATA.awakePlaces(n, seven).length !== 7) out.bad.push('seven places: season ' + n + ' rests a place');
+      return out;
+    })()`);
+    for (const x of bud.bad) problem('budget: ' + x);
+    // a resting place says so and points round the village
+    await js(b, `(() => { const S = __ivy.S; const all = DATA.PLACES.filter((p) => !p.beta); for (const p of all) { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; } S.seasonNo = 3; S.sdone = {}; __ivy.save(); })()`);
+    const quiet = await js(b, `DATA.PLACES.filter((p) => !p.beta).map((p) => p.id).find((p) => __ivy.resting(p))`);
+    if (!quiet) problem('budget: no place rests in season 3 with nine places');
+    else {
+      await js(b, `__ivy.goPlace('${quiet}')`); await sleep(800);
+      bud.resting = await js(b, `({ place: '${quiet}', bar: document.querySelector('#restoredTxt').textContent, next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' '), again: (__ivy.openJobs(), [...document.querySelectorAll('.jGo')].filter((x) => /Again/.test(x.textContent)).length) })`);
+      await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+      if (!/^All quiet at .* this winter$/.test(bud.resting.bar)) problem('budget: a resting place does not say so: ' + bud.resting.bar);
+      if (!bud.resting.again) problem('budget: the jobs of a resting place cannot be played again');
+      await pic(b, 'resting-place');
+    }
+    await js(b, `__ivy.openPlaces()`); await sleep(800);
+    bud.places = await js(b, `[...document.querySelectorAll('.placeCard')].map((c) => (c.querySelector('.jobDot') ? '• ' : '  ') + c.querySelector('.pName').textContent.trim() + ' | ' + c.querySelector('.pSub').textContent.slice(0, 44))`);
+    const dots = bud.places.filter((t) => t.startsWith('•')).length;
+    if (dots < 2 || dots > 7) problem('budget: the places list has ' + dots + ' places with a dot');
+    await pic(b, 'places-budget');
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+  }
+
+  // the walk round the village: "jobs are waiting at" names the next place
+  // after the one you are at, not the first in the list
+  {
+    const w = report.walk = {};
+    await js(b, `(() => { const S = __ivy.S; S.seasonNo = 8; S.sdone = {}; for (const j of __ivy.seasonJobs()) if (['cottage', 'cafe', 'glasshouse'].includes(j.place)) S.sdone[j.id] = 1; __ivy.save(); __ivy.goPlace('glasshouse'); })()`); await sleep(700);
+    w.fromGlasshouse = await js(b, `({ next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' '), want: __ivy.nextPlaceWithJobs('glasshouse').name })`);
+    const wantGlass = await js(b, `(() => { const ids = DATA.PLACES.filter((p) => !p.beta).map((p) => p.id); const aw = DATA.awakePlaces(8, ids); return DATA.placeOf(ids.slice(ids.indexOf('glasshouse') + 1).concat(ids).find((p) => aw.includes(p) && !['cottage', 'cafe', 'glasshouse'].includes(p))).name; })()`);
+    if (!w.fromGlasshouse.next.includes(wantGlass)) problem(`walk: from the glasshouse it should point to ${wantGlass}: ${w.fromGlasshouse.next}`);
+    await js(b, `(() => { const S = __ivy.S; for (const j of __ivy.seasonJobs()) if (j.place !== 'cove' && j.place !== 'rescue') S.sdone[j.id] = 1; __ivy.save(); __ivy.goPlace('halt'); })()`); await sleep(700);
+    w.fromHalt = await js(b, `document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ')`);
+    const firstLeft = await js(b, `(() => { const aw = DATA.awakePlaces(8, DATA.PLACES.filter((p) => !p.beta).map((p) => p.id)); return aw.includes('cove') ? 'Seashell Cove' : 'Bluebell Rescue'; })()`);
+    if (!w.fromHalt.includes(firstLeft)) problem(`walk: from the station it should go round to ${firstLeft}: ${w.fromHalt}`);
+  }
+
+  // the evening: after nine the thinking jobs come last; "Done for now" ends
+  // with Goodnight; the title offers "Just one job", which ends on a green Done for now
+  {
+    const ev = report.evening = {};
+    ev.order = await js(b, `(() => { const S = __ivy.S; S.sdone = {};
+      for (let n = 1; n <= 24; n++) { S.seasonNo = n; const js = __ivy.seasonJobs().filter((j) => j.place === 'halt'); if (js.some((j) => j.family === 'think') && js[0].family === 'think') {
+        __ivy.setHour(15); const day = __ivy.nextChore('halt').family; __ivy.setHour(21); const late = __ivy.nextChore('halt').family;
+        const lateList = []; for (const j of js) { const k = __ivy.nextChore('halt'); lateList.push(k.family); S.sdone[k.id] = 1; } S.sdone = {}; __ivy.setHour(null);
+        return { season: n, day, late, lateList }; } } return null; })()`);
+    if (!ev.order) problem('evening: no season starts the station with a thinking job');
+    else {
+      if (ev.order.day !== 'think' || ev.order.late === 'think') problem('evening: the thinking job does not move last after nine ' + JSON.stringify(ev.order));
+      const t = ev.order.lateList.indexOf('think');
+      if (t < 0 || ev.order.lateList.slice(t).some((f) => f !== 'think')) problem('evening: a thinking job was skipped or not last ' + JSON.stringify(ev.order.lateList));
+    }
+    // Goodnight
+    await js(b, `(() => { const S = __ivy.S; S.goodnight = true; S.seasonNo = 9; S.sdone = {}; __ivy.save(); __ivy.setHour(21); __ivy.goPlace('pottery'); })()`); await sleep(700);
+    await js(b, `__ivy.openPause(); document.querySelector('#pauseStop').click()`); await sleep(1600);
+    ev.goodnight = await js(b, `({ on: document.querySelector('#goodnight').classList.contains('on'), lights: +document.querySelector('#goodnight').dataset.lights, next: document.querySelector('#goodnight .gnNext').textContent })`);
+    await pic(b, 'goodnight-1');
+    await sleep(2400);
+    ev.goodnight.dark = await js(b, `document.querySelectorAll('#goodnight .gnOff').length`);
+    await pic(b, 'goodnight-2');
+    await sleep(3200);
+    ev.goodnight.title = await js(b, `document.querySelector('#title').classList.contains('on') && !document.querySelector('#goodnight').classList.contains('on')`);
+    if (!ev.goodnight.on || !ev.goodnight.lights || !ev.goodnight.dark || !ev.goodnight.title || !/^Next time: /.test(ev.goodnight.next)) problem('evening: Goodnight ' + JSON.stringify(ev.goodnight));
+    // switched off in Settings: the old goodbye line instead
+    await js(b, `(() => { __ivy.S.goodnight = false; document.querySelector('#title').click(); })()`); await sleep(700);
+    await js(b, `__ivy.openPause(); document.querySelector('#pauseStop').click()`); await sleep(900);
+    ev.off = await js(b, `({ goodnight: document.querySelector('#goodnight').classList.contains('on'), bye: document.querySelector('.pauseBye').textContent })`);
+    if (ev.off.goodnight || !/Sleep well/.test(ev.off.bye)) problem('evening: Goodnight switched off still shows ' + JSON.stringify(ev.off));
+    await sleep(5400);
+    // Just one job: a fresh page in the evening
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S)); S.goodnight = true; S.place = 'halt'; sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await sleep(600);
+    for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
+    await js(b, `__ivy.setHour(20); __ivy.renderTitle()`); await sleep(300);
+    ev.justOne = { shown: await js(b, `!document.querySelector('#justOne').hidden`), want: await js(b, `(__ivy.oneJob() || {}).n && __ivy.oneJob().n.id`) };
+    await pic(b, 'title-just-one-job');
+    await js(b, `document.querySelector('#justOne').click()`); await sleep(1000);
+    ev.justOne.started = await js(b, `({ play: document.querySelector('#play').classList.contains('on'), title: document.querySelector('#playTitle').textContent })`);
+    await js(b, `__ivy.finish()`); await sleep(1600);
+    ev.justOne.finish = await js(b, `({ stop: document.querySelector('#doneStop').className, back: document.querySelector('#doneBtn').className })`);
+    if (!ev.justOne.shown || !ev.justOne.started.play || ev.justOne.finish.stop !== 'go' || ev.justOne.finish.back !== 'go soft') problem('evening: Just one job ' + JSON.stringify(ev.justOne));
+    await pic(b, 'just-one-job-done');
+    await js(b, `document.querySelector('#doneBtn').click()`); await sleep(600);
+    await js(b, `__ivy.setHour(null)`);
+  }
+
+  // an older save meets v22: a save from v21 (restoredAt kept, no goodnight
+  // setting) keeps its waits; a save from before v21 waits a year for the pottery
+  {
+    const old = report.olderV22 = {};
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S));
+      delete S.goodnight; S.owned = { cottage: 1, beta: 1 }; S.done = {}; S.decor = {};
+      for (const p of DATA.PLACES) if (['cottage', 'cafe', 'cove', 'rescue', 'glasshouse', 'canal', 'books'].includes(p.id)) { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; }
+      S.seasonNo = 30; S.sdone = {}; S.coins = 95000; S.place = 'books'; S.wips = {}; S.pauses = false; S.restoredAt = { cottage: 0, cafe: 1, cove: 3, rescue: 6, glasshouse: 12, canal: 18, books: 28 };
+      sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await sleep(600);
+    for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
+    await js(b, `document.querySelector('#title').click()`); await sleep(800);
+    old.v21 = await js(b, `({ goodnight: __ivy.S.goodnight, place: __ivy.S.place, bar: document.querySelector('#restoredTxt').textContent })`);
+    await js(b, `__ivy.openPlaces()`); await sleep(800);
+    old.v21.pottery = await card('Kiln Lane'); old.v21.halt = await card('Halfpenny');
+    if (old.v21.goodnight !== true) problem('older save: goodnight is not on by default');
+    if (!old.v21.pottery || old.v21.pottery.buy || !old.v21.pottery.opens.some((t) => /2 seasons to go/.test(t))) problem('older save (v21): the pottery should wait two more seasons ' + JSON.stringify(old.v21.pottery));
+    await pic(b, 'older-save-v21');
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S)); delete S.restoredAt; delete S.oldWaits; delete S.goodnight; S.seasonNo = 30; S.coins = 95000;
+      sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await sleep(600);
+    for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
+    await js(b, `document.querySelector('#title').click()`); await sleep(800);
+    await js(b, `__ivy.openPlaces()`); await sleep(800);
+    old.v20 = { oldWaits: await js(b, '__ivy.S.oldWaits'), pottery: await card('Kiln Lane') };
+    if (!old.v20.oldWaits || !old.v20.pottery || old.v20.pottery.buy || !old.v20.pottery.opens.some((t) => /4 seasons to go/.test(t))) problem('older save (before v21): the pottery should wait a year from now ' + JSON.stringify(old.v20));
+    await pic(b, 'older-save-v20');
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+  }
+
+  // the money: jobs a season and coins a year with 7, 9, 10 and 17 places, and
+  // whether the coins are there for the pottery and the station when their wait is over
+  {
+    report.economy = await js(b, `(() => {
+      const pay = (j) => j.value * (j.puzzle ? 1.25 : 1.4); // + finishing bonus, + coin stashes on tool jobs
+      const ids = DATA.PLACES.filter((p) => !p.beta).map((p) => p.id), out = { note: 'a year from season 17, every job done once; tool jobs pay value x1.4 (bonus and stashes), puzzles x1.25' };
+      // the real seasons of the places that exist
+      const year = (pl) => { let coins = 0; for (let n = 17; n < 21; n++) coins += DATA.seasonJobs(n, pl).reduce((a, j) => a + pay(j), 0); return Math.round(coins); };
+      // and the same for places still to come, counted by the budget: every awake
+      // place's jobs at the season's pay (x1.37, a mix of tool jobs and puzzles)
+      const extra = (k) => ids.concat(Array.from({ length: Math.max(0, k - ids.length) }, (_, i) => 'place' + (ids.length + i + 1))).slice(0, k);
+      const estimate = (pl) => { let coins = 0; const jobs = [], awake = [];
+        for (let n = 17; n < 21; n++) { const aw = DATA.awakePlaces(n, pl); let c = 0;
+          for (const p of aw) for (let i = 0; i < (DATA.PER_SEASON[p] || 5); i++) c += DATA.seasonValue(n, i) * 1.37;
+          coins += c; awake.push(aw.length); jobs.push(aw.reduce((a, p) => a + (DATA.PER_SEASON[p] || 5), 0)); }
+        return { jobsPerSeason: jobs, awakePlaces: awake, coinsPerYear: Math.round(coins) }; };
+      out.places = Object.fromEntries([7, 9, 10, 17].map((k) => [k, estimate(extra(k))]));
+      out.places['9'].coinsPerYearPlayed = year(ids);
+      out.opening = {};
+      for (const id of ['pottery', 'halt']) {
+        const p = DATA.placeOf(id), prev = DATA.placeOf(p.needs), before = ids.slice(0, ids.indexOf(prev.id) + 1);
+        const restore = Math.round(prev.chores.reduce((a, c) => a + pay(c), 0)), y = year(before);
+        const fams = [...new Set(prev.chores.map((c) => c.family))].filter((f) => !TOOLS.FAM[f].hands);
+        const tools = (pl, fs, tiers) => fs.reduce((a, f) => a + tiers.reduce((b, t) => b + (TOOLS.FAM[f].tiers[t] ? DATA.toolCost(f, t, pl) : 0), 0), 0);
+        const decorHalf = prev.decor.filter((_, i) => i % 2 === 0).reduce((a, d) => a + d.cost, 0);
+        const typical = decorHalf + tools(prev.id, fams, [1]);
+        const noSpend = restore + y;
+        const famsNew = [...new Set(p.chores.map((c) => c.family))].filter((f) => !TOOLS.FAM[f].hands);
+        out.opening[id] = { price: p.price, toolPrice: p.toolPrice, restoreBefore: restore, yearOfSeasons: y, coinsWhenOpen: noSpend, priceShareOfYear: +(p.price / y).toFixed(2),
+          typicalSpend: typical, typicalSpendIs: 'every other decoration at ' + prev.short + ' and the second tool of each kind there',
+          shortWithSpend: Math.max(0, p.price - (noSpend - typical)), oneSeason: Math.round(y / 4),
+          fullToolsetHere: tools(id, famsNew, [1, 2, 3, 4]), halfYear: Math.round(y / 2) };
+      }
+      return out;
+    })()`);
+    for (const [id, e] of Object.entries(report.economy.opening)) {
+      if (e.coinsWhenOpen < e.price) problem(`economy: ${id} costs ${e.price}, only ${e.coinsWhenOpen} by the time it opens`);
+      if (e.shortWithSpend > e.oneSeason) problem(`economy: ${id} is more than a season out of reach with typical spending (${e.shortWithSpend} short)`);
+    }
+    for (const [k, v] of Object.entries(report.economy.places)) if (v.jobsPerSeason.some((n) => n > 37)) problem(`economy: ${k} places have a season over 37 jobs`);
+    // the music for the new places renders
+    report.music = await js(b, `(async () => ({ pottery: await AUDIO.debugRender({ place: 'pottery', season: 'summer' }, 12), halt: await AUDIO.debugRender({ place: 'halt', season: 'winter', night: true }, 12) }))()`);
+    for (const [k, v] of Object.entries(report.music)) if (!(v.peak > 0.005)) problem(`music: ${k} is silent (${JSON.stringify(v)})`);
+  }
 
   // every other job, straight through
   report.regression = await js(b, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES, ...DATA.GLASS_CHORES, ...DATA.CANAL_CHORES, ...DATA.BOOK_CHORES];
+    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES, ...DATA.GLASS_CHORES, ...DATA.CANAL_CHORES, ...DATA.BOOK_CHORES, ...DATA.POTTERY_CHORES, ...DATA.HALT_CHORES];
     for (let n = 1; n <= 8; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue', 'glasshouse', 'canal', 'books']));
+    for (let n = 1; n <= 12; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue', 'glasshouse', 'canal', 'books', 'pottery', 'halt']));
+    // every seasonal job of the two new places at least once
+    for (const pl of ['pottery', 'halt']) for (let n = 1; n <= 16; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', pl]).filter((j) => j.place === pl));
     const bad = [];
     for (const j of jobs) {
       try {

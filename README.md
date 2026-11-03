@@ -9,11 +9,12 @@ a little corner café to bring back to life with some light building and
 planting, a seaside cove with a beach hut, a rowing boat, an old camper
 van and a lighthouse, an animal rescue on an old farm, where dogs need
 feeding and walking, a cat wants brushing and the rabbits fresh straw, a
-walled garden with an old glasshouse, a canal lock with a narrowboat, and an
-old bookshop with a reading nook. New places open over the in-game years,
-not all at once. Some jobs take a little thinking
-instead of a tool; a puzzle room, open from the start, is where new ones are
-tried out first.
+walled garden with an old glasshouse, a canal lock with a narrowboat, an
+old bookshop with a reading nook, a pottery with a kiln and a potter's wheel,
+and a little country station where no train has stopped for years. New places
+open over the in-game years, not all at once. Some jobs take a little thinking
+instead of a tool, and some are made with your own hands; a puzzle room, open
+from the start, is where new ones are tried out first.
 
 No timers, no losing, no ads, no accounts. Works offline once opened.
 
@@ -35,8 +36,9 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   wheelbarrow for mucking out ...). Every place has its own toolbox: tools
   stay where you buy them, a new place starts with simple tools, and tools
   cost twice as much at the café, three times as much at the cove, four
-  times as much at the rescue and five, six and seven times as much at the
-  glasshouse, the canal and the bookshop. The next
+  times as much at the rescue and five, six, seven, eight and nine times as
+  much at the glasshouse, the canal, the bookshop, the pottery and the
+  station. The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
   Tap the tool at the bottom to switch to any tool you already own (the shears
   are sometimes nicer than the tractor).
@@ -53,12 +55,13 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   true, ticked off one by one on its card in Places: the place before it is
   restored, enough seasons have turned since then (none for the café, one for
   the cove, two for the rescue, three for the glasshouse, a whole year for the
-  canal and the bookshop), and there are enough coins. Seasons only turn when
+  canal, the bookshop, the pottery and the station), and there are enough coins. Seasons only turn when
   their jobs are done, never on their own, so the wait is always in your own
   hands and nothing is lost while waiting. The card says which season the
   place opens in and how many seasons are left; the season that opens it says
   so once, quietly. A game from before this rule keeps every place it could
-  already reach; the canal and the bookshop wait from then on.
+  already reach; the canal, the bookshop, the pottery and the station wait
+  from then on.
 - **Places.** Once the cottage is restored, Marigold Café is for sale (9,000
   coins). Its 16 jobs: sweep the floor, wash the shop window, scrub the
   terrace, wipe the tables, polish the coffee machine, clean the awning, paint
@@ -100,6 +103,24 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   shop cat, tea for the readers, the reading tables, the dusty stockroom, the
   courtyard, the hollyhock bed, a new reading bench, and a puzzle: back on
   the shelves.
+- **Kiln Lane Pottery.** A year after the bookshop is restored the pottery is
+  for sale (80,000 coins). Its 15 jobs: the cobbled yard, the workshop window
+  and floor, soot on the kiln and moss on its chimney, the clay-caked wheel,
+  the dusty glaze shelves, the barn door and the sign, a new drying rack,
+  clay scraps into the bin, lavender by the kiln, and three jobs done by
+  hand: throw a pot on the wheel (tap the pedal, pull the clay up three
+  times, dip it in the glaze the order asks for), glaze the tea set (each pot
+  to its own shelf and glaze) and load the kiln (every pot onto the kiln's
+  shelves).
+- **Halfpenny Halt.** A year after the pottery is restored the station is for
+  sale (90,000 coins). Its 15 jobs: moss on the platform, the waiting-room
+  floor and window, the signal-box windows, the station clock, the platform
+  lamps, the station sign, the ticket-office door, the crossing gate, a new
+  platform bench, hanging baskets, litter along the line, and three little
+  mysteries: lost property (read the notes on the wall and give everything
+  back to its owner), stamps for the parcels (stamps that add up to each
+  parcel's weight) and what's missing from the shelves (find the five things
+  on the list).
 - **Puzzles.** Jobs done by hand with a little thinking, with no tools and no
   robots: put the cups away at the café (each shelf one kind, each coaster one
   glaze), feeding time at the rescue (follow the chart: the right food and the
@@ -111,15 +132,26 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   nothing else can fill glides back), and back on the shelves at the bookshop
   (move the end book of a shelf until every series has a shelf of its own).
   The last two also turn up in the seasons at the older places: packing the
-  camper van at the cove and books back on the shelves at the cottage. A move that is not right just
+  camper van at the cove and books back on the shelves at the cottage, and
+  so do the station's: things left behind at the café, whose lead is whose
+  at the rescue, parcels of books at the bookshop, and what's missing in the
+  cottage attic, the café store room, the bookshop stockroom and the rescue
+  barn. A move that is not right just
   glides back; Hint at the bottom shows one right move. Every puzzle comes out
   different each time and a half-done one is kept for later. Each is a job in
   its place and comes back in that place's seasons, at most one a season.
+  Jobs made by hand (throwing a pot) work the same way, with a Hint button
+  and no tools, and a place has at most one of those a season too. After
+  9 pm the thinking jobs come last in a season's list, never skipped.
 - **The Puzzle Room (beta).** Open from the start, first on the Places list:
   every puzzle in the game, to play in any order and as often as you like, and
   where new kinds of jobs are tried out before they move out to the places.
-- **Music.** Seven quiet tunes of the game's own, one per place, in a key that
-  follows the season and slower in the evening; volume in Settings.
+  Its corkboard holds the nine newest as cards and the two oldest as little
+  tickets pinned along the top.
+- **Music.** Nine quiet tunes of the game's own, one per place (a slow waltz
+  on a wooden mallet at the pottery, a soft brushed clickety-clack at the
+  station), in a key that follows the season and slower in the evening;
+  volume in Settings.
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
   12-character cloud code; on another phone, I have a code picks the game up
   again, and a phone that finds more progress in the cloud carries on from it.
@@ -137,16 +169,24 @@ Play: https://peterrahbek.github.io/ivy-cottage/
 - **Christmas lights.** Every winter there is a job at each place to hang the
   lights, bulb by bulb; once they are up they shine in the place's picture.
 - **Seasons.** After the restoration the year turns. Each season picks a few
-  jobs per restored place from a bigger pool (autumn leaves, snow, frost,
+  jobs per awake place from a bigger pool (autumn leaves, snow, frost,
   regrowth, plus seasonal planting and building: sunflowers, tulip bulbs, a
   vegetable patch, window boxes, firewood, a jetty, a brick path). Never more
   than one mowing job a season, and last year's picks are pushed to the back.
   The season carries on into the jobs: outdoor jobs get falling snow and a
   cold light in winter, drifting leaves in autumn, petals in spring and a few
   seeds on the air in summer.
+- **A season stays a handful.** However many places are restored, a season
+  has at most 37 jobs. The cottage and the newest place always have jobs;
+  the others take turns, so a place rests now and then (never two seasons
+  running): it shows "All quiet at the cove this autumn", its finished jobs
+  can still be played again, and Places puts a small dot by every place
+  with jobs waiting. "Jobs are waiting at ..." points to the next place round
+  the village after the one you are at, so a season is a walk round the
+  places.
 - **Decorate.** Sixteen things to buy for the cottage, from a garden gnome to a
   hot-air balloon, and twelve each for the café, the cove, the rescue, the
-  glasshouse, the canal and the bookshop.
+  glasshouse, the canal, the bookshop, the pottery and the station.
 - **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
   new places take a while to save up for.
 - **Before and after.** The finish card shows a small before-and-after picture
@@ -159,6 +199,13 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   next job, the progress bar and the shop dots are hidden. Stopping shows one
   line on what comes next time, fades the sound and goes back to the title.
   It never interrupts a job and the pause card can be switched off in Settings.
+- **Goodnight.** After 9 pm, "Done for now" ends with the place in the
+  evening: its lights go out one by one with a soft falling note, the music
+  fades, and the plan for next time and "Sleep well." come up before the
+  title. About six seconds, nothing to collect; Settings > Goodnight lights
+  switches it off. In the evening the title also offers **Just one job**: it
+  starts the next job straight away and its finish card makes "Done for now"
+  the main button.
 - **Visitors.** Now and then a muddy (or sandy) dog turns up for a bath, the
   dog next door wants a walk, or the cat next door needs brushing.
 - **Small touches.** Evening light after 8 pm (glowing windows, stars), name
@@ -222,11 +269,14 @@ then open http://localhost:8790.
 - `js/scenes9.js` coffee, napkins and tables at the café, the seal, dog bowls,
   the dog walk, the cat and the rabbit hutch
 - `js/scenes10.js` the narrowboat's side to paint and its portholes to wash
+- `js/scenes11.js` the pottery's kiln with its soot to scrub off
 - `js/puzzles.js` the contract every puzzle follows, its house rules (calm, no
   timers, nothing ever wrong for long) and a few shared helpers
 - `js/pz-cups.js`, `js/pz-feed.js`, `js/pz-hose.js`, `js/pz-beds.js`,
-  `js/pz-plan.js`, `js/pz-pack.js`, `js/pz-books.js` the seven puzzles (each a
-  job in its place and in the puzzle room)
+  `js/pz-plan.js`, `js/pz-pack.js`, `js/pz-books.js`, `js/pz-owners.js`,
+  `js/pz-post.js`, `js/pz-seek.js` the thinking puzzles, and `js/pz-wheel.js`
+  the potter's wheel, made by hand (each a job in its place and in the puzzle
+  room)
 - `js/beta.js` the puzzle room overview (SVG): a pinboard of puzzle cards
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
@@ -235,21 +285,29 @@ then open http://localhost:8790.
 - `js/glasshouse.js` the glasshouse overview (SVG), same conventions
 - `js/canal.js` the canal overview (SVG), same conventions
 - `js/books.js` the bookshop overview (SVG), same conventions
+- `js/pottery.js` the pottery overview (SVG), same conventions
+- `js/halt.js` the station overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
-- `js/data.js` places, jobs, season pools, finds, decorations, prices
-- `js/audio.js` synthesised sound and seven composed tunes (no audio files)
+- `js/data.js` places, jobs, season pools and the season budget, finds,
+  decorations, prices
+- `js/audio.js` synthesised sound and nine composed tunes (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
 - `test/` a bench that plays one puzzle in headless Chrome with real touches
-  (half, saved, reloaded, finished, then many more layouts) and draws a place
-  picture in six states; `test/example-puzzle.js` is a tiny puzzle to copy
+  (half, saved, reloaded, finished, then many more layouts), draws a place
+  picture in six states and a tool job dirty, half done and clean, and a
+  test that plays the whole game (`game.mjs`); `test/example-puzzle.js` is a
+  tiny puzzle to copy
 
 Bump `CACHE` in `sw.js` whenever a file changes.
 
     node test/run.mjs puzzle js/pz-cups.js cups --seeds 20
-    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds,plan,books,pack
+    node test/run.mjs puzzle js/pz-cups.js cups --seeds 20 --opts '{"where":"pottery"}'
+    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds,plan,books,pack,wheel,owners,post,seek
+    node test/run.mjs scene stones '{"shape":"platform"}'
     node test/game.mjs --out /tmp/ivy-game
 
 Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`, `__ivy.startRescue(i)`,
-`__ivy.startBeta(i)`, `__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
-`__ivy.ENGINE.scene.debugPlan()` (a puzzle's solving gestures), `__ivy.goPlace('cafe')`, `__ivy.reset()`.
+`__ivy.startBeta(i)`, `__ivy.startPottery(i)`, `__ivy.startHalt(i)`, `__ivy.ENGINE.debugStroke(x0, y0, x1, y1)`, `__ivy.ENGINE.debugFinish()`,
+`__ivy.ENGINE.scene.debugPlan()` (a puzzle's solving gestures), `__ivy.goPlace('cafe')`, `__ivy.reset()`,
+`__ivy.setHour(21)` (pretend it is nine in the evening; `null` for the real clock), `__ivy.stopNow()`.

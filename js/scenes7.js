@@ -874,7 +874,157 @@
   // ---------------------------------------------------------------- LANTERN
   // The lighthouse lantern room, front on: curved glass in a red frame, the
   // big lens inside, and the sea and sky seen right through it.
+  // ---------------------------------------- HALFPENNY HALT: THE PLATFORM LAMP
+  // An old cast-iron platform lamp up close: a square lantern head that
+  // narrows towards the bottom, the station's name painted on the front pane,
+  // a gas mantle inside, years of soot and grime on the glass. lantern { where: 'halt' }
+  function platformLamp(S) {
+    const { r, nz, bleed } = S;
+    const cx = 180, gy0 = 150, gy1 = 440, mw = 10;
+    // the front pane and the two side panes seen at an angle, as trapezoids
+    const FT = [96, 264], FB = [120, 240], ST = 46, SB = 84;
+    const panes = [
+      [[ST, gy0], [FT[0] - mw / 2, gy0], [FB[0] - mw / 2, gy1], [SB, gy1]],
+      [[FT[0] + mw / 2, gy0], [FT[1] - mw / 2, gy0], [FB[1] - mw / 2, gy1], [FB[0] + mw / 2, gy1]],
+      [[FT[1] + mw / 2, gy0], [W - ST, gy0], [W - SB, gy1], [FB[1] + mw / 2, gy1]],
+    ];
+    const region = new Path2D();
+    for (const p of panes) { region.moveTo(p[0][0], p[0][1]); for (const q of p.slice(1)) region.lineTo(q[0], q[1]); region.closePath(); }
+    const paneAt = (x, y) => panes.find((p) => {
+      const t = (y - gy0) / (gy1 - gy0), a = p[0][0] + (p[3][0] - p[0][0]) * t, b = p[1][0] + (p[2][0] - p[1][0]) * t;
+      return y >= gy0 && y <= gy1 && x >= a && x <= b;
+    });
+    const IRON = '#2f2b2e', IRON2 = '#45404a';
+    function behind(c) {
+      // what shows through the glass: the canopy, the sky and the far platform
+      const g = c.createLinearGradient(0, gy0, 0, gy1);
+      g.addColorStop(0, '#a9d4ea'); g.addColorStop(1, '#e9f1e6');
+      c.fillStyle = g; c.fillRect(0, gy0 - 10, W, gy1 - gy0 + 20);
+      c.fillStyle = '#b9d39a'; c.beginPath(); c.moveTo(0, 360); c.quadraticCurveTo(140, 340, 360, 356); c.lineTo(360, gy1 + 10); c.lineTo(0, gy1 + 10); c.fill();
+      c.fillStyle = '#efe4cc'; c.fillRect(0, gy0 - 10, W, 40);
+      c.fillStyle = '#efe4cc'; for (let x = -4; x < W; x += 16) { c.beginPath(); c.moveTo(x, gy0 + 30); c.lineTo(x + 14, gy0 + 30); c.lineTo(x + 7, gy0 + 44); c.closePath(); c.fill(); }
+      // the gas mantle on its burner, a soft warm white
+      c.fillStyle = '#9a7a2e'; c.fillRect(cx - 3, 300, 6, gy1 - 300);
+      c.fillStyle = '#c9a24a'; c.beginPath(); c.roundRect(cx - 18, 292, 36, 12, 4); c.fill();
+      const m = c.createRadialGradient(cx, 262, 4, cx, 262, 40);
+      m.addColorStop(0, 'rgba(255,248,215,0.9)'); m.addColorStop(1, 'rgba(255,240,190,0)');
+      c.fillStyle = m; c.beginPath(); c.arc(cx, 262, 40, 0, 7); c.fill();
+      c.fillStyle = '#f7efd8'; c.beginPath(); c.ellipse(cx, 266, 15, 26, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(180,160,120,0.6)'; c.lineWidth = 0.8;
+      for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(cx + k * 5, 242); c.quadraticCurveTo(cx + k * 7, 266, cx + k * 5, 290); c.stroke(); }
+      c.fillStyle = '#c9a24a'; c.fillRect(cx - 10, 236, 20, 6);
+    }
+    return {
+      family: 'wash', particle: 'suds', region,
+      tough(x, y) {
+        const p = paneAt(x, y);
+        if (!p) return 1;
+        const t = (y - gy0) / (gy1 - gy0), a = p[0][0] + (p[3][0] - p[0][0]) * t, b = p[1][0] + (p[2][0] - p[1][0]) * t;
+        return Math.min(x - a, b - x, y - gy0, gy1 - y) < 12 ? 1.4 : 1;
+      },
+      decor(c) {
+        const { x0, y0, x1, y1 } = bleed;
+        sky(c, y0, y1, x0, x1, '#9fd0ea', '#eef3e6');
+        cloud(c, 40, 110, 18, 0.85); cloud(c, 326, 90, 22, 0.85);
+        // fields far off, the far platform and its fence
+        c.fillStyle = '#b9d39a'; c.beginPath(); c.moveTo(x0, 470); c.quadraticCurveTo(120, 450, 220, 466); c.quadraticCurveTo(300, 456, x1, 468); c.lineTo(x1, y1); c.lineTo(x0, y1); c.fill();
+        c.fillStyle = '#d9cfbd'; c.fillRect(x0, 530, x1 - x0, y1 - 530);
+        c.fillStyle = '#f6f3ea'; c.fillRect(x0, 530, x1 - x0, 6);
+        c.fillStyle = '#efe4cc'; for (let x = x0 + 4; x < x1; x += 14) c.fillRect(x, 494, 6, 36);
+        c.fillStyle = '#efe4cc'; c.fillRect(x0, 500, x1 - x0, 5); c.fillRect(x0, 516, x1 - x0, 5);
+        // a hanging basket off to one side
+        c.strokeStyle = '#4a4040'; c.lineWidth = 1; c.beginPath(); c.moveTo(330, y0); c.lineTo(318, 236); c.moveTo(330, y0); c.lineTo(342, 236); c.stroke();
+        c.fillStyle = '#6f5a40'; c.beginPath(); c.ellipse(330, 238, 20, 12, 0, 0, Math.PI); c.fill();
+        for (let k = 0; k < 8; k++) { c.fillStyle = k % 3 ? '#5f8f45' : '#4f7d3a'; c.beginPath(); c.arc(314 + k * 4.5, 232 + (k % 2) * 5, 5.5, 0, 7); c.fill(); }
+        for (let k = 0; k < 6; k++) { c.fillStyle = ['#e2574c', '#f2a7c3', '#fff3c4'][k % 3]; c.beginPath(); c.arc(316 + k * 5, 227 + (k % 3) * 6, 2.8, 0, 7); c.fill(); }
+        softShadow(c, region, 10, 0.3, 4, 4);
+      },
+      clean(c) {
+        behind(c);
+        // the station's name, painted on the front pane
+        c.save();
+        c.font = '900 25px ui-rounded, "SF Pro Rounded", system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.lineWidth = 5; c.strokeStyle = '#7d2a34'; c.lineJoin = 'round';
+        for (const [txt, y, size] of [['HALFPENNY', 196, 25], ['HALT', 352, 30]]) {
+          c.font = `900 ${size}px ui-rounded, "SF Pro Rounded", system-ui, sans-serif`;
+          c.strokeText(txt, cx, y, FT[1] - FT[0] - 24); c.fillStyle = '#fbf6ea'; c.fillText(txt, cx, y, FT[1] - FT[0] - 24);
+        }
+        c.restore();
+      },
+      cleanOver(c) {
+        // the side panes darker, a few long reflections on the glass
+        for (const p of [panes[0], panes[2]]) {
+          c.fillStyle = 'rgba(30,50,70,0.2)'; c.beginPath(); c.moveTo(p[0][0], p[0][1]); for (const q of p.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); c.fill();
+        }
+        c.save(); c.globalCompositeOperation = 'lighter';
+        for (const [o, wdt, al] of [[0, 26, 0.18], [40, 10, 0.12], [150, 34, 0.1]]) {
+          c.fillStyle = `rgba(255,255,255,${al})`;
+          c.beginPath(); c.moveTo(FT[0] + o + 40, gy0); c.lineTo(FT[0] + o + 40 + wdt, gy0); c.lineTo(FT[0] + o - 20 + wdt, gy1); c.lineTo(FT[0] + o - 20, gy1); c.closePath(); c.fill();
+        }
+        c.restore();
+      },
+      dirt(c) {
+        // soot from the old gas flame, thickest at the top of every pane
+        const g = ramp(['#7c766a', '#8e877a', '#a39c8d', '#b4ad9e']);
+        field(c, 30, gy0, 330, gy1, 2, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 5); return [...g(v), Math.min(255, 200 + v * 40 + (1 - (y - gy0) / (gy1 - gy0)) * 30)]; });
+        const sg = c.createLinearGradient(0, gy0, 0, gy0 + 120);
+        sg.addColorStop(0, 'rgba(40,34,30,0.55)'); sg.addColorStop(1, 'rgba(40,34,30,0)');
+        c.fillStyle = sg; c.fillRect(30, gy0, 300, 120);
+        for (let i = 0; i < 1500; i++) { c.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.35)' : 'rgba(70,60,50,0.4)'; c.fillRect(30 + r() * 300, gy0 + r() * (gy1 - gy0), 1 + r(), 1 + r()); }
+        grime(c, r, 40, gy0, 320, gy1, 24);
+        // rain streaks, a dead leaf stuck to the glass, a gull's visit
+        c.lineCap = 'round';
+        for (let i = 0; i < 46; i++) {
+          const x = 40 + r() * 280, y = gy0 + r() * 200, l = 20 + r() * 80;
+          c.strokeStyle = `rgba(110,95,70,${0.1 + r() * 0.15})`; c.lineWidth = 1 + r() * 2.5;
+          c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 4, y + l); c.stroke();
+        }
+        for (let i = 0; i < 5; i++) dropping(c, r, 70 + r() * 220, gy0 + 20 + r() * 240, 4 + r() * 3);
+        c.save(); c.translate(234, 400); c.rotate(0.5);
+        c.fillStyle = '#b8742f'; c.beginPath(); c.ellipse(0, 0, 13, 6, 0, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(80,40,15,0.5)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-13, 0); c.lineTo(12, 0); c.stroke();
+        c.restore();
+        // a cobweb in the bottom corner of the front pane
+        c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 0.7;
+        const wx = FB[0] + 8, wy = gy1 - 4;
+        for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k / 5) * (Math.PI / 2); c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + Math.cos(a) * 54, wy + Math.sin(a) * 54); c.stroke(); }
+        for (let ring = 12; ring < 54; ring += 11) { c.beginPath(); for (let k = 0; k <= 5; k++) { const a = -Math.PI / 2 + (k / 5) * (Math.PI / 2); c.lineTo(wx + Math.cos(a) * ring, wy + Math.sin(a) * ring); } c.stroke(); }
+      },
+      top(c) {
+        // the post below, with its ladder bar
+        c.fillStyle = 'rgba(20,15,15,0.25)'; c.fillRect(cx - 9, gy1 + 50, 24, bleed.y1 - gy1);
+        c.fillStyle = IRON; c.fillRect(cx - 11, gy1 + 44, 22, bleed.y1 - gy1);
+        c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(cx - 8, gy1 + 44, 4, bleed.y1 - gy1);
+        c.fillStyle = IRON; c.fillRect(cx - 54, 540, 108, 9); dot(c, cx - 54, 544.5, 6, IRON); dot(c, cx + 54, 544.5, 6, IRON);
+        // the base of the lantern: a tray narrowing into the post
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(SB - 10, gy1); c.lineTo(W - SB + 10, gy1); c.lineTo(cx + 30, gy1 + 30); c.lineTo(cx + 14, gy1 + 50); c.lineTo(cx - 14, gy1 + 50); c.lineTo(cx - 30, gy1 + 30); c.closePath(); c.fill();
+        c.fillStyle = IRON2; c.fillRect(SB - 10, gy1, W - 2 * SB + 20, 7);
+        c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(SB - 10, gy1, W - 2 * SB + 20, 2);
+        // the frame: the outer edges and the two corner posts
+        const bar = (xa, xb) => { c.beginPath(); c.moveTo(xa - mw / 2, gy0); c.lineTo(xa + mw / 2, gy0); c.lineTo(xb + mw / 2, gy1); c.lineTo(xb - mw / 2, gy1); c.closePath(); c.fill(); };
+        c.fillStyle = IRON;
+        bar(FT[0], FB[0]); bar(FT[1], FB[1]); bar(ST - 3, SB - 3); bar(W - ST + 3, W - SB + 3);
+        c.fillStyle = 'rgba(255,255,255,0.16)';
+        for (const [a, b] of [[FT[0], FB[0]], [FT[1], FB[1]]]) { c.beginPath(); c.moveTo(a - mw / 2, gy0); c.lineTo(a - mw / 2 + 2.5, gy0); c.lineTo(b - mw / 2 + 2.5, gy1); c.lineTo(b - mw / 2, gy1); c.closePath(); c.fill(); }
+        // the roof: a little pyramid with vents, a finial and a crown
+        c.fillStyle = IRON2; c.fillRect(ST - 16, gy0 - 14, W - 2 * ST + 32, 16);
+        c.fillStyle = 'rgba(255,255,255,0.15)'; c.fillRect(ST - 16, gy0 - 14, W - 2 * ST + 32, 3);
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(ST - 10, gy0 - 14); c.lineTo(W - ST + 10, gy0 - 14); c.lineTo(cx + 34, 70); c.lineTo(cx - 34, 70); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.1)'; c.beginPath(); c.moveTo(ST - 10, gy0 - 14); c.lineTo(cx - 34, 70); c.lineTo(cx - 20, 70); c.lineTo(ST + 20, gy0 - 14); c.closePath(); c.fill();
+        c.fillStyle = IRON2; c.fillRect(cx - 40, 58, 80, 14);
+        for (let k = 0; k < 5; k++) { c.fillStyle = '#1e1b1e'; c.fillRect(cx - 32 + k * 15, 61, 8, 8); }
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(cx - 30, 58); c.lineTo(cx + 30, 58); c.lineTo(cx + 8, 34); c.lineTo(cx - 8, 34); c.closePath(); c.fill();
+        dot(c, cx, 26, 9, IRON); dot(c, cx - 3, 23, 3, 'rgba(255,255,255,0.25)');
+        c.fillStyle = IRON; c.fillRect(cx - 2, 6, 4, 14);
+        // a little brass plate with the lamp's number
+        c.fillStyle = '#c9a24a'; c.beginPath(); c.roundRect(cx - 14, gy1 + 12, 28, 13, 3); c.fill();
+        c.fillStyle = '#5a4520'; c.font = '800 9px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('No 3', cx, gy1 + 19);
+      },
+    };
+  }
+
   function lantern(S) {
+    if (S.opts.where === 'halt') return platformLamp(S);
     const { r, nz, bleed } = S;
     const cx = 180, R = 150, gy0 = 156, gy1 = 466, ty = 312, mw = 10;
     const posts = [-62, -21, 21, 62].map((d) => cx + R * Math.sin((d * Math.PI) / 180));

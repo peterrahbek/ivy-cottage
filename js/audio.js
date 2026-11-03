@@ -290,6 +290,28 @@ const AUDIO = (() => {
         [[0, 11, 1], [1, 9, 1], [2, 8, 2]], [[0, 9, 2], [2, 7, 2]], [[0, 8, 1], [1, 7, 1], [2, 5, 2]], [[0, 8, 4]],
       ],
     },
+    // a slow waltz for the pottery, the tune on a soft wooden mallet, like a marimba
+    pottery: {
+      beats: 3, bpm: 78, lead: 'mallet',
+      chords: [[1], [4], [5], [1], [6], [4], [2, 1], [5], [1], [3], [4], [1], [2], [5], [1], [1]],
+      melody: [
+        [[0, 5, 2], [2, 3, 1]], [[0, 4, 1], [1, 6, 1], [2, 8, 1]], [[0, 7, 2], [2, 5, 1]], [[0, 3, 3]],
+        [[0, 6, 2], [2, 8, 1]], [[0, 8, 1.5], [1.5, 6, 0.5], [2, 4, 1]], [[0, 6, 2], [2, 5, 1]], [[0, 5, 3]],
+        [[0, 8, 2], [2, 10, 1]], [[0, 10, 1], [1, 9, 1], [2, 7, 1]], [[0, 8, 2], [2, 6, 1]], [[0, 5, 3]],
+        [[0, 6, 1], [1, 8, 1], [2, 9, 1]], [[0, 9, 1.5], [1.5, 7, 0.5], [2, 5, 1]], [[0, 3, 1], [1, 5, 1], [2, 8, 1]], [[0, 8, 3]],
+      ],
+    },
+    // the station: a slow tune over a soft brushed clickety-clack, like a train far away
+    halt: {
+      bpm: 68, brush: true,
+      chords: [[1], [6], [4], [5], [1], [6], [2, 1], [5], [4], [1], [6], [3], [4], [5, 1], [1], [1]],
+      melody: [
+        [[0, 5, 1], [1, 5, 1], [2, 6, 1], [3, 8, 1]], [[0, 8, 2], [2, 6, 2]], [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 3], [3, 7, 1]],
+        [[0, 8, 1], [1, 8, 1], [2, 9, 1], [3, 10, 1]], [[0, 10, 2], [2, 8, 2]], [[0, 9, 1], [1, 8, 1], [2, 6, 2]], [[0, 5, 4]],
+        [[0, 6, 1], [1, 8, 1], [2, 11, 2]], [[0, 10, 1.5], [1.5, 8, 0.5], [2, 5, 2]], [[0, 6, 1], [1, 8, 1], [2, 10, 1], [3, 8, 1]], [[0, 7, 4]],
+        [[0, 8, 1], [1, 6, 1], [2, 4, 1], [3, 6, 1]], [[0, 9, 2], [2, 7, 2]], [[0, 8, 1], [1, 5, 1], [2, 3, 2]], [[0, 8, 4]],
+      ],
+    },
   };
   const KEY = { spring: 65, summer: 60, autumn: 62, winter: 67 };
   let theme = { place: 'cottage', season: 'spring', night: false }, nextTheme = null;
@@ -325,6 +347,21 @@ const AUDIO = (() => {
     }
     lp.connect(g); out(g, 0.5);
   }
+  // a wooden mallet: a quick sine with the bright, short partial a marimba bar has
+  function mallet(f, t, vol) {
+    tone(f, t, 1.1, 'sine', vol * 1.1, music, 0.45, 0.004);
+    tone(f * 3.93, t, 0.12, 'sine', vol * 0.22, music, 0.2, 0.002);
+    tone(f * 2, t, 0.25, 'triangle', vol * 0.08, music, 0.2, 0.003);
+  }
+  // a soft brush on a snare, far away
+  function brushTap(t, vol) {
+    const src = ac.createBufferSource(), g = ac.createGain(), bp = ac.createBiquadFilter();
+    src.buffer = noiseBuf; bp.type = 'bandpass'; bp.Q.value = 0.9;
+    bp.frequency.setValueAtTime(4200, t); bp.frequency.exponentialRampToValueAtTime(2600, t + 0.09);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    src.connect(bp); bp.connect(g); out(g, 0.25);
+    src.start(t, Math.random()); src.stop(t + 0.15);
+  }
   function bass(f, t, dur, vol) {
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = 'sine'; o.frequency.value = f;
@@ -337,31 +374,47 @@ const AUDIO = (() => {
     const i = bar % 16, [deg, seventh] = tune.chords[i];
     const r = U.rng(cycle * 97 + i * 13 + 1);
     // how this pass round the loop is arranged
-    const pass = cycle % 4, quiet = theme.night || pass === 3;
+    const pass = cycle % 4, quiet = theme.night || pass === 3, beats = tune.beats || 4;
     const chord = [deg, deg + 2, deg + 4].concat(seventh ? [deg + 6] : []).map((d) => note(tonic - 12, d));
-    pad(chord.slice(0, 3).map(midi), t, beat * 4, 0.016);
-    if (pass !== 0) bass(midi(note(tonic - 24, deg)), t, beat * 2.2, 0.055);
-    if (pass !== 0 && !quiet) bass(midi(note(tonic - 24, deg + (r() < 0.5 ? 4 : 0))), t + beat * 2, beat * 2, 0.04);
-    // a gentle broken chord, sparser on quiet passes
-    const arp = [0, 1, 2, 3, 2, 1, 3, 1];
+    pad(chord.slice(0, 3).map(midi), t, beat * beats, 0.016);
     const tones = chord.length > 3 ? chord : chord.concat([chord[0] + 12]);
-    for (let k = 0; k < 8; k++) {
-      if ((quiet || pass === 2) && k % 2) continue;
-      if (pass === 0 && k % 4 === 3) continue;
-      keys(midi(tones[arp[k]] + (k === 0 ? -12 : 0)), t + k * beat * 0.5, beat * 2.6, k === 0 ? 0.05 : 0.032 + r() * 0.01);
+    if (beats === 3) {
+      // a waltz: the root low on one, the chord softly on two and three
+      if (pass !== 0) bass(midi(note(tonic - 24, deg)), t, beat * 1.8, 0.05);
+      keys(midi(tones[0] - 12), t, beat * 2.4, 0.045);
+      for (const b of [1, 2]) {
+        if (quiet && b === 2) continue;
+        keys(midi(tones[1]), t + b * beat, beat * 1.4, 0.026 + r() * 0.008);
+        keys(midi(tones[2]), t + b * beat + 0.012, beat * 1.4, 0.022 + r() * 0.008);
+      }
+    } else {
+      if (pass !== 0) bass(midi(note(tonic - 24, deg)), t, beat * 2.2, 0.055);
+      if (pass !== 0 && !quiet) bass(midi(note(tonic - 24, deg + (r() < 0.5 ? 4 : 0))), t + beat * 2, beat * 2, 0.04);
+      // a gentle broken chord, sparser on quiet passes
+      const arp = [0, 1, 2, 3, 2, 1, 3, 1];
+      for (let k = 0; k < 8; k++) {
+        if ((quiet || pass === 2) && k % 2) continue;
+        if (pass === 0 && k % 4 === 3) continue;
+        keys(midi(tones[arp[k]] + (k === 0 ? -12 : 0)), t + k * beat * 0.5, beat * 2.6, k === 0 ? 0.05 : 0.032 + r() * 0.01);
+      }
     }
+    // the far-away clickety-clack: two soft taps, twice a bar
+    if (tune.brush && pass !== 0) for (const b of [0, 0.5, 2, 2.5]) brushTap(t + b * beat, (quiet ? 0.006 : 0.011) * (b % 1 ? 0.7 : 1));
     // the tune itself, missing on the intro pass and only every other bar when breathing
     if (pass !== 0 && !(pass === 3 && i % 2)) {
       const up = pass === 2 ? 12 : 0;
       for (const [at, d, len] of tune.melody[i]) {
         if (theme.night && r() < 0.25) continue;
-        box(midi(note(tonic + 12 + up, d)), t + at * beat, 0.07 * (len >= 2 ? 1 : 0.85));
+        const f = midi(note(tonic + 12 + up, d)), v = 0.07 * (len >= 2 ? 1 : 0.85);
+        if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
       }
     }
   }
+  // each tune has its own pace (72 beats a minute unless it says), slower in the evening
+  const tuneOf = () => TUNES[theme.place] || TUNES.cottage;
+  const beatOf = () => { const bpm = tuneOf().bpm || 72; return 60 / (theme.night ? bpm - 8 : bpm); };
   function musicTick() {
     if (!ac || ac.state !== 'running' || !on.music) { if (ac) nextBar = Math.max(nextBar, ac.currentTime + 0.1); return; }
-    const beat = 60 / (theme.night ? 64 : 72);
     if (nextBar < ac.currentTime) nextBar = ac.currentTime + 0.1;
     while (nextBar < ac.currentTime + 0.6) {
       if (nextTheme && (bar % 8 === 0 || nextTheme.place !== theme.place)) {
@@ -369,8 +422,9 @@ const AUDIO = (() => {
         theme = nextTheme; nextTheme = null;
         if (fresh) { bar = 0; cycle = 0; }
       }
+      const beat = beatOf();
       playBar(nextBar, beat);
-      nextBar += beat * 4;
+      nextBar += beat * (tuneOf().beats || 4);
       bar++;
       if (bar % 16 === 0) cycle++;
     }
@@ -400,19 +454,29 @@ const AUDIO = (() => {
       const len = 22050 * 2, ir = off.createBuffer(1, len, 22050), x = ir.getChannelData(0);
       for (let i = 0; i < len; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
       verb.buffer = ir; const vg = off.createGain(); vg.gain.value = 0.35; verb.connect(vg); vg.connect(off.destination);
+      if (!noiseBuf || noiseBuf.sampleRate !== 22050) { const nb = off.createBuffer(1, 22050 * 2, 22050), d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; keep.noiseBuf = noiseBuf; noiseBuf = nb; }
       theme = { place: o.place || 'cottage', season: o.season || 'spring', night: !!o.night }; bar = 0; cycle = o.cycle == null ? 1 : o.cycle;
-      const beat = 60 / (theme.night ? 64 : 72);
-      for (let t = 0.1; t < secs - 3; t += beat * 4) { playBar(t, beat); bar++; if (bar % 16 === 0) cycle++; }
+      const beat = beatOf();
+      for (let t = 0.1; t < secs - 3; t += beat * (tuneOf().beats || 4)) { playBar(t, beat); bar++; if (bar % 16 === 0) cycle++; }
       if (o.coins) { sfx.gain.value = 1; sfx.connect(off.destination); music.gain.value = 0; for (let k = 0; k < 8; k++) tone(1046.5 * Math.pow(2, PENTA[k] / 12), 1 + k * 0.25, 0.25, 'sine', 0.07, sfx, 0.25); }
       const data = (await off.startRendering()).getChannelData(0);
       let peak = 0, sum = 0;
       for (let i = 0; i < data.length; i++) { const v = Math.abs(data[i]); if (v > peak) peak = v; sum += v * v; }
       return { peak: +peak.toFixed(4), rms: +Math.sqrt(sum / data.length).toFixed(4) };
-    } finally { Object.assign({}, keep); ac = keep.ac; music = keep.music; verb = keep.verb; sfx = keep.sfx; theme = keep.theme; bar = keep.bar; cycle = keep.cycle; }
+    } finally { if ('noiseBuf' in keep) noiseBuf = keep.noiseBuf; ac = keep.ac; music = keep.music; verb = keep.verb; sfx = keep.sfx; theme = keep.theme; bar = keep.bar; cycle = keep.cycle; }
   }
   function volume(v) {
     musicVol = U.clamp(v, 0, 1);
     if (ac) music.gain.setTargetAtTime(on.music ? musicVol : 0, ac.currentTime, 0.1);
+  }
+  // the music fades out slowly (goodnight); volume() brings it back
+  function fade(secs = 4) { if (ac) music.gain.setTargetAtTime(0, ac.currentTime, secs / 4); }
+  // a light going out at goodnight: a soft note sinking a little, lower each time
+  function lightOff(i = 0) {
+    if (!ac) return;
+    const t = ac.currentTime, f = 784 * Math.pow(2, -[0, 3, 5, 7, 10, 12, 15, 17][i % 8] / 12);
+    const o = tone(f, t, 1.5, 'sine', 0.045, sfx, 0.65, 0.012);
+    o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * 0.95, t + 1.3);
   }
 
   // ------------------------------------------------------------ birdsong
@@ -450,5 +514,5 @@ const AUDIO = (() => {
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, nope, pour, turn, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, debugRender };
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, nope, pour, turn, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, fade, lightOff, debugRender, TUNES };
 })();

@@ -14,6 +14,9 @@ const DATA = (() => {
     towpath: 'The towpath', water: 'On the water', bank: 'The bank', boat: 'The narrowboat', lock: 'The lock', lockhouse: 'The lock-keeper\'s cottage', bridge: 'The bridge',
     shop: 'In the shop', shopfront: 'The shop front', nook: 'The reading nook', upstairs: 'Upstairs', courtyard: 'The courtyard',
     fromCanal: 'From the canal', fromBooks: 'From the bookshop',
+    potYard: 'The cobbled yard', workshop: 'The workshop', kilnSide: 'By the kiln',
+    platform: 'The platform', waitingRoom: 'The waiting room', signalBox: 'The signal box', lineSide: 'Along the line', ticketOffice: 'The ticket office',
+    fromPottery: 'From the pottery', fromHalt: 'From the station',
   };
 
   // part = which piece of the place's picture this chore restores
@@ -173,6 +176,50 @@ const DATA = (() => {
     { id: 'books-bench', area: 'courtyard', part: 'bench', name: 'Build a reading bench', scene: 'build', opts: { material: 'planks' }, seed: 915 },
   ];
 
+  // The eighth place: a pottery in an old brick barn on a field lane, with a
+  // kiln, a potter's wheel and glaze shelves. For sale a year after the
+  // bookshop is restored. Throwing a bowl is made with your own hands; glazing
+  // the tea set and loading the kiln are puzzles.
+  const POTTERY_CHORES = [
+    { id: 'pot-yard', area: 'potYard', part: 'yard', name: 'The cobbled yard', scene: 'stones', opts: { shape: 'yard' }, seed: 1001 },
+    { id: 'pot-window', area: 'workshop', part: 'window', name: 'The workshop window', scene: 'window', opts: { room: 'pottery' }, seed: 1002 },
+    { id: 'pot-floor', area: 'workshop', part: 'floor', name: 'Clay dust on the floor', scene: 'cafeFloor', opts: { where: 'pottery' }, seed: 1003 },
+    { id: 'pot-kiln', area: 'kilnSide', part: 'kiln', name: 'Soot on the kiln', scene: 'kiln', opts: {}, seed: 1004 },
+    { id: 'pot-wheel', area: 'workshop', part: 'wheel', name: 'The clay-caked wheel', scene: 'counter', opts: { what: 'wheel' }, seed: 1005 },
+    { id: 'pot-shelves', area: 'workshop', part: 'shelves', name: 'Dusty glaze shelves', scene: 'attic', opts: { where: 'pottery' }, seed: 1006 },
+    { id: 'pot-chimney', area: 'kilnSide', part: 'chimney', name: 'Moss on the kiln chimney', scene: 'roof', opts: { what: 'chimney' }, seed: 1007 },
+    { id: 'pot-door', area: 'potYard', part: 'door', name: 'Paint the barn door', scene: 'door', opts: { what: 'barn' }, seed: 1008, color: 'potteryDoor' },
+    { id: 'pot-sign', area: 'potYard', part: 'sign', name: 'Paint the pottery sign', scene: 'sign', opts: { title: 'POTTERY', sub: '· KILN LANE ·', icon: 'pot' }, seed: 1009, color: 'potterySign' },
+    { id: 'pot-rack', area: 'potYard', part: 'rack', name: 'A new drying rack', scene: 'build', opts: { material: 'planks' }, seed: 1010 },
+    { id: 'pot-scraps', area: 'workshop', part: 'scraps', name: 'Clay scraps into the bin', scene: 'beach', opts: { items: 'clay', ground: 'floor' }, seed: 1011, verb: 'put the scraps in the bin' },
+    { id: 'pot-lavender', area: 'kilnSide', part: 'lavender', name: 'Lavender by the kiln', scene: 'plant', opts: { box: 'bed', plants: 'lavender' }, seed: 1012 },
+    { id: 'pot-throw', area: 'workshop', part: 'throw', name: 'Throw a pot', scene: 'wheel', opts: {}, seed: 1013, how: 'Spin the wheel, pull up the clay, glaze it' },
+    { id: 'pot-glaze', area: 'workshop', part: 'glaze', name: 'Glaze the tea set', scene: 'cups', opts: { where: 'pottery' }, seed: 1014, how: 'Each pot to its own shelf and glaze' },
+    { id: 'pot-firing', area: 'kilnSide', part: 'firing', name: 'Load the kiln', scene: 'pack', opts: { what: 'kiln' }, seed: 1015, how: 'Fit every pot onto the kiln shelves' },
+  ];
+
+  // The ninth place: a little country station where no train has stopped for
+  // years. For sale a year after the pottery is restored. Its puzzles are
+  // little mysteries: lost property, stamps for the parcels and what is
+  // missing from the shelves.
+  const HALT_CHORES = [
+    { id: 'halt-platform', area: 'platform', part: 'platform', name: 'Moss on the platform', scene: 'stones', opts: { shape: 'platform' }, seed: 1101 },
+    { id: 'halt-floor', area: 'waitingRoom', part: 'floor', name: 'The waiting-room floor', scene: 'cafeFloor', opts: { where: 'halt' }, seed: 1102 },
+    { id: 'halt-window', area: 'waitingRoom', part: 'window', name: 'The waiting-room window', scene: 'window', opts: { room: 'waiting' }, seed: 1103 },
+    { id: 'halt-box', area: 'signalBox', part: 'box', name: 'The signal-box windows', scene: 'window', opts: { room: 'signalbox' }, seed: 1104 },
+    { id: 'halt-clock', area: 'platform', part: 'clock', name: 'The station clock', scene: 'roundWindow', opts: { what: 'clock' }, seed: 1105 },
+    { id: 'halt-lamps', area: 'platform', part: 'lamps', name: 'The platform lamps', scene: 'lantern', opts: { where: 'halt' }, seed: 1106 },
+    { id: 'halt-sign', area: 'platform', part: 'sign', name: 'Paint the station sign', scene: 'sign', opts: { title: 'HALFPENNY HALT', sub: '· PLATFORM 1 ·', icon: 'train' }, seed: 1107, color: 'haltSign' },
+    { id: 'halt-door', area: 'ticketOffice', part: 'door', name: 'Paint the ticket-office door', scene: 'door', opts: {}, seed: 1108, color: 'haltDoor' },
+    { id: 'halt-gate', area: 'lineSide', part: 'gate', name: 'Paint the crossing gate', scene: 'fence', opts: { what: 'gate' }, seed: 1109, color: 'haltGate' },
+    { id: 'halt-bench', area: 'platform', part: 'bench', name: 'A new platform bench', scene: 'build', opts: { material: 'planks' }, seed: 1110 },
+    { id: 'halt-baskets', area: 'platform', part: 'baskets', name: 'Hanging baskets', scene: 'plant', opts: { box: 'baskets', plants: 'flowers' }, seed: 1111 },
+    { id: 'halt-line', area: 'lineSide', part: 'line', name: 'Litter along the line', scene: 'beach', opts: { items: 'litter', ground: 'gravel' }, seed: 1112, verb: 'pick up the litter' },
+    { id: 'halt-lost', area: 'ticketOffice', part: 'lost', name: 'Lost property', scene: 'owners', opts: {}, seed: 1113, how: 'Read the notes, then give everything back' },
+    { id: 'halt-parcels', area: 'ticketOffice', part: 'parcels', name: 'Stamps for the parcels', scene: 'post', opts: {}, seed: 1114, how: 'Stamps that add up to each weight' },
+    { id: 'halt-shelves', area: 'ticketOffice', part: 'shelves', name: 'What\'s missing from the shelves', scene: 'seek', opts: { where: 'halt' }, seed: 1115, how: 'Find the five things on the list' },
+  ];
+
   // The puzzle room, a beta place open from the start: jobs with a little
   // thinking instead of a tool (js/puzzles.js). No machines, no robots, a
   // new layout every time, and they can be taken in any order.
@@ -184,6 +231,10 @@ const DATA = (() => {
     { id: 'beta-plan', area: 'fromGarden', part: 'plan', name: 'The cutting garden', scene: 'plan', opts: {}, seed: 605, how: 'One of each flower in every row and column' },
     { id: 'beta-books', area: 'fromBooks', part: 'books', name: 'Back on the shelves', scene: 'books', opts: {}, seed: 606, how: 'Every series on a shelf of its own' },
     { id: 'beta-pack', area: 'fromCanal', part: 'pack', name: 'Load the boat', scene: 'pack', opts: {}, seed: 607, how: 'Fit every piece into the hold' },
+    { id: 'beta-wheel', area: 'fromPottery', part: 'wheel', name: 'Throw a pot', scene: 'wheel', opts: {}, seed: 608, how: 'Spin the wheel, pull up the clay, glaze it' },
+    { id: 'beta-owners', area: 'fromHalt', part: 'owners', name: 'Lost property', scene: 'owners', opts: {}, seed: 609, how: 'Read the notes, then give everything back' },
+    { id: 'beta-post', area: 'fromHalt', part: 'post', name: 'Stamps for the parcels', scene: 'post', opts: {}, seed: 610, how: 'Stamps that add up to each weight' },
+    { id: 'beta-seek', area: 'fromHalt', part: 'seek', name: 'What\'s missing?', scene: 'seek', opts: { where: 'halt' }, seed: 611, how: 'Find the five things on the list' },
   ];
 
   // Jobs that only turn up in the seasons, for variety: planting and
@@ -218,6 +269,16 @@ const DATA = (() => {
     // the newer puzzles turn up at the older places too
     { id: 'x-cove-pack', place: 'cove', area: 'van', name: 'Pack the camper van', scene: 'pack', opts: { what: 'van' }, seed: 326, how: 'Fit everything into the van' },
     { id: 'x-cottage-books', area: 'attic', name: 'Books back on the shelves', scene: 'books', opts: { where: 'cottage' }, seed: 327, how: 'Every series on a shelf of its own' },
+    { id: 'x-cafe-owners', place: 'cafe', area: 'inside', name: 'Left behind at the café', scene: 'owners', opts: { what: 'cafe' }, seed: 328, how: 'Read the notes, then give everything back' },
+    { id: 'x-rescue-owners', place: 'rescue', area: 'kennels', name: 'Whose lead is whose?', scene: 'owners', opts: { what: 'leads' }, seed: 329, how: 'Read the notes, then give every dog its own' },
+    { id: 'x-books-post', place: 'books', area: 'shop', name: 'Parcels of books', scene: 'post', opts: { where: 'books' }, seed: 330, how: 'Stamps that add up to each weight' },
+    { id: 'x-cottage-seek', area: 'attic', name: 'What\'s missing in the attic?', scene: 'seek', opts: { where: 'attic' }, seed: 331, how: 'Find the five things on the list' },
+    { id: 'x-cafe-seek', place: 'cafe', area: 'inside', name: 'The store room', scene: 'seek', opts: { where: 'store' }, seed: 332, how: 'Find the five things on the list' },
+    { id: 'x-books-seek', place: 'books', area: 'upstairs', name: 'The stockroom', scene: 'seek', opts: { where: 'stockroom' }, seed: 333, how: 'Find the five things on the list' },
+    { id: 'x-rescue-seek', place: 'rescue', area: 'barn', name: 'The barn', scene: 'seek', opts: { where: 'barn' }, seed: 334, how: 'Find the five things on the list' },
+    { id: 'x-pottery-lights', place: 'pottery', area: 'potYard', name: 'Fairy lights', scene: 'lights', opts: { where: 'pottery' }, seed: 335, verb: 'hang the lights' },
+    { id: 'x-halt-lights', place: 'halt', area: 'platform', name: 'Lamps along the platform', scene: 'lights', opts: { where: 'halt' }, seed: 336, verb: 'hang the lights' },
+    { id: 'x-pottery-cat', place: 'pottery', area: 'workshop', name: 'The pottery cat', scene: 'cat', opts: { where: 'pottery' }, seed: 337, verb: 'brush the cat' },
   ];
 
   const FAMILY_OF = {
@@ -227,12 +288,15 @@ const DATA = (() => {
     dog: 'groom', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
     coffee: 'brew', serve: 'arrange', seal: 'feed', bowls: 'feed', walk: 'walk', cat: 'brush', hutch: 'muck',
     cups: 'think', feeding: 'think', hose: 'think', beds: 'think', plan: 'think', books: 'think', pack: 'think', narrowboat: 'paint', porthole: 'wash',
+    kiln: 'scrub', owners: 'think', post: 'think', seek: 'think',
+    // made with your own hands: no tools, no robots, a Hint button like the puzzles
+    wheel: 'craft',
   };
   const familyOf = (scene) => FAMILY_OF[scene];
 
   // indoor jobs get no snow or falling leaves from the season outside
   const INDOOR = new Set(['cafeFloor', 'tables', 'counter', 'fridge', 'attic', 'coffee', 'bowls', 'cat', 'hutch']);
-  const isIndoor = (c) => INDOOR.has(c.scene) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles') || (c.scene === 'serve' && c.opts.what === 'napkins');
+  const isIndoor = (c) => INDOOR.has(c.scene) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles') || (c.scene === 'serve' && c.opts.what === 'napkins') || (c.scene === 'beach' && c.opts.ground === 'floor');
 
   // What jobs pay. Kept modest: tools, helpers, decorations and new places
   // should take a while to save up for.
@@ -243,6 +307,9 @@ const DATA = (() => {
   function glassValue(i) { return Math.round(520 * Math.pow(1.06, i)); }
   function canalValue(i) { return Math.round(640 * Math.pow(1.06, i)); }
   function booksValue(i) { return Math.round(780 * Math.pow(1.06, i)); }
+  // from the pottery on, a place's jobs pay its price / 90, rising 6% a job
+  const byPrice = (price) => (i) => Math.round((price / 90) * Math.pow(1.06, i));
+  const potteryValue = byPrice(80000), haltValue = byPrice(90000);
   // puzzles pay like a job in the middle of the cottage: worth doing, but
   // never a shortcut past the other places
   function betaValue(i) { return Math.round(70 * Math.pow(1.15, i)); }
@@ -254,10 +321,13 @@ const DATA = (() => {
   GLASS_CHORES.forEach((c, i) => { c.index = i; c.place = 'glasshouse'; c.family = c.family || familyOf(c.scene); c.value = glassValue(i); });
   CANAL_CHORES.forEach((c, i) => { c.index = i; c.place = 'canal'; c.family = c.family || familyOf(c.scene); c.value = canalValue(i); });
   BOOK_CHORES.forEach((c, i) => { c.index = i; c.place = 'books'; c.family = c.family || familyOf(c.scene); c.value = booksValue(i); });
+  POTTERY_CHORES.forEach((c, i) => { c.index = i; c.place = 'pottery'; c.family = c.family || familyOf(c.scene); c.value = potteryValue(i); });
+  HALT_CHORES.forEach((c, i) => { c.index = i; c.place = 'halt'; c.family = c.family || familyOf(c.scene); c.value = haltValue(i); });
   BETA_CHORES.forEach((c, i) => { c.index = i; c.place = 'beta'; c.family = familyOf(c.scene); c.value = betaValue(i); });
   EXTRAS.forEach((c) => { c.place = c.place || 'cottage'; c.family = familyOf(c.scene); c.extra = true; });
-  // the thinking jobs are puzzles wherever they live (js/puzzles.js)
-  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (c.family === 'think') c.puzzle = true; }));
+  // the thinking and the making jobs are puzzles wherever they live (js/puzzles.js)
+  const HANDS = new Set(['think', 'craft']);
+  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (HANDS.has(c.family)) c.puzzle = true; }));
 
   // first cottage chore that uses each family sets the price level of its tools
   const intro = {};
@@ -290,14 +360,14 @@ const DATA = (() => {
         ['win-living', 'Frost on the living room window', 'frost'], ['lawn-patch', 'A clear spot for the birds', 'snow'], ['win-bedroom', 'Frosty bedroom windows', 'frost'],
         ['attic-window', 'Frost on the round window', 'frost'], ['attic-floor', 'Winter dusting in the attic'], ['x-firewood', 'More wood for the stove'],
         ['x-jetty', 'Snow on the jetty', 'snow'], ['x-lights', 'Christmas lights on the cottage'], ['x-cat', 'A cat curled up by the stove'],
-        ['x-cottage-books', 'Winter reading, back on the shelves'],
+        ['x-cottage-books', 'Winter reading, back on the shelves'], ['x-cottage-seek', 'What\'s missing in the attic?'],
       ],
       spring: [
         ['bed-roses', 'Spring weeds in the roses'], ['fence-left', 'Fresh paint for the fence'], ['bed-tulips', 'Spring weeds in the tulips'],
         ['fence-right', 'More fresh paint for the fence'], ['shutters', 'A new colour for the shutters'], ['door', 'A new colour for the door'],
         ['lawn-tree', 'The first mow of the year'], ['roof-right', 'Moss by the chimney'], ['x-windowboxes', 'Plant the window boxes'],
         ['x-veg', 'Sow the vegetable patch'], ['x-brickpath', 'Lay a brick path to the shed'], ['pond', 'Spring clean in the pond'],
-        ['x-dog', 'Bath time after a muddy spring walk'], ['x-walk', 'The dog next door wants a walk'],
+        ['x-dog', 'Bath time after a muddy spring walk'], ['x-walk', 'The dog next door wants a walk'], ['x-cottage-seek', 'Spring cleaning in the attic'],
       ],
     },
     cafe: {
@@ -306,14 +376,14 @@ const DATA = (() => {
         ['cafe-planters', 'Replant the planter boxes'], ['cafe-floor', 'Sand on the café floor'], ['cafe-pots', 'New flowers for the pots'],
         ['cafe-window', 'Fingerprints on the shop window'], ['cafe-counter', 'Polish the coffee machine'], ['cafe-fridge', 'Cold drinks for a hot day'],
         ['x-cafe-coffee', 'Iced coffee for a hot day', null, { drink: 'iced' }], ['x-cafe-chairs', 'Tables out in the sunshine'], ['x-cafe-napkins', 'Napkins for the lunch rush'],
-        ['cafe-cups', 'Cups after the lunch rush'],
+        ['cafe-cups', 'Cups after the lunch rush'], ['x-cafe-owners', 'Left behind on a sunny day'],
       ],
       autumn: [
         ['cafe-terrace', 'Leaves on the terrace', 'leaves'], ['cafe-deck', 'Leaves on the deck', 'leaves'], ['cafe-window', 'Rain spots on the shop window'],
         ['cafe-floor', 'Muddy footprints on the floor'], ['cafe-herbs', 'Fresh herbs for the kitchen'], ['cafe-tables', 'Coffee rings on the tables'],
         ['x-cafe-dog', 'A guest\'s muddy dog'],
         ['cafe-counter', 'Pumpkin spice everywhere'], ['x-cafe-coffee', 'Lattes for a rainy day'], ['x-cafe-napkins', 'Fresh napkins on every table'],
-        ['cafe-cups', 'Teacups for a rainy day'],
+        ['cafe-cups', 'Teacups for a rainy day'], ['x-cafe-seek', 'What\'s missing from the store room?'],
       ],
       winter: [
         ['cafe-terrace', 'Snow on the terrace', 'snow'], ['cafe-deck', 'Snow on the deck', 'snow'], ['cafe-window', 'Frost on the shop window', 'frost'],
@@ -326,6 +396,7 @@ const DATA = (() => {
         ['cafe-sign', 'Repaint the sign'], ['cafe-door', 'A new colour for the door'], ['cafe-planters', 'Spring planting'],
         ['cafe-pots', 'Pots for the steps'], ['cafe-herbs', 'Sow new herbs'], ['cafe-terrace', 'Moss on the terrace'],
         ['cafe-awning', 'Spring clean for the awning'], ['x-cafe-chairs', 'The terrace opens for spring'],
+        ['x-cafe-owners', 'Left behind at the café'], ['x-cafe-seek', 'The store room after the winter'],
       ],
     },
     cove: {
@@ -357,24 +428,25 @@ const DATA = (() => {
         ['rescue-walk', 'A long summer walk'], ['rescue-water', 'Cool water on a hot day'], ['rescue-pond', 'Duckweed on the pond'],
         ['rescue-meadow', 'The paddock has grown again'], ['rescue-puppy', 'A puppy rolled in the mud'], ['rescue-seal', 'Fish for the seal pup'],
         ['rescue-toys', 'Toys left out after playtime'], ['rescue-veg', 'More carrots for the rabbits'], ['rescue-feed', 'Feeding time on a hot day'],
+        ['x-rescue-owners', 'Whose lead is whose?'],
       ],
       autumn: [
         ['rescue-yard', 'Leaves in the farmyard', 'leaves'], ['rescue-walk', 'A walk through the autumn woods'], ['rescue-hutch', 'Cosy straw for the autumn'],
         ['rescue-bowls', 'Supper for the dogs'], ['rescue-cat', 'Burrs in the cat\'s fur'], ['rescue-pond', 'Leaves on the duck pond', 'leaves'],
         ['rescue-window', 'Rain on the office window'], ['rescue-puppy', 'Muddy paws after the rain'], ['rescue-beds', 'Cosy beds for autumn nights'],
-        ['rescue-feed', 'Supper by the chart'],
+        ['rescue-feed', 'Supper by the chart'], ['x-rescue-seek', 'What\'s missing in the barn?'],
       ],
       winter: [
         ['x-rescue-lights', 'Fairy lights on the barn'], ['rescue-yard', 'Snow in the farmyard', 'snow'], ['rescue-window', 'Frost on the office window', 'frost'],
         ['rescue-walk', 'A walk in the snow'], ['rescue-hutch', 'Extra straw for cold nights'], ['rescue-water', 'Fresh water on a frosty morning'],
         ['rescue-bowls', 'A warm breakfast'], ['rescue-floor', 'Snow blown into the barn', 'snow'], ['rescue-beds', 'Who sleeps by the stove?'],
-        ['rescue-feed', 'A warm supper by the chart'],
+        ['rescue-feed', 'A warm supper by the chart'], ['x-rescue-seek', 'Lost in the hay'],
       ],
       spring: [
         ['rescue-fence', 'Fresh paint for the paddock fence'], ['rescue-door', 'A new colour for the farmhouse door'], ['rescue-veg', 'Sow the vegetable patch'],
         ['rescue-meadow', 'The first mow of the year'], ['rescue-cat', 'Spring moult: brush the cat'], ['rescue-seal', 'A new seal pup to feed'],
         ['rescue-sign', 'Touch up the sign'], ['rescue-toys', 'Toys out in the spring sunshine'], ['rescue-beds', 'Beds for the new arrivals'],
-        ['rescue-feed', 'Feeding time for the new arrivals'],
+        ['rescue-feed', 'Feeding time for the new arrivals'], ['x-rescue-owners', 'Leads for the new arrivals'],
       ],
     },
     glasshouse: {
@@ -426,6 +498,7 @@ const DATA = (() => {
         ['books-window', 'Summer dust on the shop window'], ['books-awning', 'Pollen on the awning'], ['books-counter', 'Iced coffee drips in the coffee corner'],
         ['books-boxes', 'New flowers for the window boxes'], ['books-yard', 'Weeds between the flagstones'], ['books-bed', 'Weeds by the hollyhocks'],
         ['books-tea', 'Iced coffee for hot readers', null, { drink: 'iced' }], ['books-tables', 'Ice-cream drips on the tables'], ['books-floor', 'Sand from the beach on the floor'],
+        ['x-books-post', 'Parcels of holiday books'], ['x-books-seek', 'What\'s missing in the stockroom?'],
       ],
       autumn: [
         ['books-yard', 'Leaves in the courtyard', 'leaves'], ['books-floor', 'Muddy footprints on the floor'], ['books-window', 'Rain spots on the shop window'],
@@ -435,24 +508,71 @@ const DATA = (() => {
       winter: [
         ['x-books-lights', 'Fairy lights in the shop window'], ['books-window', 'Frost on the shop window', 'frost'], ['books-yard', 'Snow in the courtyard', 'snow'],
         ['books-floor', 'Slushy footprints'], ['books-tea', 'Hot chocolate for the readers', null, { drink: 'cocoa' }], ['books-shelves', 'Christmas books back on the shelves'],
-        ['books-cat', 'A cat curled up by the radiator'], ['books-attic', 'Winter dusting in the stockroom'],
+        ['books-cat', 'A cat curled up by the radiator'], ['books-attic', 'Winter dusting in the stockroom'], ['x-books-post', 'Christmas parcels of books'],
       ],
       spring: [
         ['books-door', 'A new colour for the door'], ['books-sign', 'Repaint the sign'], ['books-boxes', 'Spring flowers for the window boxes'],
         ['books-bed', 'Spring weeds by the hollyhocks'], ['books-bench', 'A new bench in the courtyard'], ['books-awning', 'Spring clean for the awning'],
-        ['books-shelves', 'New books for spring'], ['books-yard', 'Moss in the courtyard'],
+        ['books-shelves', 'New books for spring'], ['books-yard', 'Moss in the courtyard'], ['x-books-seek', 'Spring clean in the stockroom'],
+      ],
+    },
+    pottery: {
+      summer: [
+        ['pot-yard', 'Weeds between the cobbles'], ['pot-window', 'Summer dust on the workshop window'], ['pot-floor', 'Clay dust after a busy day'],
+        ['pot-wheel', 'Clay on the wheel again'], ['pot-lavender', 'More lavender for the bees'], ['pot-scraps', 'Clay scraps after the summer class'],
+        ['pot-throw', 'A pot for the summer fair'], ['pot-glaze', 'Glaze a tea set for the garden'], ['x-pottery-cat', 'The pottery cat, all dusty'],
+      ],
+      autumn: [
+        ['pot-yard', 'Leaves in the yard', 'leaves'], ['pot-window', 'Rain spots on the workshop window'], ['pot-chimney', 'Moss creeping back on the chimney'],
+        ['pot-kiln', 'Soot after the autumn firing'], ['pot-floor', 'Muddy boots on the floor'], ['pot-rack', 'Leaves on the drying rack', 'leaves'],
+        ['pot-firing', 'Load the kiln for autumn'], ['pot-glaze', 'Glaze mugs for the cold days'], ['pot-throw', 'A pot for the autumn table'],
+        ['x-pottery-cat', 'The pottery cat, full of burrs'],
+      ],
+      winter: [
+        ['x-pottery-lights', 'Fairy lights on the drying rack'], ['pot-yard', 'Snow in the yard', 'snow'], ['pot-window', 'Frost on the workshop window', 'frost'],
+        ['pot-kiln', 'Soot from the winter firing'], ['pot-shelves', 'Winter dusting on the glaze shelves'], ['pot-rack', 'Snow on the drying rack', 'snow'],
+        ['pot-firing', 'Load the kiln with presents'], ['pot-glaze', 'Glaze cups for hot chocolate'], ['pot-throw', 'A pot for a present'],
+        ['x-pottery-cat', 'A cat asleep by the warm kiln'],
+      ],
+      spring: [
+        ['pot-door', 'A new colour for the barn door'], ['pot-sign', 'Repaint the sign'], ['pot-lavender', 'Plant new lavender'],
+        ['pot-rack', 'Mend the drying rack'], ['pot-yard', 'Moss between the cobbles'], ['pot-chimney', 'Moss on the chimney'],
+        ['pot-scraps', 'Clay scraps after the spring class'], ['pot-throw', 'A pot for spring flowers'], ['pot-firing', 'Load the kiln for the spring fair'],
+      ],
+    },
+    halt: {
+      summer: [
+        ['halt-platform', 'Weeds on the platform'], ['halt-baskets', 'New flowers for the baskets'], ['halt-line', 'Picnic litter along the line'],
+        ['halt-window', 'Summer dust on the waiting-room window'], ['halt-floor', 'Sand from the beach in the waiting room'], ['halt-box', 'Pollen on the signal-box windows'],
+        ['halt-lost', 'Left behind after a summer day out'], ['halt-parcels', 'Parcels for the summer post'],
+      ],
+      autumn: [
+        ['halt-platform', 'Leaves on the platform', 'leaves'], ['halt-bench', 'Leaves on the bench', 'leaves'], ['halt-window', 'Rain spots on the waiting-room window'],
+        ['halt-lamps', 'Cobwebs on the platform lamps'], ['halt-floor', 'Muddy footprints in the waiting room'], ['halt-clock', 'Rain spots on the station clock'],
+        ['halt-lost', 'Umbrellas left on a rainy day'], ['halt-shelves', 'What\'s missing after the autumn rush'],
+      ],
+      winter: [
+        ['x-halt-lights', 'Lamps along the platform'], ['halt-platform', 'Snow on the platform', 'snow'], ['halt-window', 'Frost on the waiting-room window', 'frost'],
+        ['halt-box', 'Frost on the signal-box windows', 'frost'], ['halt-clock', 'Frost on the station clock', 'frost'], ['halt-lamps', 'Polish the lamps for the long nights'],
+        ['halt-parcels', 'Christmas parcels'], ['halt-lost', 'Mittens and scarves left behind'], ['halt-shelves', 'What\'s missing from the winter shelves'],
+      ],
+      spring: [
+        ['halt-door', 'A new colour for the ticket-office door'], ['halt-sign', 'Touch up the station sign'], ['halt-gate', 'Fresh paint for the crossing gate'],
+        ['halt-baskets', 'Spring flowers for the baskets'], ['halt-bench', 'Mend the platform bench'], ['halt-platform', 'Moss on the platform'],
+        ['halt-parcels', 'Seed packets by post'], ['halt-shelves', 'Spring clean on the shelves'],
       ],
     },
   };
   // Christmas lights always come with winter
-  const ALWAYS = new Set(['x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights']);
-  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5 };
-  // at most this many jobs of one kind in a season (default 2); one puzzle per place
-  const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2, brew: 1, walk: 1, brush: 1, muck: 1, think: 1 };
+  const ALWAYS = new Set(['x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights', 'x-pottery-lights', 'x-halt-lights']);
+  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5, pottery: 5, halt: 5 };
+  // at most this many jobs of one kind in a season (default 2); one puzzle and
+  // one thing made by hand per place
+  const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2, brew: 1, walk: 1, brush: 1, muck: 1, think: 1, craft: 1 };
 
   const seasonOf = (n) => SEASON_ORDER[(n - 1) % 4];
   function seasonValue(n, i) { return Math.round(choreValue(CHORES.length - 1) * 0.4 * Math.min(1.6, Math.pow(1.05, n - 1)) * (1 + i * 0.04)); }
-  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, EXTRAS);
+  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, EXTRAS);
   const byId = (id) => ALL().find((c) => c.id === id);
   // leaves in water are skimmed with a net, never raked
   const famFor = (b, dirt) => (dirt === 'leaves' ? (b.scene === 'pond' || b.scene === 'rockpool' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family);
@@ -462,7 +582,7 @@ const DATA = (() => {
   // and jobs from the same season last year pushed to the back.
   function pickSeason(n, place, history = true) {
     const pool = SEASON_POOL[place][seasonOf(n)];
-    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057 }[place]);
+    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057, pottery: 729173, halt: 833177 }[place]);
     const last = history && n > 4 ? new Set(pickSeason(n - 4, place, false)) : new Set();
     const scored = pool.map((p) => ({ p, s: r() + (last.has(p[0]) ? 0.6 : 0) - (ALWAYS.has(p[0]) ? 2 : 0) })).sort((a, b) => a.s - b.s).map((x) => x.p);
     const want = PER_SEASON[place], picked = [], count = {};
@@ -473,7 +593,7 @@ const DATA = (() => {
       count[fam] = (count[fam] || 0) + 1;
       picked.push(p);
     }
-    const isNew = (p) => ['plant', 'build', 'collect', 'polish', 'arrange', 'brew', 'feed', 'walk', 'think'].includes(famFor(byId(p[0]), p[2]));
+    const isNew = (p) => ['plant', 'build', 'collect', 'polish', 'arrange', 'brew', 'feed', 'walk', 'think', 'craft'].includes(famFor(byId(p[0]), p[2]));
     if (!picked.some(isNew)) {
       const swap = scored.find((p) => isNew(p) && !picked.includes(p));
       if (swap) picked[picked.length - 1] = swap;
@@ -481,12 +601,37 @@ const DATA = (() => {
     return history ? picked : picked.map((p) => p[0]);
   }
 
+  // A season never grows past SEASON_BUDGET jobs, however many places there
+  // are. The cottage and the newest restored place are always awake; the
+  // others take turns, a window moving round them season by season, so each
+  // is awake at least every other season while the budget allows (with
+  // seventeen places, every third season). With seven places or fewer every
+  // place is awake every season, as before.
+  const SEASON_BUDGET = 37;
+  const perSeason = (p) => PER_SEASON[p] || 5;
+  // places: restored place ids in the order they open, the cottage first
+  function awakePlaces(n, places, per = perSeason) {
+    if (n < 1) return [];
+    const fixed = places.filter((p, i) => p === 'cottage' || i === places.length - 1);
+    const others = places.filter((p) => !fixed.includes(p));
+    const room = SEASON_BUDGET - fixed.reduce((a, p) => a + per(p), 0);
+    if (others.reduce((a, p) => a + per(p), 0) <= room) return places.slice();
+    const m = others.length, k = Math.max(1, Math.min(m, Math.floor(room / 5)));
+    const start = ((n - 1) * k) % m, awake = new Set(fixed);
+    let used = 0;
+    for (let j = 0; j < k; j++) {
+      const p = others[(start + j) % m];
+      if (used + per(p) > room) break;
+      used += per(p); awake.add(p);
+    }
+    return places.filter((p) => awake.has(p));
+  }
   // places: list of restored place ids, the cottage first
   function seasonJobs(n, places) {
     if (n < 1) return [];
     const season = seasonOf(n);
     const out = [];
-    for (const place of places) {
+    for (const place of awakePlaces(n, places)) {
       pickSeason(n, place).forEach(([baseId, name, dirt, more], i) => {
         const b = byId(baseId);
         const find = place === 'cottage' ? SEASON_FINDS[season][i] : null;
@@ -532,7 +677,7 @@ const DATA = (() => {
     { name: 'Terracotta', c: '#d98b63' }, { name: 'Butter', c: '#f2d88a' }, { name: 'Cream', c: '#f4ecdc' },
     { name: 'Forest', c: '#4e7b5b' }, { name: 'Navy', c: '#3d5a86' }, { name: 'Charcoal', c: '#4b4a52' },
   ];
-  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86' };
+  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86', potteryDoor: '#9cc5a1', potterySign: '#d98b63', haltSign: '#c9474f', haltDoor: '#4e7b5b', haltGate: '#f4ecdc' };
 
   // one keepsake hidden in each job, found the first time through
   const FINDS = {
@@ -579,10 +724,22 @@ const DATA = (() => {
     'books-tea': ['🍰', 'A slice of lemon cake'], 'books-tables': ['♟️', 'A chess piece someone lost'], 'books-attic': ['🎩', 'A magician\'s top hat'],
     'books-yard': ['🦜', 'A parrot that flew in'], 'books-bed': ['🪃', 'A boomerang that came back'], 'books-bench': ['⌛', 'An old hourglass'],
     'beta-books': ['🧳', 'A little suitcase of stories'], 'beta-pack': ['🧲', 'A horseshoe magnet'],
+    'pot-yard': ['🐌', 'A snail asleep on a cobble'], 'pot-window': ['🏺', 'A tiny glazed vase'], 'pot-floor': ['🧤', 'A pair of clay-caked gloves'],
+    'pot-kiln': ['🔥', 'A spark that never went out'], 'pot-wheel': ['🐚', 'A shell pressed into the clay'], 'pot-shelves': ['🫙', 'A jar of blue glaze'],
+    'pot-chimney': ['🐦', 'A swallow\'s nest'], 'pot-door': ['🧲', 'A horseshoe for luck'], 'pot-sign': ['🖌️', 'A glazing brush'],
+    'pot-rack': ['🪵', 'A wooden rib for shaping'], 'pot-scraps': ['🧩', 'A broken tile shaped like a heart'], 'pot-lavender': ['🐝', 'A bee in the lavender'],
+    'pot-throw': ['🥣', 'The first pot you made'], 'pot-glaze': ['🫖', 'A teapot lid that fits'], 'pot-firing': ['🕯️', 'A clay candle holder'],
+    'halt-platform': ['🎟️', 'A ticket to somewhere'], 'halt-floor': ['🪙', 'A halfpenny'], 'halt-window': ['🗺️', 'An old railway map'],
+    'halt-box': ['🔔', 'The signalman\'s bell'], 'halt-clock': ['🗝️', 'The key that winds the clock'], 'halt-lamps': ['🕯️', 'A lamp wick'],
+    'halt-sign': ['📯', 'A guard\'s whistle'], 'halt-door': ['🧳', 'A suitcase full of postcards'], 'halt-gate': ['🐈', 'The station cat\'s bell'],
+    'halt-bench': ['📰', 'A newspaper from long ago'], 'halt-baskets': ['🌼', 'A daisy in a teacup'], 'halt-line': ['🚂', 'A toy train'],
+    'halt-lost': ['🧣', 'A scarf nobody came back for'], 'halt-parcels': ['📦', 'A parcel addressed to you'], 'halt-shelves': ['🔍', 'A detective\'s magnifying glass'],
+    'beta-wheel': ['🏺', 'A little jug you made'], 'beta-owners': ['☂️', 'An umbrella with a name tag'], 'beta-post': ['✉️', 'A stamp with a cat on it'],
+    'beta-seek': ['🕵️', 'A detective\'s notebook'],
   };
 
   // what you do in each kind of job, for the first-time hint
-  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog', brew: 'pour', feed: 'feed', walk: 'walk', brush: 'brush', muck: 'muck out', think: 'think' };
+  const VERBS = { mow: 'mow', scrub: 'scrub', paint: 'paint', wash: 'wash', weed: 'pull weeds', skim: 'skim', dust: 'dust', rake: 'rake', snow: 'shovel', plant: 'plant', build: 'build', collect: 'pick things up', polish: 'polish', arrange: 'arrange', wipe: 'wipe', groom: 'wash the dog', brew: 'pour', feed: 'feed', walk: 'walk', brush: 'brush', muck: 'muck out', think: 'think', craft: 'make' };
 
   // decorations, bought in the shed once a few jobs are done at that place
   const DECOR = [
@@ -687,10 +844,38 @@ const DATA = (() => {
     { id: 'b-kitten', name: 'A kitten playing with wool', icon: '🐈', cost: 13000 },
     { id: 'b-piano', name: 'An old piano', icon: '🎹', cost: 17500 },
   ];
+  const POTTERY_DECOR = [
+    { id: 'p-chimes', name: 'Clay wind chimes', icon: '🎐', cost: 800 },
+    { id: 'p-urn', name: 'A big urn by the door', icon: '🏺', cost: 1150 },
+    { id: 'p-step', name: 'A mosaic step', icon: '🔷', cost: 1550 },
+    { id: 'p-hedge', name: 'A lavender hedge', icon: '💜', cost: 2050 },
+    { id: 'p-cat', name: 'The potter\'s cat in the window', icon: '🐈', cost: 2700 },
+    { id: 'p-bench', name: 'A bench by the kiln', icon: '🪑', cost: 3450 },
+    { id: 'p-bunting', name: 'Bunting', icon: '🎏', cost: 4400 },
+    { id: 'p-birdbath', name: 'A glazed bird bath', icon: '🐦', cost: 5600 },
+    { id: 'p-lights', name: 'Fairy lights on the rack', icon: '✨', cost: 7000 },
+    { id: 'p-barrow', name: 'A wheelbarrow of pots', icon: '🪴', cost: 8800 },
+    { id: 'p-sundial', name: 'A sundial', icon: '☀️', cost: 11500 },
+    { id: 'p-bike', name: 'A bicycle with pots in the basket', icon: '🚲', cost: 16000 },
+  ];
+  const HALT_DECOR = [
+    { id: 'h-cat', name: 'A cat basket on the platform', icon: '🧺', cost: 900 },
+    { id: 'h-churns', name: 'Milk churns', icon: '🥛', cost: 1300 },
+    { id: 'h-trunk', name: 'A travel trunk', icon: '🧳', cost: 1750 },
+    { id: 'h-postbox', name: 'A red postbox', icon: '📮', cost: 2300 },
+    { id: 'h-bike', name: 'A bicycle', icon: '🚲', cost: 3000 },
+    { id: 'h-cart', name: 'A barrow of flowers', icon: '🌷', cost: 3900 },
+    { id: 'h-poster', name: 'An old poster', icon: '🖼️', cost: 5000 },
+    { id: 'h-bunting', name: 'Bunting', icon: '🎏', cost: 6300 },
+    { id: 'h-lights', name: 'A string of lamps', icon: '✨', cost: 8000 },
+    { id: 'h-bell', name: 'A station bell', icon: '🔔', cost: 10000 },
+    { id: 'h-vane', name: 'A weather vane', icon: '🐓', cost: 13000 },
+    { id: 'h-tea', name: 'A tea hatch', icon: '🫖', cost: 18000 },
+  ];
   const DECOR_UNLOCK = 6;
 
   // The places you can own; the picture of each is drawn by HOUSE, CAFE, COVE,
-  // RESCUE, GLASSHOUSE, CANAL, BOOKS or BETA. A place goes up for sale once
+  // RESCUE, GLASSHOUSE, CANAL, BOOKS, POTTERY, HALT or BETA. A place goes up for sale once
   // the one it needs is restored and `wait` more seasons have turned (main.js).
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
@@ -700,14 +885,16 @@ const DATA = (() => {
     { id: 'glasshouse', name: 'Primrose Glasshouse', short: 'the glasshouse', toolPrice: 5, blurb: 'A walled garden with an old glasshouse, an orchard and a potting shed, all gone wild. Water it, grow it, mend it and bring it back into bloom.', price: 42000, needs: 'rescue', wait: 3, chores: GLASS_CHORES, decor: GLASS_DECOR, done: 'The garden is in bloom again', lights: 'g-lights' },
     { id: 'canal', name: 'Kingfisher Lock', short: 'the canal', toolPrice: 6, blurb: 'A canal lock with a narrowboat, a humpback bridge and the lock-keeper\'s cottage, all left to the ducks. Paint the boat, mend the gates and load it for a trip.', price: 55000, needs: 'glasshouse', wait: 4, chores: CANAL_CHORES, decor: CANAL_DECOR, done: 'The canal is lovely again', lights: 'k-lights' },
     { id: 'books', name: 'Hollyhock Books', short: 'the bookshop', toolPrice: 7, blurb: 'An old bookshop on a cobbled lane, with a reading nook, a shop cat and a courtyard at the back. Dust it, sort it, paint it and open the door to readers again.', price: 70000, needs: 'canal', wait: 4, chores: BOOK_CHORES, decor: BOOK_DECOR, done: 'The bookshop is open again', lights: 'b-lights' },
+    { id: 'pottery', name: 'Kiln Lane Pottery', short: 'the pottery', toolPrice: 8, blurb: 'A pottery in an old brick barn down a field lane, with a big kiln, a potter\'s wheel and shelves of glazes. Clean it, mend it and make your first bowl.', price: 80000, needs: 'books', wait: 4, chores: POTTERY_CHORES, decor: POTTERY_DECOR, done: 'The pottery is open again', lights: 'p-lights' },
+    { id: 'halt', name: 'Halfpenny Halt', short: 'the station', toolPrice: 9, blurb: 'A little country station where no train has stopped for years: a waiting room, a signal box and a lost-property office full of little mysteries.', price: 90000, needs: 'pottery', wait: 4, chores: HALT_CHORES, decor: HALT_DECOR, done: 'The station is lovely again', lights: 'h-lights' },
     // open from the start and outside the order above: never bought, never in the seasons
     { id: 'beta', name: 'The Puzzle Room', short: 'the puzzle room', beta: true, blurb: 'New kinds of jobs to try: no tools, just a little thinking. Each one comes out different every time.', price: 0, chores: BETA_CHORES, decor: [], done: 'Every puzzle is solved' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
-    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
-    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, DECOR_UNLOCK, SEASON_NAMES,
-    seasonOf, seasonJobs, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
+    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
+    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, DECOR_UNLOCK, SEASON_NAMES,
+    seasonOf, seasonJobs, awakePlaces, SEASON_BUDGET, PER_SEASON, seasonValue, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();

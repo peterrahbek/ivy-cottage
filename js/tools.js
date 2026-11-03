@@ -210,6 +210,13 @@ const TOOLS = (() => {
         { id: 'hands', name: 'Your own two hands', shape: 'circle', r: 12, power: 1.0, speed: 200, sprite: 'hand' },
       ],
     },
+    // making things (clay, beads, paint): hands too, with a brush in them
+    craft: {
+      name: 'Your hands', job: 'Making', icon: 'hand', hands: true,
+      tiers: [
+        { id: 'hands', name: 'Your own two hands', shape: 'circle', r: 12, power: 1.0, speed: 200, sprite: 'craftHand' },
+      ],
+    },
   };
 
   // Price of each tier relative to what the first chore of that family pays.
@@ -809,6 +816,17 @@ const TOOLS = (() => {
         rr(c, -r * (0.75 + k / 2), -r * (0.58 + k / 2), r * (1.15 + k), r * (1.16 + k), r * 0.4); c.fill();
       }
       c.fillStyle = '#9cc5a1'; rr(c, -r * 1.15, -r * 0.52, r * 0.44, r * 1.04, r * 0.16); c.fill();
+    },
+    // the same hand holding a little paintbrush, for jobs made by hand
+    craftHand(c, t) {
+      const r = t.r;
+      c.save(); c.rotate(-0.5);
+      c.strokeStyle = '#b98f5a'; c.lineWidth = r * 0.22; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-r * 0.6, r * 0.2); c.lineTo(r * 1.35, r * 0.2); c.stroke();
+      c.fillStyle = '#c9c2b4'; rr(c, r * 1.25, r * 0.06, r * 0.32, r * 0.28, 2); c.fill();
+      c.fillStyle = '#5d8fd8'; c.beginPath(); c.moveTo(r * 1.55, r * 0.06); c.quadraticCurveTo(r * 2.05, r * 0.2, r * 1.55, r * 0.34); c.closePath(); c.fill();
+      c.restore();
+      SPR.hand(c, t);
     },
     softbrush(c, t) {
       const r = t.r;

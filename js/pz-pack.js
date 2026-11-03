@@ -9,6 +9,10 @@
 // ashore. With opts.what = 'van' it is the camper van at the cove instead,
 // parked on the sand with its side door open: suitcases, a cool box, a
 // rolled-up tent, sleeping bags, boxes, the picnic basket and a beach bag.
+// With opts.what = 'kiln' it is "Load the kiln" at Kiln Lane Pottery: the
+// kiln seen from above with its lid open, and each load a kiln shelf (a bat)
+// of pots waiting on the bench: bowls, mugs, jugs, vases, plates, teapots and
+// flower pots, each its own shape, glaze and pattern.
 //   node test/run.mjs puzzle js/pz-pack.js pack --seeds 30
 
 (() => {
@@ -273,8 +277,65 @@
       if (k === 1) star(x, X - 2, Y + 9, 8, '#e8875a');
     } },
   };
+  // what goes in the kiln: pots seen from above on a kiln shelf (a bat), each
+  // load its own shape, glaze and pattern
+  const glint = (x, X, Y, rad) => { x.fillStyle = 'rgba(255,255,255,0.45)'; x.beginPath(); x.ellipse(X - rad * 0.35, Y - rad * 0.4, rad * 0.32, rad * 0.18, -0.6, 0, 7); x.fill(); };
+  Object.assign(LOADS, {
+    bowls: { rim: '#8d877b', fill: '#d9d2c4', cell(x, X, Y) {
+      disc(x, X + 1.5, Y + 2, 19, 'rgba(60,50,40,0.25)');
+      disc(x, X, Y, 19, '#4c80b6'); disc(x, X, Y, 17, '#8fbfe6'); disc(x, X, Y, 11, '#a9cdee');
+      ring(x, X, Y, 6, 'rgba(76,128,182,0.6)', 1.4);
+      for (let j = 0; j < 10; j++) { const a = j * 0.628; disc(x, X + Math.cos(a) * 14, Y + Math.sin(a) * 14, 1.5, '#4c80b6'); }
+      glint(x, X, Y, 17);
+    } },
+    mugs: { rim: '#7f7b72', fill: '#cfc8ba', cell(x, X, Y, k) {
+      disc(x, X + 1.5, Y + 2, 15, 'rgba(60,50,40,0.25)');
+      line(x, X + 12, Y, X + 21, Y, '#4c9470', 6); line(x, X + 12, Y, X + 21, Y, '#a5d7ba', 3);
+      disc(x, X, Y, 15, '#4c9470'); disc(x, X, Y, 12.5, '#a5d7ba');
+      for (const d of [5, 9]) ring(x, X, Y, d, '#4c9470', 1.8);
+      disc(x, X, Y, 2.4, '#4c9470');
+      glint(x, X, Y, 13);
+    } },
+    jugs: { rim: '#8a7c62', fill: '#dacdb2', cell(x, X, Y) {
+      disc(x, X + 1.5, Y + 2, 16, 'rgba(60,50,40,0.25)');
+      x.fillStyle = '#bb8e2a'; x.beginPath(); x.moveTo(X - 13, Y - 6); x.lineTo(X - 22, Y); x.lineTo(X - 13, Y + 6); x.closePath(); x.fill();
+      line(x, X + 13, Y, X + 21, Y, '#bb8e2a', 6); line(x, X + 13, Y, X + 21, Y, '#f2d88a', 3);
+      disc(x, X, Y, 15.5, '#bb8e2a'); disc(x, X, Y, 13, '#f2d88a'); disc(x, X, Y, 7, '#e9cb72');
+      star(x, X, Y, 5.4, '#bb8e2a');
+      glint(x, X, Y, 13);
+    } },
+    vases: { rim: '#8e7a7a', fill: '#ddcfcb', cell(x, X, Y) {
+      disc(x, X + 1.5, Y + 2, 17, 'rgba(60,50,40,0.25)');
+      disc(x, X, Y, 17, '#c4625a'); disc(x, X, Y, 15, '#efb4ae');
+      x.fillStyle = '#c4625a';
+      x.beginPath(); x.moveTo(X, Y + 12); x.bezierCurveTo(X - 13, Y + 3, X - 7, Y - 10, X, Y - 4); x.bezierCurveTo(X + 7, Y - 10, X + 13, Y + 3, X, Y + 12); x.fill();
+      disc(x, X, Y - 1, 4.4, '#efb4ae'); disc(x, X, Y - 1, 2.6, '#7a3a34');
+      glint(x, X, Y, 15);
+    } },
+    plates: { rim: '#7d7790', fill: '#d6d0de', cell(x, X, Y) {
+      disc(x, X + 1.5, Y + 2, 21, 'rgba(60,50,40,0.25)');
+      disc(x, X, Y, 21, '#7660b0'); disc(x, X, Y, 19.5, '#bba9df');
+      ring(x, X, Y, 15.5, '#7660b0', 3); ring(x, X, Y, 9, 'rgba(118,96,176,0.5)', 1.2);
+      glint(x, X, Y, 19);
+    } },
+    teapots: { rim: '#6f8686', fill: '#cfdcdc', cell(x, X, Y, k) {
+      disc(x, X + 1.5, Y + 2, 15, 'rgba(60,50,40,0.25)');
+      if (k === 0) { line(x, X - 12, Y + 3, X - 22, Y - 4, '#3f8a8c', 5); line(x, X - 12, Y + 3, X - 22, Y - 4, '#a6d3d4', 2.6); line(x, X + 12, Y, X + 21, Y, '#3f8a8c', 6); line(x, X + 12, Y, X + 21, Y, '#a6d3d4', 3); }
+      disc(x, X, Y, 15, '#3f8a8c'); disc(x, X, Y, 13, '#a6d3d4');
+      for (let j = 0; j < 4; j++) { const a = j * 1.571 + 0.785; line(x, X + Math.cos(a) * 9, Y + Math.sin(a) * 9, X + Math.cos(a) * 13, Y + Math.sin(a) * 13, '#3f8a8c', 2.2); }
+      disc(x, X, Y, 7.5, '#3f8a8c'); disc(x, X, Y, 6, '#bfe0e0'); disc(x, X, Y, 2.4, '#3f8a8c');
+      glint(x, X, Y, 13);
+    } },
+    flowerpots: { rim: '#8a6a58', fill: '#dcc7b5', cell(x, X, Y) {
+      disc(x, X + 1.5, Y + 2, 17, 'rgba(60,50,40,0.25)');
+      disc(x, X, Y, 17, '#a4553a'); disc(x, X, Y, 15, '#cf7d55'); ring(x, X, Y, 12, '#a4553a', 1.6);
+      disc(x, X, Y, 10.5, '#b8653f'); disc(x, X, Y, 3, '#5a2e1f');
+      x.strokeStyle = 'rgba(255,220,190,0.45)'; x.lineWidth = 2; x.beginPath(); x.arc(X, Y, 14, 3.6, 5.2); x.stroke();
+    } },
+  });
   const BOAT = ['crates', 'sacks', 'barrels', 'apples', 'rope', 'logs', 'pots'];
   const VAN = ['suitcase', 'coolbox', 'tent', 'sleeping', 'boxes', 'basket', 'beachbag'];
+  const KILN = ['bowls', 'mugs', 'jugs', 'vases', 'plates', 'teapots', 'flowerpots'];
 
   // the outline of a load: every square rounded, and joined to its neighbours
   function blobPath(x, cells, inset, rad) {
@@ -318,10 +379,10 @@
 
   // --------------------------------------------------------------- SCENE
   function pack(S) {
-    const r = S.r, van = S.opts.what === 'van';
+    const r = S.r, van = S.opts.what === 'van', kiln = S.opts.what === 'kiln';
     const { cols, shapes } = generate(r);
     const GX = (360 - cols * CELL) / 2, GX1 = GX + cols * CELL;
-    const looks = PZ.shuffle(r, (van ? VAN : BOAT).slice());
+    const looks = PZ.shuffle(r, (van ? VAN : kiln ? KILN : BOAT).slice());
     const slots = slotsFor(shapes.length);
     const sol = shapes.map((cells) => ({ k: 0, col: Math.min(...cells.map((p) => p[0])), row: Math.min(...cells.map((p) => p[1])) }));
     const pieces = shapes.map((cells, i) => {
@@ -406,16 +467,16 @@
     }
 
     const sc = {
-      puzzle: true, indoor: false, steps: K,
+      puzzle: true, indoor: kiln, steps: K,
       crop: { x: 0, y: 60, w: 360, h: 360 },
       decor(c) {
         const L = { GX, GX1, cols, duckX };
-        if (van) vanDecor(c, S.bleed, L); else boatDecor(c, S.bleed, L);
+        if (van) vanDecor(c, S.bleed, L); else if (kiln) kilnDecor(c, S.bleed, L); else boatDecor(c, S.bleed, L);
         // the rule, on a card at the top
         c.fillStyle = 'rgba(40,40,30,0.14)'; PZ.rr(c, 54, 14, 252, 46, 13); c.fill();
         c.fillStyle = PZ.PAPER; PZ.rr(c, 54, 10, 252, 46, 13); c.fill();
         c.strokeStyle = '#e5d9c6'; c.lineWidth = 1.2; c.stroke();
-        PZ.text(c, van ? 'Fit it all into the van' : 'Fit it all into the hold', 180, 27, { size: 16 });
+        PZ.text(c, van ? 'Fit it all into the van' : kiln ? 'Fit every pot into the kiln' : 'Fit it all into the hold', 180, 27, { size: 16 });
         PZ.text(c, van ? 'drag to pack · tap to turn' : 'drag to load · tap to turn', 180, 45, { size: 13, color: PZ.INK2, weight: 700 });
       },
       draw(c, t, still) {
@@ -459,6 +520,7 @@
         if (placed === K) {
           const bob = still ? 0 : Math.sin(t * 2.2) * 1.2;
           if (van) gull(c, birdSide ? 332 : 28, SHORE + 2 + bob, birdSide ? -1 : 1);
+          else if (kiln) cat(c, birdSide ? 334 : 26, SHORE + 14, birdSide ? -1 : 1, still ? 0 : t);
           else kingfisher(c, birdSide ? 334 : 26, SHORE - 4 + bob, birdSide ? -1 : 1);
         }
       },
@@ -666,14 +728,14 @@
     // a mallard paddling by
     duck(c, L.duckX, 84);
   }
-  // squares in chalk on the floor of the hold (or the van)
-  function chalk(c, GX, GX1) {
-    c.strokeStyle = 'rgba(245,235,210,0.5)'; c.lineWidth = 1.6; c.setLineDash([5, 4]);
+  // squares in chalk on the floor of the hold (or the van; in pencil on the kiln floor)
+  function chalk(c, GX, GX1, pencil) {
+    c.strokeStyle = pencil ? 'rgba(120,100,80,0.45)' : 'rgba(245,235,210,0.5)'; c.lineWidth = 1.6; c.setLineDash([5, 4]);
     c.beginPath();
     for (let x = GX + CELL; x < GX1 - 1; x += CELL) { c.moveTo(x, GY + 3); c.lineTo(x, GY1 - 3); }
     for (let y = GY + CELL; y < GY1 - 1; y += CELL) { c.moveTo(GX + 3, y); c.lineTo(GX1 - 3, y); }
     c.stroke(); c.setLineDash([]);
-    c.strokeStyle = 'rgba(245,235,210,0.42)'; c.lineWidth = 2; PZ.rr(c, GX + 1, GY + 1, GX1 - GX - 2, GY1 - GY - 2, 4); c.stroke();
+    c.strokeStyle = pencil ? 'rgba(120,100,80,0.4)' : 'rgba(245,235,210,0.42)'; c.lineWidth = 2; PZ.rr(c, GX + 1, GY + 1, GX1 - GX - 2, GY1 - GY - 2, 4); c.stroke();
   }
   function duck(c, x, y) {
     c.strokeStyle = 'rgba(235,250,245,0.45)'; c.lineWidth = 1.4;
@@ -749,6 +811,67 @@
     c.fillStyle = '#f3c9b5'; c.beginPath(); c.moveTo(0, 6); c.lineTo(-8, -3); c.quadraticCurveTo(0, -11, 8, -3); c.closePath(); c.fill();
     c.strokeStyle = 'rgba(190,120,100,0.6)'; c.lineWidth = 1;
     for (const k of [-5, -2, 1, 4]) { c.beginPath(); c.moveTo(0, 5); c.lineTo(k * 1.4, -6); c.stroke(); }
+    c.restore();
+  }
+  // the kiln at the pottery, seen from above with its lid open, on a floor of
+  // red tiles; the loads wait on the bench in front of it
+  function kilnDecor(c, B, L) {
+    const dr = U.rng(7577), bw = B.x1 - B.x0, { GX, GX1 } = L;
+    const wall = 26, kx0 = GX - wall - 10, kx1 = GX1 + wall + 10, ky0 = GY - wall - 10, ky1 = GY1 + wall + 10;
+    // the workshop floor
+    c.fillStyle = '#d8c2a2'; c.fillRect(B.x0, B.y0, bw, SHORE - B.y0 + 4);
+    const T = 46;
+    for (let y = Math.floor(B.y0 / T) * T; y < SHORE; y += T) {
+      for (let x = Math.floor(B.x0 / T) * T; x < B.x1; x += T) {
+        c.fillStyle = ['#c27a58', '#b8704f', '#c98462', '#bd7654'][(dr() * 4) | 0]; c.fillRect(x + 1.5, y + 1.5, T - 3, T - 3);
+        c.fillStyle = 'rgba(255,230,205,0.15)'; c.fillRect(x + 1.5, y + 1.5, T - 3, 2);
+      }
+    }
+    for (let i = 0; i < 40; i++) { const q = 3 + dr() * 8; c.fillStyle = 'rgba(225,215,198,0.22)'; c.beginPath(); c.ellipse(B.x0 + dr() * bw, B.y0 + dr() * (SHORE - B.y0), q, q * 0.75, dr() * 3, 0, 7); c.fill(); }
+    // the kiln: a shadow, a case of red brick with iron corners, a firebrick lining
+    c.fillStyle = 'rgba(50,25,15,0.3)'; PZ.rr(c, kx0 + 5, ky0 + 7, kx1 - kx0, ky1 - ky0, 10); c.fill();
+    c.fillStyle = '#9a4a32'; PZ.rr(c, kx0, ky0, kx1 - kx0, ky1 - ky0, 10); c.fill();
+    c.save(); PZ.rr(c, kx0, ky0, kx1 - kx0, ky1 - ky0, 10); c.clip();
+    c.strokeStyle = 'rgba(230,200,175,0.35)'; c.lineWidth = 1;
+    for (let y = ky0; y < ky1; y += 10) { c.beginPath(); c.moveTo(kx0, y); c.lineTo(kx1, y); c.stroke(); for (let x = kx0 + ((Math.round((y - ky0) / 10) % 2) ? 11 : 0); x < kx1; x += 22) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 10); c.stroke(); } }
+    c.restore();
+    for (const [x, y] of [[kx0, ky0], [kx1 - 22, ky0], [kx0, ky1 - 22], [kx1 - 22, ky1 - 22]]) { c.fillStyle = '#3d434a'; PZ.rr(c, x, y, 22, 22, 5); c.fill(); c.fillStyle = '#7d8790'; c.beginPath(); c.arc(x + 11, y + 11, 2.4, 0, 7); c.fill(); }
+    const lx0 = GX - 14, lx1 = GX1 + 14, ly0 = GY - 14, ly1 = GY1 + 14;
+    c.fillStyle = '#e2c991'; c.fillRect(lx0, ly0, lx1 - lx0, ly1 - ly0);
+    c.strokeStyle = 'rgba(150,115,60,0.45)'; c.lineWidth = 1;
+    for (let y = ly0; y < ly1; y += 7) { c.beginPath(); c.moveTo(lx0, y); c.lineTo(lx1, y); c.stroke(); }
+    c.fillStyle = 'rgba(60,40,20,0.2)'; c.fillRect(lx0, ly0, lx1 - lx0, 6);
+    // the kiln floor: a pale shelf dusted with kiln wash, marked out in pencil
+    c.fillStyle = '#d6d0c4'; c.fillRect(GX - 4, GY - 4, GX1 - GX + 8, GY1 - GY + 8);
+    for (let i = 0; i < 220; i++) { c.fillStyle = dr() < 0.5 ? 'rgba(150,140,125,0.35)' : 'rgba(250,247,240,0.6)'; c.fillRect(GX + dr() * (GX1 - GX), GY + dr() * (GY1 - GY), 1.6, 1.6); }
+    c.fillStyle = 'rgba(40,30,20,0.18)'; c.fillRect(GX - 4, GY - 4, GX1 - GX + 8, 5);
+    chalk(c, GX, GX1, true);
+    // the open lid, folded back against the wall behind, and the little dial
+    c.fillStyle = 'rgba(50,25,15,0.25)'; PZ.rr(c, GX + 26, ky0 - 22, GX1 - GX - 44, 22, 6); c.fill();
+    c.fillStyle = '#5b636b'; PZ.rr(c, GX + 20, ky0 - 26, GX1 - GX - 40, 22, 6); c.fill();
+    c.fillStyle = '#7d8790'; PZ.rr(c, GX + 24, ky0 - 23, GX1 - GX - 48, 12, 4); c.fill();
+    c.fillStyle = '#3d434a'; c.fillRect(GX + 40, ky0 - 6, 18, 8); c.fillRect(GX1 - 58, ky0 - 6, 18, 8);
+    // a bench at the front where the shelves of pots wait
+    c.fillStyle = '#b99a72'; c.fillRect(B.x0, SHORE, bw, B.y1 - SHORE);
+    for (let y = SHORE + 34; y < B.y1; y += 34) { c.fillStyle = 'rgba(90,60,30,0.25)'; c.fillRect(B.x0, y, bw, 2); c.fillStyle = 'rgba(255,240,215,0.2)'; c.fillRect(B.x0, y + 2, bw, 1.4); }
+    for (let i = 0; i < 300; i++) { c.strokeStyle = 'rgba(110,80,45,0.18)'; c.lineWidth = 0.8; const x = B.x0 + dr() * bw, y = SHORE + dr() * (B.y1 - SHORE); c.beginPath(); c.moveTo(x, y); c.lineTo(x + 8 + dr() * 30, y + (dr() - 0.5)); c.stroke(); }
+    for (let i = 0; i < 30; i++) { const q = 3 + dr() * 7; c.fillStyle = 'rgba(232,222,205,0.25)'; c.beginPath(); c.ellipse(B.x0 + dr() * bw, SHORE + 10 + dr() * (B.y1 - SHORE), q, q * 0.75, dr() * 3, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(60,40,20,0.3)'; c.fillRect(B.x0, SHORE - 3, bw, 6);
+    c.fillStyle = '#cfb48a'; c.fillRect(B.x0, SHORE, bw, 3);
+  }
+  // the pottery's ginger cat, sitting and looking at the kiln, tail curled round
+  function cat(c, x, y, dir, t) {
+    c.save(); c.translate(x, y); c.scale(dir, 1);
+    PZ.shadow(c, 0, 12, 13, 3, 0.22);
+    const fur = '#e39a52', dk = '#b8692e';
+    c.strokeStyle = fur; c.lineWidth = 4.5; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-6, 9); c.quadraticCurveTo(-16, 10, -14, 0 + Math.sin(t * 1.4) * 1.5); c.stroke();
+    c.fillStyle = fur; c.beginPath(); c.ellipse(0, 1, 9, 11, 0, 0, 7); c.fill();
+    c.fillStyle = '#f6c48a'; c.beginPath(); c.ellipse(2.5, 4, 4.2, 6.5, 0, 0, 7); c.fill();
+    disc(c, 1.5, -12, 7.5, fur);
+    c.beginPath(); c.moveTo(-4.5, -16); c.lineTo(-3, -23); c.lineTo(1, -18); c.closePath(); c.moveTo(3, -18); c.lineTo(7, -23); c.lineTo(8, -15); c.closePath(); c.fill();
+    c.strokeStyle = dk; c.lineWidth = 1.3; c.beginPath(); c.moveTo(-5, -4); c.lineTo(-1, -2); c.moveTo(-6, 0); c.lineTo(-1, 1); c.stroke();
+    disc(c, 4.5, -13, 1.1, '#3b2a1a'); disc(c, -0.5, -13, 1.1, '#3b2a1a'); disc(c, 2, -10.5, 0.9, '#e2768b');
     c.restore();
   }
   // a kingfisher on a bollard, and a gull on the sand

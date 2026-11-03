@@ -4,7 +4,8 @@
 // with one pinned card per puzzle, a window onto the season, and a work table
 // with a lamp, a mug, pencils, wool and a sleeping cat. An unsolved card is a
 // pencil sketch on cream paper, a little askew; a solved one is the same
-// picture in soft colour with a gold star. Every id carries a 'b' prefix
+// picture in soft colour with a gold star. The nine newest kinds hang as a
+// three by three grid; the oldest are small tickets pinned along the top. Every id carries a 'b' prefix
 // (plus opts.uid when given) so this picture can share a page with the others.
 
 const BETA = (() => {
@@ -43,18 +44,26 @@ const BETA = (() => {
   };
   const HILL = { spring: ['#a9cf8f', '#8fbd78'], summer: ['#86b971', '#6f9a5c'], autumn: ['#d4b06c', '#b98f5a'], winter: ['#eef3f7', '#dfe8f0'] };
 
-  // the seven cards: where they hang, how askew, their tint and pin colour;
-  // three along the top, then two rows of two, drawn at CARD_K of their full size
+  // the cards: where they hang, how askew, their tint and pin colour. The nine
+  // newest kinds hang as a three by three grid, drawn at CARD_K of their full
+  // size, oldest top left and newest bottom right; the oldest kinds (TICKETS)
+  // are small tickets pinned along the top of the board, either side of the tape
   const CARDS = {
-    cups: { x: 186, y: 94, tilt: -5, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
-    feed: { x: 261, y: 90, tilt: 3, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
-    hose: { x: 336, y: 94, tilt: -3.5, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
-    beds: { x: 223, y: 181, tilt: 4, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
-    plan: { x: 299, y: 184, tilt: -4, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
-    books: { x: 222, y: 268, tilt: -3, label: 'Shelves', tint: '#efb4ae', pin: '#8fbfe6' },
-    pack: { x: 300, y: 266, tilt: 3.5, label: 'Packing', tint: '#d6b07e', pin: '#6f9a6a' },
+    hose: { x: 189, y: 113, tilt: -4, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
+    beds: { x: 261, y: 111, tilt: 3, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
+    plan: { x: 333, y: 114, tilt: -3, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
+    books: { x: 190, y: 192, tilt: 3.5, label: 'Shelves', tint: '#efb4ae', pin: '#8fbfe6' },
+    pack: { x: 262, y: 194, tilt: -3, label: 'Packing', tint: '#d6b07e', pin: '#6f9a6a' },
+    wheel: { x: 332, y: 191, tilt: 4, label: 'Pottery', tint: '#f2d88a', pin: '#bba9df' },
+    owners: { x: 189, y: 271, tilt: -3.5, label: 'Lost property', tint: '#a6d3d4', pin: '#efb4ae' },
+    post: { x: 261, y: 273, tilt: 3, label: 'Parcels', tint: '#bba9df', pin: '#f2d88a' },
+    seek: { x: 333, y: 270, tilt: -4, label: 'Finding', tint: '#c6dcb4', pin: '#8fbfe6' },
   };
-  const CARD_K = 0.62;
+  const CARD_K = 0.55;
+  const TICKETS = {
+    cups: { x: 187, y: 56, tilt: -4, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
+    feed: { x: 335, y: 57, tilt: 3.5, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
+  };
 
   // a sleeping cat breathes, the mug steams, petals and snow drift past the window
   function style() {
@@ -178,12 +187,7 @@ const BETA = (() => {
     return `<rect x="141" y="33" width="246" height="290" rx="4" fill="#3b2a1a" opacity="0.14"/>
       <rect x="138" y="30" width="246" height="290" rx="4" fill="#b98f5a"/><rect x="138" y="30" width="246" height="3" rx="1.5" fill="#d2ab78"/>
       <rect x="146" y="38" width="230" height="274" fill="${url('Cork')}"/><rect x="146" y="38" width="230" height="5" fill="#3b2a1a" opacity="0.12"/>
-      <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>
-      <g transform="rotate(-7 166 236)"><rect x="153" y="218" width="26" height="34" rx="1.4" fill="#3b2a1a" opacity="0.15" transform="translate(1.6 2)"/><rect x="153" y="218" width="26" height="34" rx="1.4" fill="#fbf3e2"/>
-        <rect x="156" y="221" width="20" height="18" rx="1" fill="#c6dcb4"/>${dot(162, 229, 2.6, '#e9962c')}${dot(170, 231, 2.6, '#e2574c')}${dot(166, 226, 2.2, '#fffaf1')}
-        <path d="M157 244 h18 M157 247.6 h12" stroke="#b5ab9c" stroke-width="1.2"/>${dot(166, 218.6, 2.6, '#8fbfe6')}${dot(165.4, 218, 0.9, '#fff', 0.8)}</g>
-      <g transform="rotate(14 360 238)"><path d="M360 216 Q374 232 360 262 Q346 232 360 216Z" fill="#d98b63"/><path d="M360 220 V258 M360 232 l-6 -5 M360 240 l7 -6 M360 248 l-6 -5" stroke="#b5683f" stroke-width="0.9" fill="none"/>
-        <rect x="352" y="214" width="16" height="6" fill="#f2d88a" opacity="0.85" transform="rotate(-8 360 217)"/></g>`;
+      <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>`;
   }
   // the BETA tape label across the top of the board
   function tape() {
@@ -287,6 +291,48 @@ const BETA = (() => {
       for (const [c, cells] of PIECES) for (const [i, j] of cells) s += cell(i, j, c);
       return s + L('M21 35 l9 9 M30 35 l-9 9', dark('#d98b63', 0.3), 1.2);
     },
+    // throwing a pot: a round-bellied vase spinning on the wheel
+    wheel() {
+      let s = P('M34 94 L38 77 H62 L66 94Z', '#b98f5a', true) + E(50, 94, 17, 2.2, '#94703f');
+      s += E(50, 75, 36, 9, '#a6b4bd', true) + E(50, 73, 28, 6, '#c3ccd2') + E(50, 71.4, 17, 3.4, '#8a7a62');
+      s += P('M40 71 Q29 59 35 47 Q39 41 43 37 Q45 33 42 28 H58 Q55 33 57 37 Q61 41 65 47 Q71 59 60 71Z', '#d98b63', true);
+      s += E(50, 28, 8, 2.2, light('#d98b63', 0.45));
+      s += L('M34.6 51 Q50 57 65.4 51', '#f6efe3', 2.6) + L('M36 58 Q50 63.6 64 58', '#6f9a6a', 1.6);
+      return s + L('M15 57 q-5 8 1 16 M85 57 q5 8 -1 16', '#8fbfe6', 1.4) + L('M22 49 q-4 5 0 10 M78 49 q4 5 0 10', '#8fbfe6', 1.1);
+    },
+    // lost property: an umbrella left open to dry and a hat with a luggage tag
+    owners() {
+      const um = '#8fbfe6';
+      let s = P('M8 50 Q30 13 52 50 q-5.5 -4.4 -11 0 q-5.5 -4.4 -11 0 q-5.5 -4.4 -11 0 q-5.5 -4.4 -11 0Z', um, true);
+      s += L('M30 27 Q25 37 30 50 M30 27 Q21 34 19 50 M30 27 Q39 34 41 50', dark(um, 0.35), 0.9) + L('M30 27 V21', LINE, 1.6);
+      s += L('M30 50 V84 q0 6 -5.4 6 q-5 0 -5 -5', '#6b4a32', 2.4);
+      s += L('M78 36 Q73 50 78 64', '#b5ab9c', 1);
+      s += P('M58 86 Q56 65 72 63 Q88 65 86 86Z', '#5c5a66', true) + P('M57.6 80.6 Q72 77.6 86.4 80.6 L86.7 84.6 Q72 81.6 57.4 84.6Z', '#c9474f');
+      s += P('M49 86 Q72 80 95 86 Q72 92.6 49 86Z', '#4b4a52');
+      s += P('M73 31 L78.6 25 H93 V46 H78.6 L73 40Z', '#f2d88a') + E(77.6, 35.4, 1.6, 1.6, '#fffaf1');
+      return s + L('M83 30.6 h7 M83 35.4 h5.4 M83 40.2 h7', '#b5ab9c', 1);
+    },
+    // stamps for the parcels: brown paper, string and two stamps
+    post() {
+      let s = P('M12 48 H66 V92 H12Z', '#d6b07e', true) + P('M12 48 L28 32 H86 L66 48Z', '#e6c597') + P('M66 48 L86 32 V76 L66 92Z', '#c99e69');
+      s += L('M39 48 V92 M12 70 H66 L86 54 M20 40 H76 M57 32 L39 48', '#c4704b', 1.4);
+      s += E(44, 38.6, 4.4, 2.4, light('#c4704b', 0.3)) + E(52, 38.6, 4.4, 2.4, light('#c4704b', 0.3)) + E(48, 40, 1.6, 1.6, '#c4704b');
+      s += P('M44 74 h15 v14 h-15Z', '#efb4ae') + P('M46.4 76.4 h10.2 v9.2 h-10.2Z', light('#efb4ae', 0.5)) + E(51.5, 81, 2.8, 2.8, '#e2574c');
+      s += P('M16 52 h14 v14 h-14Z', '#a6d3d4') + P('M18.4 54.4 h9.2 v9.2 h-9.2Z', light('#a6d3d4', 0.5)) + E(23, 59, 2.6, 2.6, '#f2d88a');
+      return s + L('M16 78 h16 M16 83.4 h12', '#8a7a62', 1);
+    },
+    // what's missing: a little shelf of odds and ends, one under the glass
+    seek() {
+      let s = P('M8 16 H74 V94 H8Z', '#d6b07e', true) + P('M12 20 H70 V90 H12Z', '#8a6a4a');
+      s += P('M12 50 H70 V53.6 H12Z', '#b98f5a') + P('M12 86 H70 V89.6 H12Z', '#b98f5a');
+      s += P('M16 50 V38 q0 -3 3 -3 h6 q3 0 3 3 V50Z', '#a6d3d4') + P('M17 35 h10 v-3.4 h-10Z', '#d98b63') + E(37, 45, 5, 5, '#e2574c');
+      s += P('M16 86 V76 h14 v10Z', '#6f9a6a') + P('M17.4 76 v-5 h11.2 v5Z', '#efb4ae') + P('M38 86 V72 h5 V86Z', '#f2d88a') + P('M40.5 71.4 q-3 -4 0 -8 q3 4 0 8Z', '#e9962c');
+      s += P('M52 86 q-2 -10 6 -12 q8 2 6 12Z', '#bba9df');
+      s += P(ovalD(62, 58, 16, 16), '#eaf4f4');
+      s += E(56.6, 58, 4.2, 4.2, '#e9bf4f') + E(56.6, 58, 1.8, 1.8, '#eaf4f4') + L('M60.8 58 H70 M66.4 58 v4 M69.6 58 v3', '#c99a2e', 2);
+      s += L(ovalD(62, 58, 16, 16), '#c99a2e', 3.4) + L('M54 49 q4 -4 9 -4', '#fff', 1.4);
+      return s + L('M73.6 69.6 L88 88', '#6b4a32', 5.4);
+    },
   };
 
   // one pinned card, unsolved (pencil, askew) or solved (colour, gold star)
@@ -301,7 +347,7 @@ const BETA = (() => {
     if (done) s += `<rect x="6" y="12" width="88" height="84" rx="4" fill="${c.tint}" opacity="0.3"/>`;
     else s += '<path d="M8 99 H92 M8 9 H40" stroke="#d9cdb6" stroke-width="0.7"/><path d="M100 102 L86 116 H98 q2 0 2 -2Z" fill="#e2d5bc"/>';
     s += ART[part]();
-    s += `<text x="${done ? 46 : 50}" y="110" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="800" fill="${done ? '#3b352e' : PEN}">${c.label}</text>`;
+    s += label(c.label, done ? 44 : 50, 110, done ? 66 : 86, 14, done);
     if (done) {
       s += `<g transform="rotate(12 86 101)"><path d="${star(86, 101, 12, 5.6)}" fill="#e9bf4f" stroke="#c99a2e" stroke-width="0.8" stroke-linejoin="round"/>
         <path d="${star(86, 101, 7.4, 3.4)}" fill="#f6d77a"/>${dot(83, 96.6, 1.4, '#fff', 0.8)}</g>`;
@@ -309,6 +355,41 @@ const BETA = (() => {
     // the pin
     const pin = done ? c.pin : '#d98b63';
     s += `${oval(52, 10, 4.6, 2.4, '#3b2a1a', 0.25)}${dot(50, 7, 5, pin)}${dot(50, 7, 3.6, light(pin, 0.25))}${dot(48.4, 5.4, 1.4, '#fff', 0.8)}</g>`;
+    COL = false;
+    return s;
+  }
+
+  // a label that always fits its width: a long name of two words goes on two
+  // lines, and anything still too wide gets a smaller font
+  function label(text, x, y, maxW, size, done) {
+    const words = text.split(' ');
+    if (words.length === 2 && text.length * size * 0.6 > maxW * 1.15) {
+      const sz = size * 0.76;
+      return label(words[0], x, y - 1.5 - sz * 0.62, maxW, sz, done) + label(words[1], x, y - 1.5 + sz * 0.42, maxW, sz, done);
+    }
+    const est = text.length * size * 0.6, k = Math.min(1, maxW / est), fs = size * k;
+    const fit = k < 1 ? ` textLength="${f1(est * k)}" lengthAdjust="spacingAndGlyphs"` : '';
+    return `<text x="${x}" y="${f1(y)}" text-anchor="middle" font-family="${FONT}" font-size="${f1(fs)}" font-weight="800" fill="${done ? '#3b352e' : PEN}"${fit}>${text}</text>`;
+  }
+
+  // one of the oldest kinds, as a small ticket: the picture small on the left,
+  // a dotted tear line, the name, and a little gold star once solved
+  function ticket(part, done) {
+    const c = TICKETS[part];
+    COL = done;
+    const tilt = done ? c.tilt * 0.3 : c.tilt;
+    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt})">
+      <rect x="-42" y="-22" width="84" height="44" fill="#000" fill-opacity="0"/>
+      <rect x="-37" y="-14.4" width="76" height="32" rx="1.6" fill="#3b2a1a" opacity="0.2"/>
+      <rect x="-38" y="-16" width="76" height="32" rx="1.6" fill="${done ? '#fffaf1' : '#f3e9d4'}"/>
+      ${dot(-38, 0, 3, url('Cork'))}${dot(38, 0, 3, url('Cork'))}`;
+    if (done) s += `<rect x="-34" y="-13" width="27" height="26" rx="2" fill="${c.tint}" opacity="0.3"/>`;
+    s += `<g transform="translate(-33.6 -12.8) scale(0.31) translate(-8 -12)">${ART[part]()}</g>`;
+    s += `<path d="M-4 -13 V13" stroke="${done ? '#cdbfa6' : '#d9cdb6'}" stroke-width="0.9" stroke-dasharray="1.6 2"/>`;
+    s += label(c.label, 15.5, 1, 35, 9.4, done);
+    if (done) s += `<g transform="rotate(12 35 13)"><path d="${star(35, 13, 6.4, 3)}" fill="#e9bf4f" stroke="#c99a2e" stroke-width="0.6" stroke-linejoin="round"/><path d="${star(35, 13, 3.8, 1.8)}" fill="#f6d77a"/></g>`;
+    const pin = done ? c.pin : '#d98b63';
+    s += `${oval(1.2, -12.6, 3, 1.6, '#3b2a1a', 0.25)}${dot(0, -14.4, 3.4, pin)}${dot(0, -14.4, 2.4, light(pin, 0.25))}${dot(-1, -15.4, 0.9, '#fff', 0.8)}</g>`;
     COL = false;
     return s;
   }
@@ -379,7 +460,7 @@ const BETA = (() => {
       <g transform="translate(0 ${DY})">${glow(110, 320, 190, 130)}${glow(130, 356, 120, 16)}<path d="M80 290 L64 352 H180 L108 284Z" fill="#ffe9b0" opacity="0.12"/></g></g>`;
   }
 
-  const SPOTS = Object.fromEntries(Object.entries(CARDS).map(([k, c]) => [k, [c.x, c.y + DY]]));
+  const SPOTS = Object.fromEntries(Object.entries(Object.assign({}, TICKETS, CARDS)).map(([k, c]) => [k, [c.x, c.y + DY]]));
   function sparkles(part) {
     if (!part) return '';
     const spot = SPOTS[part] || [260, 175];
@@ -396,7 +477,7 @@ const BETA = (() => {
   // RESCUE.render (season, night, fresh, uid; pct, pending and decor unused)
   function render(st = {}, cols = {}, opts = {}) {
     SEASON = SKY[opts.season] ? opts.season : 'spring'; UID = opts.uid ? String(opts.uid).replace(/[^\w-]/g, '') : ''; NIGHT = !!opts.night;
-    const cards = Object.keys(CARDS).map((p) => card(p, !!st[p])).join('');
+    const cards = Object.keys(TICKETS).map((p) => ticket(p, !!st[p])).join('') + Object.keys(CARDS).map((p) => card(p, !!st[p])).join('');
     return `<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" class="house beta">
       ${style()}${defs()}${room()}<g transform="translate(0 ${DY})">${windowView()}${board()}${cards}${tape()}${table(st)}</g>
       ${NIGHT ? night() : ''}${lights()}${sparkles(opts.fresh)}

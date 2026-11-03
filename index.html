@@ -50,6 +50,7 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #title .tap{margin-top:34px;font-weight:800;color:#fff;background:var(--sage-d);padding:14px 30px;border-radius:999px;
   box-shadow:0 4px 0 #3f6b3c;animation:breathe 2.4s ease-in-out infinite}
 @keyframes breathe{50%{transform:translateY(-2px) scale(1.03)}}
+#title .oneJob{margin-top:2px;font-weight:800;font-size:15px;color:var(--sage-d);background:var(--card);border:1.5px solid var(--line);padding:10px 22px;border-radius:999px;box-shadow:0 3px 0 var(--line)}
 #title .leaves{position:absolute;inset:0;pointer-events:none;overflow:hidden}
 #title .leaves i{position:absolute;top:-20px;width:14px;height:9px;border-radius:0 100% 0 100%;background:#6aa04c;opacity:.7;animation:fall linear infinite}
 @keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
@@ -218,6 +219,21 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #scene.newdecor svg{animation:newdecor .6s ease}
 @keyframes newdecor{40%{filter:brightness(1.25)}}
 
+/* goodnight: the place at night, its lights going out one by one */
+#goodnight{position:fixed;inset:0;z-index:44;display:none;flex-direction:column;background:#141a3a;color:#f6efe3}
+#goodnight.on{display:flex;animation:fadein .6s ease}
+#goodnight .gnPic{flex:1;min-height:0;position:relative}
+#goodnight .gnPic svg{position:absolute;inset:0;width:100%;height:100%}
+#goodnight .gnPic g.night *{transition:opacity .9s ease}
+#goodnight .gnPic .gnOff{opacity:0 !important}
+#goodnight .gnPic .gnDim{opacity:0;transition:opacity .9s ease;pointer-events:none}
+#goodnight .gnText{position:absolute;left:0;right:0;bottom:0;padding:28px 24px calc(34px + var(--safe-b));text-align:center;font-weight:800;line-height:1.45;
+  background:linear-gradient(to top,rgba(14,18,48,.92) 55%,rgba(14,18,48,0));opacity:0;transition:opacity 1.2s ease}
+#goodnight .gnText.on{opacity:1}
+#goodnight .gnNext{font-size:16px;color:#e9dfcc}
+#goodnight .gnNext b{color:#fff3cf}
+#goodnight .gnSleep{margin-top:8px;font-size:26px;font-weight:900;color:#fff3cf}
+@media (prefers-reduced-motion: reduce){#goodnight .gnPic g.night *,#goodnight .gnPic .gnDim,#goodnight .gnText{transition:none}}
 #pause{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(40,30,20,.35)}
 #pause.on{display:flex;animation:fadein .5s ease}
 .pauseCard{width:min(340px,92vw);padding:20px 18px 14px;text-align:center}
@@ -314,6 +330,7 @@ body.pausing .dock button.alert::after{display:none}
 .placeCard .pName{font-weight:900;font-size:18px}
 .placeCard .betaTag{display:inline-block;vertical-align:3px;margin-left:4px;padding:2px 7px;border-radius:999px;background:var(--sage-d);color:#fff;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
 #toolChip .bulb{font-size:22px;line-height:38px;width:38px;text-align:center}
+.placeCard .jobDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--terra);vertical-align:3px;margin-left:4px;box-shadow:0 0 0 2px #f6dccd}
 .placeCard .pSub{font-size:13px;color:var(--ink2);font-weight:700;line-height:1.35;margin-top:2px}
 .placeCard .opens{list-style:none;margin:7px 0 0;padding:0}
 .placeCard .opens li{position:relative;padding-left:22px;margin-top:3px;color:var(--ink2)}
@@ -362,6 +379,7 @@ body.pausing .dock button.alert::after{display:none}
   <div class="logo"><svg viewBox="0 0 40 40"><path d="M20 36 C 8 30 4 18 10 8 C 18 10 22 18 20 36Z" fill="#6aa04c"/><path d="M20 36 C 30 30 36 20 30 10 C 24 14 20 24 20 36Z" fill="#4f8a3c"/><path d="M20 36 V18" stroke="#3f6b3c" stroke-width="2"/></svg><span>Ivy Cottage</span></div>
   <div class="tag">a forgotten little house that needs some love</div>
   <div class="tap">Tap to begin</div>
+  <button class="oneJob" id="justOne" hidden>Just one job</button>
   <div id="homeTip" hidden>Tip: tap <b>Share</b>, then <b>Add to Home Screen</b>, to keep your cottage and play full screen.</div>
 </section>
 
@@ -416,6 +434,7 @@ body.pausing .dock button.alert::after{display:none}
 <div id="sheet"><div class="sheetCard"><div class="grab"></div><div class="sheetHead"><h2 id="sheetTitle"></h2><button class="closeBtn" id="sheetClose">Done</button></div><div id="sheetBody"></div></div></div>
 <div id="toast"></div>
 <div id="seasonCard"><small></small><b></b></div>
+<div id="goodnight" aria-live="polite"><div class="gnPic"></div><div class="gnText"><div class="gnNext"></div><div class="gnSleep">Sleep well.</div></div></div>
 <div id="pause">
   <div class="card pauseCard">
     <h2>A lovely place to pause</h2>
@@ -441,6 +460,7 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/scenes8.js"></script>
 <script src="js/scenes9.js"></script>
 <script src="js/scenes10.js"></script>
+<script src="js/scenes11.js"></script>
 <script src="js/puzzles.js"></script>
 <script src="js/pz-cups.js"></script>
 <script src="js/pz-feed.js"></script>
@@ -449,6 +469,10 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/pz-plan.js"></script>
 <script src="js/pz-books.js"></script>
 <script src="js/pz-pack.js"></script>
+<script src="js/pz-wheel.js"></script>
+<script src="js/pz-owners.js"></script>
+<script src="js/pz-post.js"></script>
+<script src="js/pz-seek.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/cafe.js"></script>
@@ -457,6 +481,8 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/glasshouse.js"></script>
 <script src="js/canal.js"></script>
 <script src="js/books.js"></script>
+<script src="js/pottery.js"></script>
+<script src="js/halt.js"></script>
 <script src="js/beta.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>

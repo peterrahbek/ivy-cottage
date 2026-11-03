@@ -270,12 +270,121 @@ const SCENES = (() => {
     c.fillStyle = '#9d978b'; c.fillRect(bleed.x0, 598, bleed.x1 - bleed.x0, 3);
   }
 
+  // round the pottery's cobbled yard: the brick barn above with clay bins
+  // against it, a grass verge on the lane below
+  function yardSurround(c, r, nz, bleed) {
+    c.fillStyle = '#8a7c6b'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, bleed.y1 - bleed.y0);
+    for (let row = 0, y = bleed.y0; y < bleed.y1; y += 13, row++) {
+      for (let x = bleed.x0 - (row % 2 ? 8 : 0); x < bleed.x1; x += 16) {
+        c.fillStyle = U.shade(U.pick(r, ['#b3a593', '#a69886', '#bfb19e', '#9c8f7f']), (nz.n2(x * 0.05, y * 0.05) - 0.5) * 0.2);
+        c.beginPath(); c.roundRect(x + 1, y + 1, 14, 11, 5); c.fill();
+      }
+    }
+    // the barn wall: old red brick on a stone plinth
+    c.fillStyle = '#8e4a34'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, 62 - bleed.y0);
+    for (let row = 0, y = 60; y > bleed.y0 - 10; y -= 9, row++) {
+      for (let x = bleed.x0 - (row % 2 ? 11 : 0); x < bleed.x1; x += 22) {
+        c.fillStyle = U.shade(U.pick(r, ['#b5623f', '#a85a3c', '#c06b46', '#9e5137', '#b86a4a']), (r() - 0.5) * 0.12);
+        c.fillRect(x + 1, y - 8, 20, 7.5);
+      }
+    }
+    c.fillStyle = '#b8ad9c'; c.fillRect(bleed.x0, 60, bleed.x1 - bleed.x0, 12);
+    c.fillStyle = '#d2c8b7'; c.fillRect(bleed.x0, 60, bleed.x1 - bleed.x0, 3);
+    c.fillStyle = 'rgba(40,25,15,0.25)'; c.fillRect(bleed.x0, 72, bleed.x1 - bleed.x0, 5);
+    // clay bins with lids, a sack of clay and a stack of pots against the wall
+    const bin = (x, y, rad, lid) => {
+      c.fillStyle = 'rgba(40,30,20,0.3)'; c.beginPath(); c.ellipse(x + 3, y + 4, rad, rad * 0.9, 0, 0, 7); c.fill();
+      c.fillStyle = '#8f969c'; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill();
+      c.fillStyle = lid; c.beginPath(); c.arc(x, y, rad - 3, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,0.35)'; c.lineWidth = 1.2; c.beginPath(); c.arc(x, y, rad - 6, 3.6, 5.4); c.stroke();
+      c.fillStyle = '#5d6469'; c.fillRect(x - 6, y - 2, 12, 4);
+    };
+    bin(38, 89, 16, '#a7aeb3'); bin(76, 92, 13, '#9aa2a8');
+    c.fillStyle = 'rgba(40,30,20,0.3)'; c.beginPath(); c.ellipse(114, 94, 15, 9, 0.2, 0, 7); c.fill();
+    c.fillStyle = '#c9b48f'; c.beginPath(); c.ellipse(112, 90, 14, 10, 0.2, 0, 7); c.fill();
+    c.fillStyle = '#b39b74'; c.fillRect(104, 82, 6, 4);
+    c.fillStyle = '#7a8a9a'; c.font = '700 6px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.fillText('CLAY', 113, 93);
+    for (const [x, y, rad] of [[292, 90, 13], [300, 84, 11], [292, 80, 9]]) {
+      c.fillStyle = 'rgba(40,30,20,0.25)'; c.beginPath(); c.arc(x + 2, y + 3, rad, 0, 7); c.fill();
+      c.fillStyle = '#c4714a'; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill();
+      c.fillStyle = '#7a3f28'; c.beginPath(); c.arc(x, y, rad - 3, 0, 7); c.fill();
+    }
+    bin(328, 90, 14, '#a7aeb3');
+    // the grass verge along the lane
+    mowedLawn(c, nz, bleed.x0, 572, bleed.x1, bleed.y1, false);
+    grassGrain(c, r, bleed.x0, 572, bleed.x1, bleed.y1, 6, 0.25);
+    c.fillStyle = '#c9c0b0'; c.fillRect(bleed.x0, 570, bleed.x1 - bleed.x0, 6);
+  }
+  // round the station platform: the track on one side, the waiting room on the other
+  function platformSurround(c, r, nz, bleed) {
+    const ballast = ramp(['#7e7769', '#8f887a', '#a09a8c', '#b2ab9c']);
+    field(c, bleed.x0, bleed.y0, 118, bleed.y1, 2, (x, y) => ballast(nz.fbm(x * 0.09, y * 0.09, 3) * 0.6 + nz.n2(x * 0.7, y * 0.7) * 0.4));
+    for (let i = 0; i < 900; i++) {
+      const x = bleed.x0 + r() * (118 - bleed.x0), y = bleed.y0 + r() * (bleed.y1 - bleed.y0);
+      c.fillStyle = U.pick(r, ['rgba(60,55,48,0.35)', 'rgba(230,226,215,0.35)', 'rgba(120,100,80,0.3)']);
+      c.beginPath(); c.arc(x, y, 0.8 + r() * 1.6, 0, 7); c.fill();
+    }
+    // sleepers and the two rails, rusty on the sides and bright on top
+    for (let y = bleed.y0 - 20; y < bleed.y1; y += 40) {
+      c.fillStyle = 'rgba(30,25,20,0.3)'; c.fillRect(2, y + 3, 102, 16);
+      c.fillStyle = U.pick(r, ['#6e5a45', '#7a6550', '#665240']); c.fillRect(0, y, 102, 15);
+      c.fillStyle = 'rgba(255,255,255,0.1)'; c.fillRect(0, y + 1, 102, 3);
+      c.strokeStyle = 'rgba(40,30,20,0.35)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(6, y + 8); c.lineTo(96, y + 9); c.stroke();
+      for (const x of [26, 80]) { c.fillStyle = '#4a4440'; c.fillRect(x - 8, y + 2, 16, 11); }
+    }
+    for (const x of [26, 80]) {
+      c.fillStyle = 'rgba(30,25,20,0.35)'; c.fillRect(x - 3, bleed.y0, 9, bleed.y1 - bleed.y0);
+      c.fillStyle = '#7b5a43'; c.fillRect(x - 4, bleed.y0, 8, bleed.y1 - bleed.y0);
+      c.fillStyle = '#b9bcc0'; c.fillRect(x - 2.2, bleed.y0, 4.4, bleed.y1 - bleed.y0);
+      c.fillStyle = 'rgba(255,255,255,0.6)'; c.fillRect(x - 1, bleed.y0, 1.4, bleed.y1 - bleed.y0);
+    }
+    // a few weeds in the ballast
+    for (let i = 0; i < 14; i++) {
+      const x = 4 + r() * 100, y = bleed.y0 + r() * (bleed.y1 - bleed.y0);
+      c.strokeStyle = U.pick(r, ['#5c7a2e', '#6f9037', '#86a646']); c.lineWidth = 1.4; c.lineCap = 'round';
+      for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (r() - 0.5) * 1.8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 7, y + Math.sin(a) * 7); c.stroke(); }
+    }
+    // the face of the platform, in shadow below the coping
+    c.fillStyle = '#6d6458'; c.fillRect(104, bleed.y0, 14, bleed.y1 - bleed.y0);
+    c.fillStyle = 'rgba(20,15,10,0.35)'; c.fillRect(104, bleed.y0, 5, bleed.y1 - bleed.y0);
+    // the waiting room's boarded wall on the far side
+    c.fillStyle = '#efe4cc'; c.fillRect(352, bleed.y0, bleed.x1 - 352, bleed.y1 - bleed.y0);
+    c.fillStyle = '#7d2a34'; c.fillRect(352, bleed.y0, 6, bleed.y1 - bleed.y0);
+    c.fillStyle = 'rgba(80,60,40,0.18)'; for (let y = bleed.y0; y < bleed.y1; y += 18) c.fillRect(358, y, bleed.x1 - 358, 1.5);
+  }
+
   function stonesScene(S) {
     const { r, nz, opts, bleed } = S;
     const region = new Path2D();
     const pavers = [];
     let gapPath = null;
-    if (opts.shape === 'stepping') {
+    if (opts.shape === 'yard') {
+      // the pottery's yard: rounded cobbles in rows, a drain in the middle
+      rrPath(region, 14, 104, 332, 466, 18);
+      for (let y = 104, row = 0; y < 570; row++) {
+        const h = 24 + r() * 6;
+        for (let x = 14 - (row % 2 ? 15 : 0); x < 346;) {
+          const w = 27 + r() * 10;
+          pavers.push({ x: x + 2, y: y + 2, w: w - 4, h: Math.min(h, 570 - y) - 4 });
+          x += w;
+        }
+        y += h;
+      }
+    } else if (opts.shape === 'platform') {
+      // a station platform: coping stones along the edge, big flags behind
+      region.rect(116, -10, 236, 620);
+      for (let y = -10; y < 610; y += 58) pavers.push({ x: 117, y: y + 1, w: 28, h: 56 });
+      for (let y = -10, row = 0; y < 610; row++) {
+        const h = 64 + r() * 18;
+        for (let x = 148 - (row % 2 ? 46 : 0); x < 352;) {
+          const w = 74 + r() * 34;
+          const x0 = Math.max(148, x);
+          pavers.push({ x: x0 + 2, y: y + 2, w: Math.min(x + w, 352) - x0 - 4, h: h - 4 });
+          x += w;
+        }
+        y += h;
+      }
+    } else if (opts.shape === 'stepping') {
       for (let i = 0; i < 7; i++) {
         const x = 180 + Math.sin(i * 0.9) * 80 + (r() - 0.5) * 20, y = 540 - i * 78;
         const s = { x, y, rx: 40 + r() * 8, ry: 30 + r() * 6, rot: (r() - 0.5) * 0.5 };
@@ -326,6 +435,8 @@ const SCENES = (() => {
       },
       decor(c) {
         if (opts.shape === 'terrace') terraceSurround(c, r, nz, bleed);
+        else if (opts.shape === 'yard') yardSurround(c, r, nz, bleed);
+        else if (opts.shape === 'platform') platformSurround(c, r, nz, bleed);
         else {
           mowedLawn(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, true);
           grassGrain(c, r, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 6, 0.2);
@@ -344,14 +455,39 @@ const SCENES = (() => {
             c.fillStyle = U.shade(col, 0.25); c.beginPath(); c.ellipse(-s.rx * 0.2, -s.ry * 0.25, s.rx * 0.6, s.ry * 0.45, 0, 0, 7); c.fill();
             c.restore();
           }
-        } else {
+        } else if (opts.shape === 'yard') {
+          // domed cobbles, warm grey with the odd terracotta one
           for (const p of pavers) {
-            const col = U.pick(r, stoneCols);
+            const col = U.pick(r, ['#b9ab98', '#a89a87', '#c4b7a3', '#9d9283', '#b3a28c', '#cbbca6', '#b88f73']);
+            c.fillStyle = U.shade(col, -0.32); c.beginPath(); c.roundRect(p.x, p.y + 1.8, p.w, p.h, 10); c.fill();
+            c.fillStyle = col; c.beginPath(); c.roundRect(p.x, p.y, p.w, p.h - 1, 10); c.fill();
+            const g = c.createRadialGradient(p.x + p.w * 0.38, p.y + p.h * 0.32, 1, p.x + p.w / 2, p.y + p.h / 2, p.w * 0.7);
+            g.addColorStop(0, 'rgba(255,255,255,0.32)'); g.addColorStop(0.6, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,0.12)');
+            c.fillStyle = g; c.beginPath(); c.roundRect(p.x, p.y, p.w, p.h - 1, 10); c.fill();
+          }
+          // the iron drain in the middle of the yard
+          const dx = 232, dy = 338;
+          c.fillStyle = 'rgba(40,30,20,0.35)'; c.beginPath(); c.arc(dx + 1.5, dy + 2.5, 25, 0, 7); c.fill();
+          c.fillStyle = '#9c9282'; c.beginPath(); c.arc(dx, dy, 25, 0, 7); c.fill();
+          c.fillStyle = '#4d4a47'; c.beginPath(); c.arc(dx, dy, 19, 0, 7); c.fill();
+          c.fillStyle = '#26221f';
+          for (let k = -3; k <= 3; k++) { c.beginPath(); c.roundRect(dx - Math.sqrt(256 - k * k * 20) * 0.95, dy + k * 4.6 - 1.4, Math.sqrt(256 - k * k * 20) * 1.9, 2.8, 1.4); c.fill(); }
+          c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 1.2; c.beginPath(); c.arc(dx, dy, 19, 3.5, 5.2); c.stroke();
+        } else {
+          const cols = opts.shape === 'platform' ? ['#d4cdbf', '#c9c1b2', '#ddd6c9', '#c2baab', '#d8cfbd'] : stoneCols;
+          for (const p of pavers) {
+            const col = U.pick(r, cols);
             c.fillStyle = U.shade(col, -0.28); c.beginPath(); c.roundRect(p.x, p.y + 1.5, p.w, p.h, 5); c.fill();
             c.fillStyle = col; c.beginPath(); c.roundRect(p.x, p.y, p.w, p.h - 1, 5); c.fill();
             const g = c.createLinearGradient(p.x, p.y, p.x + p.w, p.y + p.h);
             g.addColorStop(0, 'rgba(255,255,255,0.28)'); g.addColorStop(0.5, 'rgba(255,255,255,0)'); g.addColorStop(1, 'rgba(0,0,0,0.08)');
             c.fillStyle = g; c.beginPath(); c.roundRect(p.x, p.y, p.w, p.h - 1, 5); c.fill();
+          }
+          if (opts.shape === 'platform') {
+            // the white line along the platform edge, a little worn
+            c.fillStyle = '#f6f3ea'; c.fillRect(128, -10, 12, 620);
+            for (let i = 0; i < 70; i++) { c.fillStyle = 'rgba(190,180,165,0.5)'; c.fillRect(128 + r() * 10, -10 + r() * 620, 1 + r() * 3, 1 + r() * 2); }
+            c.fillStyle = 'rgba(0,0,0,0.08)'; c.fillRect(138.5, -10, 1.5, 620);
           }
         }
         // speckle
@@ -387,6 +523,42 @@ const SCENES = (() => {
           c.fillStyle = U.pick(r, ['#b5762f', '#8c5a2b', '#c9a24a']);
           c.save(); c.translate(r() * W, r() * H); c.rotate(r() * 6.28);
           c.beginPath(); c.ellipse(0, 0, 5, 2.4, 0, 0, 7); c.fill(); c.restore();
+        }
+        if (opts.shape === 'yard') {
+          // clay everywhere: smears, crumbs and a trail of clay boot prints
+          for (let i = 0; i < 44; i++) {
+            const x = 20 + r() * 320, y = 110 + r() * 450, s = 10 + r() * 18, a = r() * 3;
+            c.fillStyle = U.pick(r, ['rgba(168,98,68,0.75)', 'rgba(150,120,100,0.7)', 'rgba(186,120,86,0.7)', 'rgba(130,112,98,0.65)']);
+            c.beginPath(); c.ellipse(x, y, s, s * 0.55, a, 0, 7); c.fill();
+            c.strokeStyle = 'rgba(205,160,130,0.5)'; c.lineWidth = 1.2;
+            c.beginPath(); c.moveTo(x - Math.cos(a) * s * 0.8, y - Math.sin(a) * s * 0.8); c.lineTo(x + Math.cos(a) * s * 0.9, y + Math.sin(a) * s * 0.9); c.stroke();
+          }
+          for (let i = 0; i < 90; i++) { c.fillStyle = U.pick(r, ['#b0694a', '#c47e5a', '#8f6a54']); c.beginPath(); c.arc(20 + r() * 320, 110 + r() * 450, 1.2 + r() * 2.2, 0, 7); c.fill(); }
+          c.fillStyle = 'rgba(140,82,58,0.5)';
+          for (let i = 0; i < 9; i++) {
+            const x = 70 + i * 26 + (i % 2) * 14, y = 540 - i * 48;
+            c.save(); c.translate(x, y); c.rotate(0.45);
+            c.beginPath(); c.ellipse(0, -5, 5, 7, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, 8, 4, 4.5, 0, 0, 7); c.fill();
+            c.restore();
+          }
+        } else if (opts.shape === 'platform') {
+          // old tickets and weeds in the joints
+          for (let i = 0; i < 9; i++) {
+            c.save(); c.translate(150 + r() * 190, 20 + r() * 560); c.rotate((r() - 0.5) * 1.6);
+            c.fillStyle = 'rgba(40,30,20,0.25)'; c.fillRect(-9, -5, 19, 11);
+            c.fillStyle = U.pick(r, ['#efe3c4', '#e9d7a6', '#dcc6a0']); c.fillRect(-10, -6, 19, 11);
+            c.fillStyle = 'rgba(125,42,52,0.6)'; c.fillRect(-8, -3, 15, 1.4); c.fillRect(-8, 0, 10, 1.2);
+            c.restore();
+          }
+          for (let i = 0; i < 16; i++) {
+            const x = 150 + r() * 195, y = r() * 600;
+            for (let k = 0; k < 7; k++) {
+              const a = r() * 6.28;
+              c.fillStyle = U.pick(r, ['#5d8a33', '#6f9a3a', '#86ad48']);
+              c.beginPath(); c.ellipse(x + Math.cos(a) * 4, y + Math.sin(a) * 3, 5, 2, a, 0, 7); c.fill();
+            }
+            if (r() < 0.5) { c.fillStyle = '#efc22a'; c.beginPath(); c.arc(x, y, 2.6, 0, 7); c.fill(); }
+          }
         }
       },
     };

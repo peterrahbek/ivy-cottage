@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scene bench</title>
+<style>
+body{margin:0;background:#f6efe3;display:flex;gap:14px;padding:14px;font:700 12px system-ui;color:#6b6157}
+figure{margin:0}
+canvas{display:block;border-radius:10px;box-shadow:0 2px 8px rgba(80,60,30,.15);width:360px;height:600px}
+figcaption{padding:5px 2px}
+</style>
+</head>
+<body>
+<script src="../js/util.js"></script>
+<script src="../js/scenes.js"></script>
+<script src="../js/scenes2.js"></script>
+<script src="../js/scenes3.js"></script>
+<script src="../js/scenes4.js"></script>
+<script src="../js/scenes5.js"></script>
+<script src="../js/scenes6.js"></script>
+<script src="../js/scenes7.js"></script>
+<script src="../js/scenes8.js"></script>
+<script src="../js/scenes9.js"></script>
+<script src="../js/scenes10.js"></script>
+<script src="../js/scenes11.js"></script>
+<script>
+'use strict';
+// A test bench for a tool job (not a puzzle): the scene layered the way the
+// engine layers it, three times side by side: as it starts (dirty), half
+// done (the left half cleaned) and finished (clean, pieces in place).
+//   scene.html?kind=stones&opts={"shape":"yard"}&seed=5[&paint=%23c9474f]
+(() => {
+  const q = new URLSearchParams(location.search);
+  const H = window.H = { ready: false, errors: [], info: {} };
+  window.addEventListener('error', (e) => H.errors.push(String(e.message || e)));
+  try {
+    const kind = q.get('kind'), seed = +(q.get('seed') || 5), paint = q.get('paint') || '#c9474f';
+    const opts = JSON.parse(q.get('opts') || '{}');
+    const bleed = { x0: -4, y0: -4, x1: 364, y1: 604 };
+    const sc = SCENES.build(kind, opts, seed, bleed);
+    H.info = { family: sc.family, particle: sc.particle, unitMode: sc.unitMode || null, units: (sc.units || []).length, puzzle: !!sc.puzzle, stamp: !!sc.stamp, top: !!sc.top, live: !!sc.live };
+    if (!sc.region) H.errors.push('no region');
+    const panel = (label, how) => {
+      const f = document.createElement('figure'), cv = U.canvas(720, 1200), x = cv.getContext('2d');
+      x.setTransform(2, 0, 0, 2, 0, 0);
+      try {
+        sc.decor(x);
+        // the engine keeps the clean layer inside the region, like the dirt
+        x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.clean(x, paint); x.restore();
+        if (sc.cleanOver) { x.save(); x.clip(sc.region, sc.fillRule || 'evenodd'); sc.cleanOver(x); x.restore(); }
+        if (sc.live) sc.live(x, 0, null, 0, 0);
+        if (how !== 'clean') {
+          x.save(); x.clip(sc.region, sc.fillRule || 'evenodd');
+          if (how === 'half') { x.beginPath(); x.rect(180, -10, 200, 620); x.clip(); }
+          sc.dirt(x); x.restore();
+        }
+        const units = sc.units || [];
+        if (sc.unitMode === 'collect') { if (how !== 'clean') for (const u of units) if (how === 'dirty' || u.x > 180) sc.drawUnit(x, u, 1); }
+        else if (how !== 'dirty') for (const u of units) if (how === 'clean' || u.x < 180) sc.drawUnit(x, u, 1);
+        if (sc.top) sc.top(x);
+        if (sc.liveTop) sc.liveTop(x, 0);
+      } catch (e) { H.errors.push(label + ': ' + e.message); }
+      f.appendChild(cv);
+      const cap = document.createElement('figcaption'); cap.textContent = `${kind} ${JSON.stringify(opts)} · ${label}`; f.appendChild(cap);
+      document.body.appendChild(f);
+    };
+    panel('dirty', 'dirty'); panel('half done', 'half'); panel('clean', 'clean');
+  } catch (e) { H.errors.push('build: ' + e.message); }
+  H.ready = true;
+})();
+</script>
+</body>
+</html>

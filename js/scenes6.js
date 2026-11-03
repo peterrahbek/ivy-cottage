@@ -116,6 +116,21 @@
         for (let k = 0; k < 4; k++) dot(c, Math.cos(a) * l * (0.62 + k * 0.12), Math.sin(a) * l * (0.62 + k * 0.12), s * 0.1, k % 2 ? '#9a7fd1' : '#7d63b8');
       }
     },
+    // a full, rounded lavender bush for a bed of its own
+    lavbush(c, r, s) {
+      for (let i = 0; i < 30; i++) leaf(c, 0, 0, r() * 6.283, s * (0.5 + r() * 0.32), s * 0.11, U.pick(r, ['#8aa38a', '#7d9a80', '#9db59a', '#6f8c72']));
+      c.lineCap = 'round';
+      for (let i = 0; i < 24; i++) {
+        const a = (i / 24) * 6.283 + r() * 0.25, l = s * (0.72 + r() * 0.42), x = Math.cos(a), y = Math.sin(a);
+        c.strokeStyle = '#7a9468'; c.lineWidth = 0.9;
+        c.beginPath(); c.moveTo(x * l * 0.2, y * l * 0.2); c.lineTo(x * l * 0.6, y * l * 0.6); c.stroke();
+        for (let k = 0; k < 5; k++) {
+          const t = 0.58 + k * 0.1;
+          dot(c, x * l * t, y * l * t, s * (0.085 - k * 0.008), U.pick(r, ['#8c6bc8', '#7357b0', '#a68ad8', '#9a7fd1']));
+        }
+      }
+      for (let i = 0; i < 6; i++) { const a = r() * 6.283, d = s * (0.2 + r() * 0.2); dot(c, Math.cos(a) * d, Math.sin(a) * d, s * 0.07, '#b9a2e3'); }
+    },
     basil(c, r, s) {
       for (let i = 0; i < 8; i++) leaf(c, 0, 0, (i / 8) * 6.283 + r() * 0.3, s * (0.75 + r() * 0.3), s * 0.4, i % 2 ? '#5cb04a' : '#4a9a3a');
       for (let i = 0; i < 5; i++) leaf(c, 0, 0, r() * 6.28, s * 0.48, s * 0.3, '#7bc25a');
@@ -254,7 +269,11 @@
     flowers: ['geranium', 'marigold', 'daisy', 'pansy', 'lavender'],
     herbs: ['basil', 'rosemary', 'thyme', 'parsley', 'chives'],
     sunflowers: ['sunflower'], bulbs: ['bulb'], veg: ['lettuce', 'cabbage', 'carrot', 'strawberry'],
+    lavender: ['lavbush'],
   };
+  // hanging baskets under a station canopy: [x, y, rx, ry] of the soil in each
+  const BASKETS = [[100, 196, 62, 32], [260, 196, 62, 32], [180, 418, 72, 36]];
+  const CANOPY = 96;
 
   function drawPlant(c, u, k) {
     const g = k >= 1 ? 1 : Math.max(0, U.easeBack(k));
@@ -265,6 +284,104 @@
     c.scale(g, g);
     PLANTS[u.kind](c, U.rng(u.seed), u.s);
     c.restore();
+  }
+
+  // ------------------------------------------------------- HANGING BASKETS
+  // A station platform under its canopy: a cream board wall with a window
+  // and a poster, cast-iron columns, the canopy's pointed valance and three
+  // wire baskets lined with moss, hanging on chains.
+  function chain(c, x0, y0, x1, y1) {
+    const n = Math.max(2, Math.round(Math.hypot(x1 - x0, y1 - y0) / 7));
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, x = x0 + (x1 - x0) * t, y = y0 + (y1 - y0) * t;
+      c.strokeStyle = '#4a4440'; c.lineWidth = 1.6;
+      c.beginPath(); if (i % 2) c.ellipse(x, y, 1.6, 3.4, Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2, 0, 7); else c.ellipse(x, y, 2.6, 3.4, Math.atan2(y1 - y0, x1 - x0) - Math.PI / 2, 0, 7); c.stroke();
+    }
+  }
+  function basketsDecor(c, r, nz, bleed) {
+    const { x0, y0, x1, y1 } = bleed;
+    // the station wall: cream boards
+    c.fillStyle = '#eadcbf'; c.fillRect(x0, y0, x1 - x0, 548 - y0);
+    for (let y = CANOPY + 8; y < 548; y += 16) {
+      c.fillStyle = 'rgba(140,115,80,0.22)'; c.fillRect(x0, y + 13, x1 - x0, 3);
+      c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(x0, y, x1 - x0, 1.5);
+    }
+    c.fillStyle = '#8e2f3a'; c.fillRect(x0, 506, x1 - x0, 42); c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(x0, 506, x1 - x0, 3);
+    // a sash window and an old poster, behind the lower basket
+    c.fillStyle = '#8e2f3a'; rect(c, 128, 250, 104, 120, 3); c.fill();
+    c.fillStyle = '#cfe2ea'; c.fillRect(136, 258, 88, 104);
+    c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.moveTo(146, 352); c.lineTo(176, 262); c.lineTo(190, 262); c.lineTo(160, 352); c.fill();
+    c.fillStyle = '#efe4cc'; c.fillRect(178, 258, 4, 104); c.fillRect(136, 306, 88, 5);
+    c.fillStyle = '#fbf6ea'; rect(c, 34, 300, 60, 84, 2); c.fill();
+    c.fillStyle = '#8fbfe6'; c.fillRect(39, 305, 50, 46); c.fillStyle = '#f2d88a'; c.beginPath(); c.arc(64, 320, 8, 0, 7); c.fill();
+    c.fillStyle = '#3d86c6'; c.beginPath(); c.moveTo(39, 340); c.quadraticCurveTo(64, 330, 89, 340); c.lineTo(89, 351); c.lineTo(39, 351); c.fill();
+    c.fillStyle = '#8e2f3a'; c.font = '800 9px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('BY THE SEA', 64, 364);
+    c.fillStyle = '#8a7a66'; c.fillRect(46, 372, 36, 3);
+    // a bench on the platform, the cast-iron columns and their brackets
+    c.fillStyle = 'rgba(60,40,25,0.25)'; c.fillRect(266, 530, 80, 6);
+    c.fillStyle = '#7a5236'; for (const y of [470, 482, 500]) { rect(c, 262, y, 84, 8, 2); c.fill(); }
+    c.fillStyle = '#3a3a3a'; c.fillRect(268, 470, 5, 64); c.fillRect(336, 470, 5, 64);
+    for (const x of [16, 344]) {
+      c.fillStyle = 'rgba(0,0,0,0.18)'; c.fillRect(x - 5, CANOPY, 14, 450);
+      c.fillStyle = '#2f4a3a'; c.fillRect(x - 7, CANOPY, 14, 452);
+      c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(x - 5, CANOPY, 2.4, 452);
+      c.fillStyle = '#263c30'; rect(c, x - 11, 532, 22, 18, 3); c.fill(); rect(c, x - 10, CANOPY + 2, 20, 12, 3); c.fill();
+      c.strokeStyle = '#2f4a3a'; c.lineWidth = 3; c.beginPath(); const d = x < 180 ? 1 : -1;
+      c.moveTo(x, CANOPY + 70); c.quadraticCurveTo(x + d * 6, CANOPY + 14, x + d * 60, CANOPY + 6); c.stroke();
+      c.beginPath(); c.arc(x + d * 18, CANOPY + 30, 9, 0, 7); c.stroke();
+    }
+    // the platform: flagstones and a white edge
+    field(c, x0, 548, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.04, y * 0.04, 3); return [190 + v * 20, 184 + v * 18, 172 + v * 16]; });
+    c.strokeStyle = 'rgba(90,80,70,0.35)'; c.lineWidth = 1.2;
+    for (let x = Math.floor(x0 / 60) * 60; x < x1; x += 60) { c.beginPath(); c.moveTo(x, 548); c.lineTo(x, y1); c.stroke(); }
+    c.fillStyle = 'rgba(60,40,25,0.25)'; c.fillRect(x0, 548, x1 - x0, 4);
+    c.fillStyle = '#f7f3ea'; c.fillRect(x0, 584, x1 - x0, 8);
+    // the canopy: dark beams, then the valance with its pointed boards
+    c.fillStyle = '#3d4b44'; c.fillRect(x0, y0, x1 - x0, CANOPY - 26 - y0);
+    c.fillStyle = 'rgba(255,255,255,0.12)'; for (let x = Math.floor(x0 / 40) * 40; x < x1; x += 40) c.fillRect(x, y0, 3, CANOPY - 26 - y0);
+    c.fillStyle = 'rgba(60,45,30,0.22)'; c.beginPath(); c.moveTo(x0, CANOPY - 4);
+    for (let x = Math.floor(x0 / 18) * 18; x <= x1 + 18; x += 18) { c.lineTo(x, CANOPY - 4); c.lineTo(x + 9, CANOPY + 9); c.lineTo(x + 18, CANOPY - 4); }
+    c.lineTo(x1, CANOPY - 10); c.lineTo(x0, CANOPY - 10); c.closePath(); c.fill();
+    c.fillStyle = '#fbf6e8'; c.fillRect(x0, CANOPY - 30, x1 - x0, 22);
+    c.beginPath(); c.moveTo(x0, CANOPY - 8);
+    for (let x = Math.floor(x0 / 18) * 18; x <= x1 + 18; x += 18) { c.lineTo(x, CANOPY - 8); c.lineTo(x + 9, CANOPY + 4); c.lineTo(x + 18, CANOPY - 8); }
+    c.lineTo(x1, CANOPY - 30); c.lineTo(x0, CANOPY - 30); c.closePath(); c.fill();
+    c.fillStyle = '#8e2f3a'; c.fillRect(x0, CANOPY - 30, x1 - x0, 5);
+    c.strokeStyle = 'rgba(140,115,80,0.5)'; c.lineWidth = 1;
+    for (let x = Math.floor(x0 / 18) * 18 + 9; x < x1; x += 18) { c.beginPath(); c.moveTo(x, CANOPY - 25); c.lineTo(x, CANOPY + 2); c.stroke(); }
+    // the baskets: chains, a mossy wire bowl and an iron rim
+    for (const [x, y, rx, ry] of BASKETS) {
+      const hook = x === 180 ? CANOPY + 4 : CANOPY + 2, top = y - ry - 64;
+      chain(c, x, hook, x, top);
+      for (const [cx, cy] of [[x - rx, y], [x + rx, y], [x, y - ry]]) chain(c, x, top, cx, cy);
+      c.fillStyle = '#3a3633'; c.beginPath(); c.arc(x, top, 3.6, 0, 7); c.fill();
+      c.fillStyle = 'rgba(40,30,20,0.18)'; c.beginPath(); c.ellipse(x + 6, y + 62, rx * 0.8, 9, 0, 0, 7); c.fill();
+      const bowl = new Path2D(); bowl.moveTo(x - rx - 3, y); bowl.bezierCurveTo(x - rx, y + ry + 34, x - rx * 0.4, y + ry + 46, x, y + ry + 46); bowl.bezierCurveTo(x + rx * 0.4, y + ry + 46, x + rx, y + ry + 34, x + rx + 3, y); bowl.closePath();
+      c.save(); c.clip(bowl);
+      field(c, x - rx - 4, y - 4, x + rx + 4, y + ry + 48, 2, (px, py) => { const v = nz.fbm(px * 0.12, py * 0.12, 3); return [86 + v * 40, 104 + v * 36, 52 + v * 22]; });
+      c.strokeStyle = 'rgba(40,36,32,0.75)'; c.lineWidth = 1.4;
+      for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(x + (k / 3.4) * rx, y); c.quadraticCurveTo(x + (k / 3.4) * rx * 0.9, y + ry + 30, x + (k / 3.4) * rx * 0.3, y + ry + 50); c.stroke(); }
+      for (const t of [0.35, 0.7]) { c.beginPath(); c.ellipse(x, y + (ry + 44) * t, rx * (1 - t * 0.45), 6, 0, 0, Math.PI); c.stroke(); }
+      c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(x + rx * 0.3, y, rx, ry + 50);
+      c.restore();
+      c.strokeStyle = '#2e2b29'; c.lineWidth = 3.2; c.beginPath(); c.ellipse(x, y, rx + 2.5, ry + 2.5, 0, 0, 7); c.stroke();
+    }
+  }
+  // ivy trailing over the front of each basket
+  function basketsTop(c, r) {
+    c.lineCap = 'round';
+    for (const [x, y, rx, ry] of BASKETS) {
+      c.strokeStyle = '#2e2b29'; c.lineWidth = 3.2; c.beginPath(); c.ellipse(x, y, rx + 2.5, ry + 2.5, 0, 0.15, Math.PI - 0.15); c.stroke();
+      for (let k = 0; k < 5; k++) {
+        const sx = x - rx * 0.8 + (k / 4) * rx * 1.6, sy = y + Math.sqrt(Math.max(0, 1 - ((sx - x) / (rx + 2)) ** 2)) * (ry + 2), l = 26 + r() * 30;
+        c.strokeStyle = '#4d7a3a'; c.lineWidth = 1.3;
+        c.beginPath(); c.moveTo(sx, sy); c.quadraticCurveTo(sx + (r() - 0.5) * 14, sy + l * 0.5, sx + (r() - 0.5) * 10, sy + l); c.stroke();
+        for (let j = 1; j <= 4; j++) {
+          const t = j / 4.4, lx = sx + (r() - 0.5) * 6, ly = sy + l * t;
+          c.fillStyle = j % 2 ? '#5d9644' : '#4f8a3c'; c.beginPath(); c.ellipse(lx + (j % 2 ? 3 : -3), ly, 3.4, 2.4, j % 2 ? 0.6 : -0.6, 0, 7); c.fill();
+        }
+      }
+    }
   }
 
   // ------------------------------------------------------------- PLANTING
@@ -327,13 +444,25 @@
           add(x + jit(3), b.y + b.rim + bandH * bi + bandH * (row ? 0.72 : 0.28) + jit(3), s, kind);
         }
       });
+    } else if (box === 'baskets') {
+      // hanging baskets: a ring of plants round one in the middle
+      BASKETS.forEach(([x, y, rx, ry], bi) => {
+        region.moveTo(x + rx, y); region.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+        add(x + jit(4), y + jit(2), 16, set[bi % set.length]);
+        const n = rx > 66 ? 8 : 7;
+        for (let k = 0; k < n; k++) {
+          const a = (k / n) * 6.283 + bi;
+          add(x + Math.cos(a) * rx * 0.66 + jit(3), y + Math.sin(a) * ry * 0.58 + jit(2), 14, set[(bi + k + 1) % set.length]);
+        }
+      });
     } else {
       // an open garden bed in the lawn: sunflowers or bulbs in rows
+      // (lavender: a few big bushes in gravel)
       const b = { x: 34, y: 48, w: 292, h: 504 };
       boxes.push(Object.assign({ rim: 0, bed: true }, b));
       rrPath(region, b.x, b.y, b.w, b.h, 26);
-      const big = setName === 'sunflowers';
-      const cols = big ? 3 : 5, rows = big ? 6 : 10, s = big ? 21 : 8.5;
+      const big = setName === 'sunflowers', lav = setName === 'lavender';
+      const cols = big ? 3 : lav ? 4 : 5, rows = big ? 6 : lav ? 7 : 10, s = big ? 21 : lav ? 23 : 8.5;
       for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
         add(b.x + (b.w * (i + 0.5 + (j % 2 ? 0.18 : -0.18))) / cols + jit(5), b.y + (b.h * (j + 0.5)) / rows + jit(5), s * (0.92 + r() * 0.16), set[0]);
       }
@@ -404,6 +533,16 @@
         } else if (box === 'veg') {
           field(c, x0, y0, x1, y1, 2, (x, y) => { const v = nz.n2(x * 0.4, y * 0.4); return [190 + v * 40, 180 + v * 36, 160 + v * 30]; });
           for (const b of boxes) woodBox(c, b);
+        } else if (box === 'baskets') {
+          basketsDecor(c, r, nz, bleed);
+        } else if (setName === 'lavender') {
+          // warm gravel and an edging of old bricks, the kiln's brick wall above
+          field(c, x0, y0, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.04, y * 0.04, 3); return [214 + v * 20, 196 + v * 18, 164 + v * 16]; });
+          for (let i = 0; i < 700; i++) dot(c, x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 0.8 + r() * 1.6, U.pick(r, ['#b9a888', '#efe3cb', '#a8957a', '#cdb894']));
+          const p = new Path2D(); rrPath(p, 34, 48, 292, 504, 26);
+          softShadow(c, p, 8, 0.35);
+          c.setLineDash([12, 3]); c.strokeStyle = '#a9553a'; c.lineWidth = 9; c.stroke(p);
+          c.strokeStyle = '#c66a48'; c.lineWidth = 5; c.stroke(p); c.setLineDash([]);
         } else {
           mowedLawn(c, nz, x0, y0, x1, y1, true);
           grassGrain(c, r, x0, y0, x1, y1, 6, 0.2);
@@ -428,6 +567,7 @@
         for (let i = 0; i < 120; i++) dot(c, r() * W, r() * H, 0.8 + r() * 1.4, U.pick(r, ['#c9b38a', '#f4ead2', '#a89070']));
       },
       top(c) {
+        if (box === 'baskets') return basketsTop(c, r);
         if (box !== 'veg') return;
         // seed packets on sticks at the start of each row
         const b = boxes[0], ih = b.h - b.rim * 2;

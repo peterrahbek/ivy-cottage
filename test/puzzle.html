@@ -24,7 +24,7 @@ html,body{margin:0;height:100%;background:#f6efe3;overflow:hidden}
 // A test bench for one puzzle scene, standing in for the engine: the same
 // fit between the HUD bars, the same pointer handling, and fx counted
 // instead of paid. test/run.mjs drives it in headless Chrome.
-//   puzzle.html?file=../js/pz-cups.js&kind=cups&seed=3[&state={json}]
+//   puzzle.html?file=../js/pz-cups.js&kind=cups&seed=3[&opts={json}][&state={json}]
 (() => {
   const q = new URLSearchParams(location.search);
   const H = window.H = { ready: false, errors: [], goods: [], sounds: [], frames: 0, drawMs: [] };
@@ -51,7 +51,9 @@ html,body{margin:0;height:100%;background:#f6efe3;overflow:hidden}
     const bleed = { x0: -ox / scale - 4, y0: -oy / scale - 4, x1: (vw - ox) / scale + 4, y1: (vh - oy) / scale + 4 };
     const kind = q.get('kind'), seed = +(q.get('seed') || 1);
     let scene;
-    try { scene = SCENES.build(kind, {}, seed, bleed); } catch (e) { H.errors.push('build: ' + e.message); return; }
+    let opts = {};
+    try { if (q.get('opts')) opts = JSON.parse(q.get('opts')); } catch (e) { H.errors.push('opts: ' + e.message); }
+    try { scene = SCENES.build(kind, opts, seed, bleed); } catch (e) { H.errors.push('build: ' + e.message); return; }
     H.scene = scene;
     const sparks = [];
     const burst = (x, y, n) => { for (let i = 0; i < n; i++) sparks.push({ x, y, vx: (Math.random() - 0.5) * 70, vy: -20 - Math.random() * 45, t: 0 }); };

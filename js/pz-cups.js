@@ -4,7 +4,10 @@
 // the left end of a shelf shows which kind of cup lives there, and a painted
 // tile at the top of each column shows its glaze, with a coaster of the same
 // glaze at every place. Each cup on the drying tray has exactly one home:
-// where its shelf and its column meet.
+// where its shelf and its column meet. With opts.where = 'pottery' it is
+// "Glaze the tea set" at Kiln Lane Pottery instead: the shelves are for
+// kinds of pot (bowl, jug, vase, teapot, beaker), labelled with clay tiles,
+// the columns for glazes, shown on test tiles hung along the top.
 
 (() => {
   const W = 360;
@@ -22,8 +25,9 @@
     { id: 'butter', col: '#f2d88a', deep: '#bb8e2a', pat: 'star' },
     { id: 'lavender', col: '#bba9df', deep: '#7660b0', pat: 'band' },
   ];
-  // a plain chalk version for the shelf labels
+  // a plain chalk version for the shelf labels (and a slip-trailed one on a clay tile)
   const CHALK = { col: '#f6efe3', deep: '#f6efe3', pat: null, chalk: true };
+  const SLIP = { col: '#f6efe3', deep: '#f6efe3', pat: null, chalk: true, bg: '#a9563a' };
 
   // the cup shapes, seen from the front, standing with their foot at 0, 0
   const p2 = (f) => { const p = new Path2D(); f(p); return p; };
@@ -54,6 +58,35 @@
     },
   };
   const KIND_IDS = Object.keys(KINDS);
+  // the potter's shapes, for the pottery
+  const POTS = {
+    bowl: {
+      rim: [-22, 26, 4.5], box: [-26, -22, 26, -1],
+      body: p2((p) => { p.moveTo(-26, -22); p.bezierCurveTo(-25, -9, -15, -3, -10, -3); p.lineTo(-9, 0); p.lineTo(9, 0); p.lineTo(10, -3); p.bezierCurveTo(15, -3, 25, -9, 26, -22); p.closePath(); }),
+    },
+    jug: {
+      rim: [-48, 11, 2.8], box: [-22, -48, 22, 0],
+      body: p2((p) => { p.moveTo(-11, -48); p.lineTo(-12, -40); p.bezierCurveTo(-21, -32, -22, -10, -13, -1); p.lineTo(-12, 0); p.lineTo(12, 0); p.lineTo(13, -1); p.bezierCurveTo(22, -10, 21, -32, 12, -40); p.lineTo(11, -48); p.closePath(); }),
+      spout: p2((p) => { p.moveTo(-9, -48); p.lineTo(-20, -52); p.lineTo(-13, -42); p.closePath(); }),
+      handle: p2((p) => { p.moveTo(13, -42); p.bezierCurveTo(30, -42, 28, -14, 16, -12); }), hw: 5,
+    },
+    vase: {
+      rim: [-52, 10, 2.6], box: [-22, -52, 22, 0],
+      body: p2((p) => { p.moveTo(-10, -52); p.bezierCurveTo(-7, -47, -6, -44, -7, -40); p.bezierCurveTo(-20, -30, -22, -10, -11, -1); p.lineTo(-10, 0); p.lineTo(10, 0); p.lineTo(11, -1); p.bezierCurveTo(22, -10, 20, -30, 7, -40); p.bezierCurveTo(6, -44, 7, -47, 10, -52); p.closePath(); }),
+    },
+    teapot: {
+      rim: [-34, 14, 3.2], box: [-24, -34, 24, 0], lid: true, knob: [-37.5, 4.2],
+      body: p2((p) => { p.moveTo(-14, -34); p.bezierCurveTo(-26, -32, -26, -6, -12, -1); p.lineTo(-11, 0); p.lineTo(11, 0); p.lineTo(12, -1); p.bezierCurveTo(26, -6, 26, -32, 14, -34); p.closePath(); }),
+      spout: p2((p) => { p.moveTo(-20, -15); p.bezierCurveTo(-29, -17, -31, -29, -37, -37); p.lineTo(-32, -38); p.bezierCurveTo(-28, -31, -25, -27, -19, -25); p.closePath(); }),
+      handle: p2((p) => { p.moveTo(20, -28); p.bezierCurveTo(35, -30, 34, -8, 19, -9); }), hw: 5,
+    },
+    beaker: {
+      rim: [-42, 14, 3], box: [-14, -42, 14, 0], rings: true,
+      body: p2((p) => { p.moveTo(-14, -42); p.lineTo(-12, -3); p.quadraticCurveTo(-12, 0, -9, 0); p.lineTo(9, 0); p.quadraticCurveTo(12, 0, 12, -3); p.lineTo(14, -42); p.closePath(); }),
+    },
+  };
+  const POT_IDS = Object.keys(POTS);
+  const SHAPES = Object.assign({}, KINDS, POTS);
 
   function heart(p, x, y, s) {
     p.moveTo(x, y + s * 0.5);
@@ -85,7 +118,7 @@
 
   // one cup, its foot at x, y; glaze CHALK draws the shelf label's picture
   function drawCup(c, kind, g, x, y, s = 1) {
-    const k = KINDS[kind], chalk = g.chalk;
+    const k = SHAPES[kind], chalk = g.chalk, board = g.bg || '#59615f';
     c.save(); c.translate(x, y); c.scale(s, s);
     c.lineJoin = 'round'; c.lineCap = 'round';
     const edge = chalk ? 'rgba(246,239,227,0.95)' : 'rgba(59,53,46,0.42)';
@@ -98,7 +131,11 @@
     }
     if (k.handle) {
       c.strokeStyle = edge; c.lineWidth = k.hw + 2.2; c.stroke(k.handle);
-      c.strokeStyle = chalk ? '#59615f' : g.col; c.lineWidth = k.hw; c.stroke(k.handle);
+      c.strokeStyle = chalk ? board : g.col; c.lineWidth = k.hw; c.stroke(k.handle);
+    }
+    if (k.spout) {
+      c.fillStyle = chalk ? 'rgba(246,239,227,0.14)' : g.col; c.fill(k.spout);
+      c.strokeStyle = edge; c.lineWidth = chalk ? 1.8 : 1.2; c.stroke(k.spout);
     }
     const [bx0, by0, bx1, by1] = k.box;
     if (chalk) {
@@ -111,6 +148,7 @@
       // a soft shine down the left and a shade down the right
       c.fillStyle = 'rgba(255,255,255,0.32)'; c.fillRect(bx0 + (bx1 - bx0) * 0.14, by0, (bx1 - bx0) * 0.12, by1 - by0);
       c.fillStyle = 'rgba(70,50,30,0.12)'; c.fillRect(bx1 - (bx1 - bx0) * 0.2, by0, (bx1 - bx0) * 0.2, by1 - by0);
+      if (k.rings) { c.strokeStyle = 'rgba(70,50,30,0.22)'; c.lineWidth = 1.2; for (const ry of [-30, -16]) { c.beginPath(); c.moveTo(bx0, ry); c.lineTo(bx1, ry + 1); c.stroke(); } }
       if (k.glass) { c.fillStyle = 'rgba(255,255,255,0.45)'; c.fillRect(bx0, by1 - 7, bx1 - bx0, 7); }
       c.restore();
       c.globalAlpha = 1;
@@ -118,8 +156,14 @@
     c.strokeStyle = edge; c.lineWidth = chalk ? 1.8 : 1.2; c.stroke(k.body);
     // the rim, with a glimpse of the inside
     const [ry0, rrx, rry] = k.rim;
-    c.fillStyle = chalk ? '#59615f' : '#efe4d2'; c.beginPath(); c.ellipse(0, ry0, rrx, rry, 0, 0, 7); c.fill();
-    c.strokeStyle = chalk ? edge : g.col; c.lineWidth = chalk ? 1.8 : 2; c.stroke();
+    c.fillStyle = chalk ? board : k.lid ? g.col : '#efe4d2'; c.beginPath(); c.ellipse(0, ry0, rrx, rry, 0, 0, 7); c.fill();
+    c.strokeStyle = chalk ? edge : k.lid ? 'rgba(59,53,46,0.42)' : g.col; c.lineWidth = chalk ? 1.8 : k.lid ? 1.2 : 2; c.stroke();
+    if (k.knob) {
+      const [ky, kr] = k.knob;
+      c.fillStyle = chalk ? board : g.col; c.beginPath(); c.ellipse(0, ky, kr, kr * 0.8, 0, 0, 7); c.fill();
+      c.strokeStyle = edge; c.lineWidth = chalk ? 1.6 : 1.2; c.stroke();
+      if (!chalk) { c.fillStyle = 'rgba(255,255,255,0.4)'; c.beginPath(); c.ellipse(-1.2, ky - 1, kr * 0.35, kr * 0.25, 0, 0, 7); c.fill(); }
+    }
     if (k.mallow) {
       // two marshmallows peeping over the rim of the cocoa mug
       for (const [mx, my, a, col] of [[-6, -39, -0.3, '#fffaf1'], [5, -40, 0.25, '#f7c6d4']]) {
@@ -149,8 +193,8 @@
   }
 
   function cups(S) {
-    const r = S.r;
-    const kinds = PZ.shuffle(r, KIND_IDS.slice()).slice(0, 3);       // shelf j holds kinds[j]
+    const r = S.r, pot = !!(S.opts && S.opts.where === 'pottery');
+    const kinds = PZ.shuffle(r, (pot ? POT_IDS : KIND_IDS).slice()).slice(0, 3);       // shelf j holds kinds[j]
     const glazes = PZ.shuffle(r, GLAZES.slice()).slice(0, 3);        // column i is glazes[i]
     const places = [];
     for (let j = 0; j < 3; j++) for (let i = 0; i < 3; i++) places.push({ kind: kinds[j], g: glazes[i], x: COLS[i], y: FLOOR[j] - UP, cup: null });
@@ -173,6 +217,7 @@
       puzzle: true, indoor: true, steps: pieces.length,
       crop: { x: 0, y: 34, w: 360, h: 360 },
       decor(c) {
+        if (pot) return potteryDecor(c, S.bleed, kinds, glazes);
         const { x0, y0, x1, y1 } = S.bleed, rr = rng(4127);
         // the café wall: warm plaster with a faint duck-egg stripe
         c.fillStyle = '#f3e7d4'; c.fillRect(x0, y0, x1 - x0, 390 - y0);
@@ -291,6 +336,84 @@
     };
     Object.defineProperty(sc, 'fx', { get: () => fx, set: (v) => { fx = v; } });
     return sc;
+  }
+
+  // the pottery's glaze shelves: lime-washed brick, rough pine shelving, glaze
+  // test tiles hung along the top, a clay tile for each shelf's kind of pot,
+  // and the ware board on the bench below
+  function potteryDecor(c, B, kinds, glazes) {
+    const { x0, y0, x1, y1 } = B, rr = rng(5323);
+    c.fillStyle = '#efe6d6'; c.fillRect(x0, y0, x1 - x0, 390 - y0);
+    c.strokeStyle = 'rgba(170,150,125,0.22)'; c.lineWidth = 1;
+    for (let y = Math.floor(y0 / 14) * 14; y < 390; y += 14) {
+      c.beginPath(); c.moveTo(x0, y); c.lineTo(x1, y); c.stroke();
+      for (let x = Math.floor(x0 / 30) * 30 + ((Math.floor(y / 14) % 2) ? 15 : 0); x < x1; x += 30) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 14); c.stroke(); }
+    }
+    PZ.text(c, 'Each pot goes where its shelf and glaze meet', W / 2, 24, { size: 13, color: PZ.INK2, maxW: 340 });
+    // the shelving: a pine frame, a back of pale boards and a deep top board
+    c.fillStyle = 'rgba(60,40,20,0.16)'; PZ.rr(c, 17, 48, 334, 338, 6); c.fill();
+    c.fillStyle = '#c9a77a'; PZ.rr(c, 14, 42, 332, 340, 6); c.fill();
+    c.fillStyle = '#efe4d2'; c.fillRect(24, 98, 312, 274);
+    c.fillStyle = 'rgba(150,120,80,0.14)'; for (let y = 98 + 22; y < 372; y += 22) c.fillRect(24, y, 312, 1.4);
+    // dabs of glaze and clay on the boards: a potter's shelves after all
+    const dabs = ['rgba(169,86,58,0.18)', 'rgba(143,191,230,0.2)', 'rgba(165,215,186,0.2)', 'rgba(150,130,110,0.16)'];
+    for (let i = 0; i < 18; i++) { c.fillStyle = dabs[(rr() * dabs.length) | 0]; c.beginPath(); c.ellipse(30 + rr() * 300, 104 + rr() * 260, 2 + rr() * 4, 1.5 + rr() * 3, rr() * 3, 0, 7); c.fill(); }
+    wood(c, rr, 14, 42, 332, 54, '#d2b384', 'rgba(120,85,45,0.16)');
+    c.fillStyle = 'rgba(255,245,225,0.4)'; c.fillRect(14, 42, 332, 3);
+    c.fillStyle = 'rgba(90,60,30,0.28)'; c.fillRect(24, 96, 312, 2);
+    // the glaze test tiles, each on a nail, with its column's glaze and pattern
+    for (let i = 0; i < 3; i++) {
+      const g = glazes[i], x = COLS[i], y = 70;
+      c.strokeStyle = 'rgba(90,70,50,0.6)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x - 9, y - 18); c.lineTo(x, y - 25); c.lineTo(x + 9, y - 18); c.stroke();
+      c.fillStyle = '#6b5a48'; c.beginPath(); c.arc(x, y - 25, 1.8, 0, 7); c.fill();
+      PZ.shadow(c, x + 1, y + 4, 22, 20, 0.16);
+      c.fillStyle = '#e6d6bd'; PZ.rr(c, x - 20, y - 19, 40, 40, 5); c.fill();
+      c.fillStyle = g.col; PZ.rr(c, x - 16, y - 15, 32, 30, 4); c.fill();
+      c.save(); PZ.rr(c, x - 16, y - 15, 32, 30, 4); c.clip();
+      pattern(c, g, x - 16, y - 15, x + 16, y + 15, g.pat === 'heart' ? 20 : 14);
+      c.fillStyle = 'rgba(255,255,255,0.25)'; c.fillRect(x - 13, y - 15, 5, 30);
+      c.restore();
+      c.fillStyle = 'rgba(107,97,87,0.55)'; c.beginPath(); c.moveTo(x - 5, 91); c.lineTo(x + 5, 91); c.lineTo(x, 96); c.closePath(); c.fill();
+    }
+    // the potter's mark burnt into the board: a swirl, like clay turning on the wheel
+    c.strokeStyle = 'rgba(110,70,35,0.42)'; c.lineWidth = 2; c.lineCap = 'round';
+    c.beginPath(); for (let a = 0; a <= 14; a += 0.25) { const q = 1 + a * 0.85; c.lineTo(48 + Math.cos(a) * q, 69 + Math.sin(a) * q); } c.stroke();
+    for (let j = 0; j < 3; j++) {
+      const F = FLOOR[j];
+      c.fillStyle = 'rgba(90,60,30,0.14)'; c.fillRect(24, F + 16, 312, 7);
+      wood(c, rr, 24, F - 7, 312, 13, '#dcc196', 'rgba(120,85,45,0.16)');
+      wood(c, rr, 20, F + 6, 320, 10, '#b8925e', 'rgba(80,50,20,0.18)');
+      c.fillStyle = 'rgba(255,245,225,0.45)'; c.fillRect(20, F + 6, 320, 1.2);
+      // a clay tile at the left end, the shelf's kind of pot trailed on in slip
+      const lx = 50, ly = F - 32;
+      c.fillStyle = 'rgba(40,30,20,0.2)'; PZ.rr(c, lx - 25, ly - 25, 52, 52, 7); c.fill();
+      c.fillStyle = '#8f4530'; PZ.rr(c, lx - 27, ly - 28, 54, 54, 7); c.fill();
+      c.fillStyle = SLIP.bg; PZ.rr(c, lx - 24, ly - 25, 48, 48, 5); c.fill();
+      c.fillStyle = 'rgba(255,220,190,0.18)'; c.fillRect(lx - 24, ly - 25, 48, 3);
+      const tall = kinds[j] === 'vase' || kinds[j] === 'jug';
+      drawCup(c, kinds[j], SLIP, lx + (kinds[j] === 'teapot' ? 3 : 0), ly + (tall ? 20 : 18), tall ? 0.66 : kinds[j] === 'teapot' ? 0.74 : 0.8);
+      c.fillStyle = 'rgba(107,97,87,0.55)'; c.beginPath(); c.moveTo(80, ly - 5); c.lineTo(80, ly + 5); c.lineTo(85, ly); c.closePath(); c.fill();
+      // a spot of glaze at each place, in its column's glaze
+      for (let i = 0; i < 3; i++) {
+        const g = glazes[i], x = COLS[i];
+        c.fillStyle = 'rgba(90,60,30,0.2)'; c.beginPath(); c.ellipse(x, F + 1.5, 29, 8, 0, 0, 7); c.fill();
+        c.fillStyle = '#efe4d2'; c.beginPath(); c.ellipse(x, F, 29, 8, 0, 0, 7); c.fill();
+        c.fillStyle = g.col; c.beginPath(); c.ellipse(x, F, 25.5, 6.5, 0, 0, 7); c.fill();
+        c.save(); c.beginPath(); c.ellipse(x, F, 25.5, 6.5, 0, 0, 7); c.clip();
+        c.save(); c.translate(x, F); c.scale(1, 0.55); pattern(c, g, -26, -12, 26, 12, g.pat === 'heart' ? 15 : 10); c.restore();
+        c.restore();
+      }
+    }
+    // the bench below, dusty with clay, and the long ware board on it
+    c.fillStyle = '#e4d8c4'; c.fillRect(x0, 384, x1 - x0, 6);
+    wood(c, rr, x0, 390, x1 - x0, y1 - 390, '#b99a72', 'rgba(80,55,30,0.2)');
+    for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(225,215,198,0.55)'; c.beginPath(); c.ellipse(x0 + rr() * (x1 - x0), 392 + rr() * (y1 - 392), 3 + rr() * 9, 2 + rr() * 4, rr() * 3, 0, 7); c.fill(); }
+    c.fillStyle = 'rgba(60,40,20,0.18)'; c.fillRect(x0, 390, x1 - x0, 4);
+    c.fillStyle = 'rgba(60,40,20,0.18)'; PZ.rr(c, 18, 406, 330, 184, 6); c.fill();
+    c.fillStyle = '#c9a77a'; PZ.rr(c, 14, 402, 332, 186, 6); c.fill();
+    c.fillStyle = '#e2cca6'; PZ.rr(c, 20, 408, 320, 174, 4); c.fill();
+    c.fillStyle = 'rgba(120,85,45,0.16)'; for (let y = 408 + 29; y < 582; y += 29) c.fillRect(20, y, 320, 1.4);
+    for (const bx of [30, 330]) { c.fillStyle = '#a8865a'; c.fillRect(bx - 5, 404, 10, 182); c.fillStyle = 'rgba(255,240,215,0.3)'; c.fillRect(bx - 5, 404, 2, 182); }
   }
 
   Object.assign(SCENES.KINDS, { cups });
