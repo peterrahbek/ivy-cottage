@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1 };
+    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {} };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -38,6 +38,15 @@
     // seasons used to be one fixed list of eight; the varied ones start afresh
     if (Object.keys(out.sdone || {}).some((k) => /^s\d+-\d+$/.test(k))) out.sdone = {};
     out.coins = Math.max(0, Math.round(out.coins) || 0); out.earned = Math.round(out.earned || 0);
+    // New places now open a few seasons after the one before is restored.
+    // An older save keeps the places it could already reach without a wait,
+    // and the waits for the newer places start from today's season.
+    if (!s.restoredAt || typeof s.restoredAt !== 'object') {
+      out.restoredAt = {}; out.oldWaits = true;
+      for (const p of DATA.PLACES) {
+        if (!p.beta && out.owned[p.id] && p.chores.every((c) => out.done[c.id])) out.restoredAt[p.id] = out.seasonNo || 0;
+      }
+    }
     return out;
   }
   function load() {
@@ -93,8 +102,39 @@
     const p = DATA.placeOf(pl), n = nextRestore(pl), reach = n ? n.index : p.chores.length;
     return p.chores.some((c) => c.family === fam && c.index <= reach);
   };
+  // ------------------------------------------------------------ opening
+  // A new place goes up for sale step by step: the place before it restored,
+  // then a few seasons of looking after it (a whole year for the later ones),
+  // and the coins. Seasons only turn when their jobs are done, never on their
+  // own, so the wait is always in your own hands and nothing is ever lost.
+  const NEWER = new Set(['canal', 'books']); // older saves wait for these only
+  const yearOf = (n) => 1 + Math.floor(n / 4);
+  const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
+  const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
+  const WAIT_WORDS = ['', 'One season after that', 'Two seasons after that', 'Three seasons after that', 'A year after that'];
+  // remember the season each place was first restored in
+  function noteRestored() {
+    for (const p of MAIN) if (owned(p.id) && restored(p.id) && S.restoredAt[p.id] == null) S.restoredAt[p.id] = S.seasonNo;
+  }
+  // the season a place can be bought from, or null while the one before is not restored yet
+  const opensAt = (p) => (!p.needs ? 0 : restored(p.needs) && S.restoredAt[p.needs] != null ? S.restoredAt[p.needs] + waitOf(p) : null);
+  // everything that has to be true, ticked off one by one; the coins come last
+  function criteria(p) {
+    const out = [];
+    if (p.needs) out.push({ ok: restored(p.needs), text: `${placeName(p.needs)} restored` });
+    const w = waitOf(p), at = opensAt(p);
+    if (w) {
+      const left = at == null ? w : at - S.seasonNo;
+      out.push(at == null ? { ok: false, text: WAIT_WORDS[w] || `${w} seasons after that` }
+        : { ok: left <= 0, text: left <= 0 ? whenLabel(at) : `${whenLabel(at)} · ${left} season${left > 1 ? 's' : ''} to go` });
+    }
+    const rich = S.coins >= p.price;
+    out.push({ ok: rich, coins: true, text: rich ? `${U.fmt(p.price)} coins` : `${U.fmt(p.price)} coins · you have ${U.fmt(S.coins)}` });
+    return out;
+  }
+  const opened = (p) => criteria(p).every((c) => c.ok || c.coins);
   function placeOffer() {
-    return MAIN.find((p) => !owned(p.id) && (!p.needs || restored(p.needs)));
+    return MAIN.find((p) => !owned(p.id) && opened(p));
   }
   function renderPlace(id, st, opts) {
     if (id === 'beta' && typeof BETA !== 'undefined') return BETA.render(st, S.colours, opts);
@@ -102,6 +142,8 @@
     if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
     if (id === 'rescue' && typeof RESCUE !== 'undefined') return RESCUE.render(st, S.colours, opts);
     if (id === 'glasshouse' && typeof GLASSHOUSE !== 'undefined') return GLASSHOUSE.render(st, S.colours, opts);
+    if (id === 'canal' && typeof CANAL !== 'undefined') return CANAL.render(st, S.colours, opts);
+    if (id === 'books' && typeof BOOKS !== 'undefined') return BOOKS.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -163,6 +205,7 @@
   // ---------------------------------------------------------------- home
   let freshPart = null;
   function renderHome() {
+    noteRestored();
     const pl = here();
     const st = partsDone(pl.id), pending = pendingAt(pl.id);
     const pct = doneCount() / pl.chores.length;
@@ -226,10 +269,14 @@
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${S.seasonNo === 0 ? 'All restored' : 'Season done'}</div><div class="nextName">${title}</div>
         <div class="nextMeta">${upcoming} is on its way, with new jobs.</div></div><button class="go" id="goBtn">${upcoming}</button>`;
       $('#goBtn').onclick = () => {
+        const before = MAIN.filter((p) => !owned(p.id) && opened(p)).map((p) => p.id);
         S.seasonNo++; S.sdone = {}; save();
         AUDIO.chime();
         seasonCard(upcoming);
         renderHome();
+        // a place that has waited for this season says so, once, quietly
+        const now = MAIN.find((p) => !owned(p.id) && opened(p) && !before.includes(p.id));
+        if (now) setTimeout(() => toast(`${now.name} is for sale now, in Places`, 4000), 2800);
       };
     }
     $('#btnShed').classList.toggle('alert', affordableSomething());
@@ -687,9 +734,9 @@
 
   // ---------------------------------------------------------------- toast
   let toastT = 0;
-  function toast(msg) {
+  function toast(msg, ms = 1600) {
     const t = $('#toast'); t.textContent = msg; t.classList.add('on');
-    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 1600);
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), ms);
   }
 
   // ---------------------------------------------------------------- sheets
@@ -995,6 +1042,7 @@
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   }
   function openPlaces() {
+    noteRestored();
     // the puzzle room first, so it is easy to find while it is new
     const cards = DATA.PLACES.filter((p) => p.beta).concat(MAIN).map((p) => {
       const own = owned(p.id), isHere = S.place === p.id;
@@ -1009,18 +1057,18 @@
         sub = d < n ? `${d} of ${n} jobs done` : waiting ? `Restored · ${waiting} ${DATA.SEASON_NAMES[seasonName()].toLowerCase()} job${waiting > 1 ? 's' : ''} waiting` : 'Restored and tidy';
         action = isHere ? '<div class="maxed">You are here</div>' : `<button class="buy can" data-go="${p.id}"><span>Go there</span></button>`;
       } else {
-        const ready = !p.needs || restored(p.needs);
-        sub = ready ? p.blurb : `${p.blurb} For sale once ${placeName(p.needs)} is restored.`;
+        const ready = opened(p);
+        sub = `${p.blurb}<ul class="opens">${criteria(p).map((c) => `<li class="${c.ok ? 'ok' : ''}">${c.text}</li>`).join('')}</ul>`;
         action = ready ? `<button class="buy${S.coins >= p.price ? ' can' : ''}" data-buy="${p.id}"><span>Buy</span><span class="price">${coinHtml(p.price)}</span></button>` : '<div class="lock">Later</div>';
       }
       return `<div class="placeCard${isHere ? ' here' : ''}${own ? '' : ' forSale'}${p.beta ? ' beta' : ''}"><div class="pic"><img alt="" src="${pic}"></div>
         <div class="pInfo"><div class="sInfo"><div class="pName">${placeName(p.id)}${p.beta ? ' <span class="betaTag">Beta</span>' : ''}</div><div class="pSub">${sub}</div></div>${action}</div></div>`;
     }).join('');
-    openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, tools, keepsakes and decorations. Your coins and robots come along everywhere.</div>`, (body) => {
+    openSheet('Places', `<div class="shedCoins">${coinHtml(S.coins)}</div>${cards}<div class="setNote">Every place has its own jobs, tools, keepsakes and decorations. Your coins and robots come along everywhere. New places open as the years go by: a season only turns when its jobs are done, never on its own.</div>`, (body) => {
       body.querySelectorAll('[data-go]').forEach((b) => b.onclick = () => goPlace(b.dataset.go));
       body.querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => {
         const p = DATA.placeOf(b.dataset.buy);
-        if (owned(p.id) || S.coins < p.price) return nope(b);
+        if (owned(p.id) || !opened(p) || S.coins < p.price) return nope(b);
         S.coins -= p.price; S.owned[p.id] = Date.now(); save(); AUDIO.buy();
         goPlace(p.id, true);
       });

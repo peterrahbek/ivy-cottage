@@ -250,11 +250,11 @@ body.pausing .dock button.alert::after{display:none}
 #doneBA .arrow{font-size:22px;font-weight:900;color:var(--sage-d);margin-bottom:16px}
 #doneFind{background:#fbf2d5;border-radius:12px;padding:8px 10px;margin:-6px 0 14px;font-weight:800;font-size:14px;display:flex;align-items:center;gap:8px;justify-content:center}
 #doneFind i{font-style:normal;font-size:22px}
-#seasonCard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;
+#seasonCard{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;opacity:0;padding:0 24px;box-sizing:border-box;text-align:center;
   background:radial-gradient(circle at 50% 45%,rgba(255,250,241,.96),rgba(246,239,227,.9))}
 #seasonCard.on{animation:seasoncard 2.8s ease forwards}
 @keyframes seasoncard{0%{opacity:0}15%{opacity:1}75%{opacity:1}100%{opacity:0}}
-#seasonCard b{font-size:56px;font-weight:900;color:#46623f}
+#seasonCard b{font-size:clamp(36px,13vw,56px);line-height:1.05;font-weight:900;color:#46623f;max-width:100%;overflow-wrap:break-word;text-wrap:balance}
 #seasonCard.on b{animation:popin .8s cubic-bezier(.2,1.4,.4,1)}
 #seasonCard small{font-size:14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
 #seasonCard[data-season=autumn] b{color:#c4622f}#seasonCard[data-season=winter] b{color:#4f7fa8}#seasonCard[data-season=summer] b{color:#d9a12b}#seasonCard[data-season=spring] b{color:#5d8a59}
@@ -315,6 +315,11 @@ body.pausing .dock button.alert::after{display:none}
 .placeCard .betaTag{display:inline-block;vertical-align:3px;margin-left:4px;padding:2px 7px;border-radius:999px;background:var(--sage-d);color:#fff;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
 #toolChip .bulb{font-size:22px;line-height:38px;width:38px;text-align:center}
 .placeCard .pSub{font-size:13px;color:var(--ink2);font-weight:700;line-height:1.35;margin-top:2px}
+.placeCard .opens{list-style:none;margin:7px 0 0;padding:0}
+.placeCard .opens li{position:relative;padding-left:22px;margin-top:3px;color:var(--ink2)}
+.placeCard .opens li::before{content:'';position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;border:2px solid var(--ink3);box-sizing:border-box}
+.placeCard .opens li.ok{color:var(--sage-d)}
+.placeCard .opens li.ok::before{content:'✓';border:0;background:var(--sage-d);color:#fff;font-size:9px;font-weight:900;line-height:12px;text-align:center}
 .brand{cursor:pointer}
 .brand .chev{font-size:15px;color:var(--ink3);margin-left:2px}
 .setHead{font-weight:900;font-size:15px;color:var(--ink);margin:18px 4px 4px}
@@ -435,18 +440,23 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/scenes7.js"></script>
 <script src="js/scenes8.js"></script>
 <script src="js/scenes9.js"></script>
+<script src="js/scenes10.js"></script>
 <script src="js/puzzles.js"></script>
 <script src="js/pz-cups.js"></script>
 <script src="js/pz-feed.js"></script>
 <script src="js/pz-hose.js"></script>
 <script src="js/pz-beds.js"></script>
 <script src="js/pz-plan.js"></script>
+<script src="js/pz-books.js"></script>
+<script src="js/pz-pack.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/cafe.js"></script>
 <script src="js/cove.js"></script>
 <script src="js/rescue.js"></script>
 <script src="js/glasshouse.js"></script>
+<script src="js/canal.js"></script>
+<script src="js/books.js"></script>
 <script src="js/beta.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>

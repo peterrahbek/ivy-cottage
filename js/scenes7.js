@@ -630,9 +630,32 @@
 
   // the same hull, scrubbed bare and now painted, with a white sheer stripe
   // and her name; the keel stays varnished wood
+  // the little rowing boat moored on the canal instead of pulled up on the sand
+  function canalMooring(c, r, nz, bleed) {
+    const { x0, y0, x1, y1 } = bleed;
+    const g = ramp(['#2f4a3e', '#3a5a4a', '#46685a', '#527464']);
+    field(c, x0, y0, x1, y1, 3, (x, y) => g(nz.fbm(x * 0.008, y * 0.008, 4)));
+    c.fillStyle = 'rgba(214,234,226,0.3)';
+    for (let i = 0; i < 70; i++) c.fillRect(x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 6 + r() * 20, 1.4);
+    for (let i = 0; i < 160; i++) { c.fillStyle = r() < 0.5 ? 'rgba(126,170,80,0.7)' : 'rgba(150,190,90,0.6)'; c.beginPath(); c.arc(x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 1 + r() * 1.6, 0, 7); c.fill(); }
+    for (const [lx, ly, lr] of [[300, 120, 16], [322, 160, 11], [56, 420, 14]]) {
+      c.fillStyle = '#5d9a4a'; c.beginPath(); c.moveTo(lx, ly); c.arc(lx, ly, lr, 0.4, 6.0); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(40,80,30,0.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx - lr * 0.7, ly + lr * 0.2); c.stroke();
+    }
+    // the towpath along the left: coping stones, then grass
+    c.fillStyle = '#7d786d'; c.fillRect(x0, y0, 30 - x0, y1 - y0);
+    for (let y = y0 - r() * 30; y < y1; y += 40 + r() * 12) { c.fillStyle = U.pick(r, ['#a6a093', '#b3ad9f', '#9c968a']); c.fillRect(8, y + 1, 19, 38); }
+    SCENES.mowedLawn(c, nz, x0, y0, 8, y1, true);
+    c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(27, y0, 3, y1 - y0);
+    // a rope from the bow to a ring on the coping
+    c.strokeStyle = '#c9a46a'; c.lineWidth = 3; c.beginPath(); c.moveTo(180, 60); c.quadraticCurveTo(80, 40, 20, 96); c.stroke();
+    c.strokeStyle = '#6b6f75'; c.lineWidth = 2.4; c.beginPath(); c.arc(18, 98, 5, 0, 7); c.stroke();
+    softShadow(c, BOAT.outline, 14, 0.45, 5, 9);
+  }
   function boatPaint(S) {
-    const { r, nz, bleed } = S;
+    const { r, nz, bleed, opts } = S;
     const { cx, y0, y1, B, keel, N, w, outline } = BOAT;
+    const canal = opts && opts.where === 'canal', name = canal ? 'MINNOW' : 'SEASHELL';
     const region = new Path2D(outline);
     region.rect(cx - keel, y0 + 4, keel * 2, y1 - y0 + 6);
     const stripe = (side) => {
@@ -645,7 +668,7 @@
     return {
       family: 'paint', particle: 'paint', region,
       tough: (x, y) => (y > y1 - 20 || y < y0 + 30 ? 1.3 : 1),
-      decor(c) { BOAT.decor(c, r, nz, bleed); },
+      decor(c) { if (canal) canalMooring(c, r, nz, bleed); else BOAT.decor(c, r, nz, bleed); },
       clean(c, paint) { c.fillStyle = paint; c.fillRect(0, 0, W, H); },
       cleanOver(c) {
         BOAT.strakes(c, 'rgba(0,0,0,0.25)', 'rgba(255,255,255,0.16)');
@@ -668,8 +691,8 @@
         const y = y0 + (y1 - y0) * 0.66, x = cx + 0.73 * w(y);
         c.save(); c.translate(x, y); c.rotate(Math.PI / 2);
         c.font = 'bold 13px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-        c.lineJoin = 'round'; c.strokeStyle = 'rgba(30,25,20,0.75)'; c.lineWidth = 3; c.strokeText('SEASHELL', 0, 0);
-        c.fillStyle = '#fbf3dd'; c.fillText('SEASHELL', 0, 0);
+        c.lineJoin = 'round'; c.strokeStyle = 'rgba(30,25,20,0.75)'; c.lineWidth = 3; c.strokeText(name, 0, 0);
+        c.fillStyle = '#fbf3dd'; c.fillText(name, 0, 0);
         c.restore();
         c.strokeStyle = 'rgba(40,30,20,0.55)'; c.lineWidth = 2; c.stroke(outline);
       },

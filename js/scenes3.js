@@ -105,8 +105,11 @@
   // ------------------------------------------------------------------- POND
   function pond(S) {
     const { r, nz, bleed } = S;
+    // opts.canal: a straight stretch of canal between two stone banks, no koi
+    const canal = !!(S.opts && S.opts.canal);
     const region = new Path2D();
-    blob(region, 180, 300, 150, 230, r, 0.1, 16);
+    if (canal) region.rect(-10, 160, 380, 280);
+    else blob(region, 180, 300, 150, 230, r, 0.1, 16);
     const pads = [];
     for (let i = 0; i < 7; i++) { const x = 60 + r() * 240, y = 100 + r() * 400; if (inside(region, x, y)) pads.push([x, y, 14 + r() * 10, r() * 6.28, r() < 0.4]); }
     const fish = [
@@ -120,6 +123,13 @@
       tough: (x, y) => (nz.n2(x * 0.03, y * 0.03) > 0.7 ? 1.5 : 1),
       decor(c) {
         lawnAround(c, r, nz, bleed);
+        if (canal) {
+          // the towpath along the near bank
+          c.fillStyle = '#cdbfa6'; c.fillRect(bleed.x0, 440, bleed.x1 - bleed.x0, bleed.y1 - 440);
+          c.strokeStyle = 'rgba(90,75,55,0.35)'; c.lineWidth = 1.5;
+          for (let y = 470; y < bleed.y1; y += 34) { c.beginPath(); c.moveTo(bleed.x0, y); c.lineTo(bleed.x1, y); c.stroke(); }
+          for (let y = 440, row = 0; y < bleed.y1; y += 34, row++) for (let x = bleed.x0 + (row % 2) * 26; x < bleed.x1; x += 52) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 34); c.stroke(); }
+        }
         softShadow(c, region, 10, 0.4);
       },
       clean(c) {
@@ -131,7 +141,7 @@
         for (let i = 0; i < 40; i++) { const x = r() * W, y = r() * H; c.beginPath(); c.moveTo(x, y); c.bezierCurveTo(x + 20, y - 10, x + 30, y + 10, x + 50, y); c.stroke(); }
       },
       live(c, t) {
-        for (const f of fish) {
+        for (const f of canal ? [] : fish) {
           const a = t * f.sp + f.ph;
           const x = 180 + Math.sin(a) * f.rx, y = 300 + Math.sin(a * 2 + f.ph) * f.ry * 0.5 + Math.cos(a * 0.7) * f.ry * 0.5;
           const dx = Math.cos(a) * f.rx, dy = Math.cos(a * 2 + f.ph) * f.ry - Math.sin(a * 0.7) * f.ry * 0.35;
@@ -174,6 +184,33 @@
         for (let i = 0; i < 40; i++) { c.strokeStyle = 'rgba(255,255,255,0.4)'; c.lineWidth = 0.8; c.beginPath(); c.arc(r() * W, r() * H, 1.5 + r() * 3, 0, 7); c.stroke(); }
       },
       top(c) {
+        if (canal) {
+          // coping stones along both banks, reeds on the far side and a mallard
+          for (const y of [160, 440]) {
+            for (let x = -20; x < 380; x += 34) {
+              c.fillStyle = 'rgba(30,25,20,0.3)'; c.fillRect(x + 1, y - 4, 32, 14);
+              c.fillStyle = U.pick(r, ['#bdb3a3', '#cfc6b8', '#a99f90', '#d8d0c2']); c.beginPath(); c.roundRect(x, y - 7, 32, 14, 3); c.fill();
+              c.fillStyle = 'rgba(255,255,255,0.22)'; c.fillRect(x + 3, y - 5, 26, 3);
+            }
+          }
+          for (const x0 of [44, 250, 318]) {
+            for (let k = 0; k < 8; k++) {
+              const x = x0 + (r() - 0.5) * 28, h = 40 + r() * 46;
+              c.strokeStyle = U.pick(r, ['#4f8a3a', '#62a042', '#3f7531']); c.lineWidth = 2.2;
+              c.beginPath(); c.moveTo(x, 156); c.quadraticCurveTo(x + (r() - 0.5) * 10, 156 - h / 2, x + (r() - 0.5) * 14, 156 - h); c.stroke();
+              if (k % 3 === 0) { c.fillStyle = '#7a4e33'; c.beginPath(); c.roundRect(x - 3, 156 - h * 0.7, 6, 18, 3); c.fill(); }
+            }
+          }
+          const dx = 286, dy = 396;
+          c.fillStyle = 'rgba(0,30,40,0.2)'; c.beginPath(); c.ellipse(dx + 2, dy + 8, 20, 6, 0, 0, 7); c.fill();
+          c.fillStyle = '#9a7b5a'; c.beginPath(); c.ellipse(dx, dy, 19, 10, 0, 0, 7); c.fill();
+          c.fillStyle = '#e9e1d2'; c.beginPath(); c.ellipse(dx + 4, dy + 2, 9, 5, 0, 0, 7); c.fill();
+          c.fillStyle = '#2f6b45'; c.beginPath(); c.arc(dx - 16, dy - 10, 7, 0, 7); c.fill();
+          c.fillStyle = '#ffffff'; c.fillRect(dx - 20, dy - 4, 8, 2);
+          c.fillStyle = '#e9b23a'; c.beginPath(); c.ellipse(dx - 25, dy - 9, 5, 2.4, 0, 0, 7); c.fill();
+          c.fillStyle = '#222'; c.beginPath(); c.arc(dx - 18, dy - 12, 1.2, 0, 7); c.fill();
+          return;
+        }
         // stones round the edge, reeds and a frog
         const pts = [];
         const len = 70;

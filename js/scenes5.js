@@ -359,6 +359,8 @@
     // the café's sign by default; other places bring their own words, a paw
     // instead of the cup, and a barn wall instead of the café front
     const title = opts.title || 'CAFÉ', sub = opts.sub || '· COFFEE & CAKE ·';
+    // the canal's sign (the one with the fish) hangs on the lock-keeper's cottage
+    const lock = opts.lock || opts.icon === 'fish';
     const ghostTitle = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const ox0 = 20, oy0 = 160, ox1 = 340, oy1 = 392, f = 16;
     const ix0 = ox0 + f, iy0 = oy0 + f, ix1 = ox1 - f, iy1 = oy1 - f, cx = (ix0 + ix1) / 2;
@@ -413,6 +415,39 @@
       for (const dx of [-s * 0.35, s * 0.3]) { c.beginPath(); c.moveTo(dx, -s * 0.6); c.bezierCurveTo(dx - s * 0.3, -s * 0.9, dx + s * 0.3, -s * 1.1, dx, -s * 1.45); c.stroke(); }
       c.restore();
     }
+    function fishIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round';
+      const shape = () => {
+        c.beginPath(); c.moveTo(-s * 1.1, 0);
+        c.quadraticCurveTo(-s * 0.2, -s * 0.85, s * 0.72, -s * 0.1);
+        c.lineTo(s * 1.25, -s * 0.55); c.lineTo(s * 1.12, 0); c.lineTo(s * 1.25, s * 0.55); c.lineTo(s * 0.72, s * 0.1);
+        c.quadraticCurveTo(-s * 0.2, s * 0.85, -s * 1.1, 0); c.closePath();
+      };
+      c.strokeStyle = '#3a2814'; c.lineWidth = 5; shape(); c.stroke();
+      c.fillStyle = gold(c, -s, s); shape(); c.fill();
+      c.fillStyle = '#3a2814'; c.beginPath(); c.arc(-s * 0.62, -s * 0.12, s * 0.12, 0, 7); c.fill();
+      c.strokeStyle = '#3a2814'; c.lineWidth = 1.6;
+      c.beginPath(); c.arc(-s * 0.32, 0, s * 0.34, -1.1, 1.1); c.stroke();
+      for (const dx of [0.05, 0.3]) { c.beginPath(); c.arc(s * dx, 0, s * 0.22, -0.9, 0.9); c.stroke(); }
+      c.restore();
+    }
+    function bookIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round';
+      const shape = () => {
+        c.beginPath(); c.moveTo(0, -s * 0.55);
+        c.quadraticCurveTo(-s * 0.6, -s * 0.85, -s * 1.3, -s * 0.6); c.lineTo(-s * 1.3, s * 0.6);
+        c.quadraticCurveTo(-s * 0.6, s * 0.35, 0, s * 0.65);
+        c.quadraticCurveTo(s * 0.6, s * 0.35, s * 1.3, s * 0.6); c.lineTo(s * 1.3, -s * 0.6);
+        c.quadraticCurveTo(s * 0.6, -s * 0.85, 0, -s * 0.55); c.closePath();
+      };
+      c.strokeStyle = '#3a2814'; c.lineWidth = 5; shape(); c.stroke();
+      c.fillStyle = gold(c, -s, s); shape(); c.fill();
+      // the spine and a few lines of print on each page
+      c.strokeStyle = '#3a2814'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(0, -s * 0.5); c.lineTo(0, s * 0.6); c.stroke();
+      c.lineWidth = 1.2;
+      for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) { const yy = -s * 0.22 + k * s * 0.24; c.beginPath(); c.moveTo(sd * s * 0.25, yy); c.quadraticCurveTo(sd * s * 0.7, yy - s * 0.12, sd * s * 1.08, yy - s * 0.02); c.stroke(); }
+      c.restore();
+    }
     // sun-bleached grey planks running along the board
     function oldWood(c) {
       const g = ramp(['#746d66', '#88817a', '#9b948a', '#aea79c']);
@@ -427,6 +462,32 @@
       family: 'paint', particle: 'paint', region,
       tough: (x, y) => (x < ix0 + 12 || x > ix1 - 12 || y < iy0 + 12 || y > iy1 - 12 ? 1.35 : 1),
       decor(c) {
+        if (lock) {
+          // the lock-keeper's whitewashed wall with a window and geraniums,
+          // and the lock below: grass, the black and white beam, dark water
+          const { x0, y0, x1, y1 } = bleed;
+          field(c, x0, y0, x1, 446, 3, (x, y) => { const v = nz.fbm(x * 0.02, y * 0.03, 3); return [240 - v * 22, 236 - v * 22, 226 - v * 24]; });
+          c.fillStyle = '#f7f3ea'; c.fillRect(128, y0, 104, 102 - y0);
+          const gl = c.createLinearGradient(0, y0, 0, 92); gl.addColorStop(0, '#9ec9de'); gl.addColorStop(1, '#d8ecf2');
+          c.fillStyle = gl; c.fillRect(136, y0, 88, 92 - y0);
+          c.fillStyle = '#f7f3ea'; c.fillRect(177, y0, 6, 92 - y0); c.fillRect(136, 44, 88, 5);
+          c.fillStyle = '#4b4a52'; c.fillRect(120, 96, 120, 10);
+          for (let i = 0; i < 7; i++) {
+            const x = 140 + i * 13;
+            c.fillStyle = '#4f8a3a'; c.beginPath(); c.ellipse(x, 92, 7, 5, r(), 0, 7); c.fill();
+            c.fillStyle = U.pick(r, ['#e0485a', '#f06a7e', '#d93b4f']); c.beginPath(); c.arc(x + (r() - 0.5) * 6, 86 - r() * 6, 3.6, 0, 7); c.fill();
+          }
+          c.fillStyle = '#6d9a58'; c.fillRect(x0, 440, x1 - x0, 34);
+          const wg = c.createLinearGradient(0, 474, 0, y1); wg.addColorStop(0, '#2c463b'); wg.addColorStop(1, '#436452');
+          c.fillStyle = wg; c.fillRect(x0, 474, x1 - x0, y1 - 474);
+          c.fillStyle = 'rgba(214,234,226,0.35)'; for (let i = 0; i < 24; i++) c.fillRect(x0 + r() * (x1 - x0), 480 + r() * Math.max(1, y1 - 486), 8 + r() * 20, 1.2);
+          c.fillStyle = '#1f2124'; c.fillRect(x0, 452, x1 - x0, 16);
+          c.fillStyle = '#f4f1ea'; c.fillRect(x1 - 70, 452, 70, 16);
+          c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(x0, 452, x1 - x0, 3);
+          const board = new Path2D(); board.rect(ox0, oy0, ox1 - ox0, oy1 - oy0);
+          softShadow(c, board, 12, 0.45, 4, 7);
+          return;
+        }
         if (opts.farm) {
           // barn-red boards, a hayloft door with straw poking out, and the farm gate
           field(c, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 3, (x, y) => { const v = nz.fbm(x * 0.01, y * 0.04, 3); return [166 + v * 26, 72 + v * 16, 54 + v * 12]; });
@@ -494,7 +555,10 @@
           c.fillStyle = '#3a2814'; c.beginPath(); c.moveTo(x, y - 8); c.lineTo(x + 8, y); c.lineTo(x, y + 8); c.lineTo(x - 8, y); c.closePath(); c.fill();
           c.fillStyle = '#e9bd55'; c.beginPath(); c.moveTo(x, y - 5.5); c.lineTo(x + 5.5, y); c.lineTo(x, y + 5.5); c.lineTo(x - 5.5, y); c.closePath(); c.fill();
         }
-        if (opts.icon === 'paw') pawIcon(c, cx, iy0 + 46, 15); else cup(c, cx, iy0 + 44, 14);
+        if (opts.icon === 'paw') pawIcon(c, cx, iy0 + 46, 15);
+        else if (opts.icon === 'fish') fishIcon(c, cx, iy0 + 46, 17);
+        else if (opts.icon === 'book') bookIcon(c, cx, iy0 + 47, 16);
+        else cup(c, cx, iy0 + 44, 14);
         letters(c, title, iy0 + 112, fit(c, title, 86));
         letters(c, sub, iy1 - 32, fit(c, sub, 17));
       },

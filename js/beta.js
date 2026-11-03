@@ -43,16 +43,18 @@ const BETA = (() => {
   };
   const HILL = { spring: ['#a9cf8f', '#8fbd78'], summer: ['#86b971', '#6f9a5c'], autumn: ['#d4b06c', '#b98f5a'], winter: ['#eef3f7', '#dfe8f0'] };
 
-  // the five cards: where they hang, how askew, their tint and pin colour;
-  // three along the top, two below, drawn at CARD_K of their full size
+  // the seven cards: where they hang, how askew, their tint and pin colour;
+  // three along the top, then two rows of two, drawn at CARD_K of their full size
   const CARDS = {
-    cups: { x: 186, y: 111, tilt: -5, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
-    feed: { x: 261, y: 106, tilt: 3, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
-    hose: { x: 336, y: 111, tilt: -3.5, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
-    beds: { x: 223, y: 244, tilt: 4, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
-    plan: { x: 299, y: 247, tilt: -4, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
+    cups: { x: 186, y: 94, tilt: -5, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
+    feed: { x: 261, y: 90, tilt: 3, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
+    hose: { x: 336, y: 94, tilt: -3.5, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
+    beds: { x: 223, y: 181, tilt: 4, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
+    plan: { x: 299, y: 184, tilt: -4, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
+    books: { x: 222, y: 268, tilt: -3, label: 'Shelves', tint: '#efb4ae', pin: '#8fbfe6' },
+    pack: { x: 300, y: 266, tilt: 3.5, label: 'Packing', tint: '#d6b07e', pin: '#6f9a6a' },
   };
-  const CARD_K = 0.78;
+  const CARD_K = 0.62;
 
   // a sleeping cat breathes, the mug steams, petals and snow drift past the window
   function style() {
@@ -266,6 +268,24 @@ const BETA = (() => {
         }
       }
       return s;
+    },
+    // books back on the shelves: one kind of book on every shelf
+    books() {
+      let s = P('M10 14 H90 V95 H10Z', '#d6b07e', true) + P('M14 18 H86 V91 H14Z', '#8a6a4a');
+      const shelf = (y) => P(`M14 ${y} H86 V${y + 4} H14Z`, '#b98f5a');
+      const run = (y, c, hs) => hs.map((h, i) => P(`M${18 + i * 11} ${y - h} h9.4 v${h} h-9.4Z`, c, i % 2 === 1) + L(`M${19.6 + i * 11} ${y - h + 4} h6.2`, light(c, 0.55), 1)).join('');
+      s += shelf(40) + shelf(65) + shelf(88);
+      s += run(40, '#e2574c', [18, 18, 18, 18]) + run(65, '#5d7fd8', [20, 20, 20, 20]) + run(88, '#6f9a6a', [16, 16, 16]);
+      // one green book still to go, leaning on the last shelf
+      return s + P('M64 88 l7 -15 l7.6 3.4 l-7 15Z', '#6f9a6a', true);
+    },
+    // loading the boat: every piece fits, nothing left over
+    pack() {
+      let s = P('M8 22 H74 Q94 22 94 56 Q94 90 74 90 H8Z', '#6b4a32', true) + P('M14 28 H72 Q87 28 87 56 Q87 84 72 84 H14Z', '#c99e69');
+      const cell = (i, j, c) => P(`M${18 + j * 16} ${32 + i * 16} h15 v15 h-15Z`, c, c === '#d98b63');
+      const PIECES = [['#d98b63', [[0, 0], [0, 1], [1, 0]]], ['#8fbfe6', [[0, 2], [0, 3], [1, 3], [2, 3]]], ['#f2d88a', [[1, 1], [1, 2], [2, 2]]], ['#6f9a6a', [[2, 0], [2, 1]]]];
+      for (const [c, cells] of PIECES) for (const [i, j] of cells) s += cell(i, j, c);
+      return s + L('M21 35 l9 9 M30 35 l-9 9', dark('#d98b63', 0.3), 1.2);
     },
   };
 

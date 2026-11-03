@@ -443,11 +443,16 @@
   }
   function lights(S) {
     const { r, nz, opts, bleed } = S;
-    const where = opts.where || 'cottage', warm = where === 'cafe';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc' }[where] || '#f2d88a';
-    const boarded = where === 'cove' || where === 'rescue';
+    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books';
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86' }[where] || '#f2d88a';
+    const boarded = where === 'cove' || where === 'rescue', boat = where === 'canal';
     // three strings: under the eaves, across the window, along the fence
-    const strings = [
+    // (on the narrowboat: under the roof edge, along the cabin side and along the gunwale)
+    const strings = boat ? [
+      { x0: 6, y0: 150, x1: 354, y1: 150, sag: 20 },
+      { x0: 30, y0: 226, x1: 330, y1: 226, sag: 30 },
+      { x0: 6, y0: 404, x1: 178, y1: 404, sag: 16 }, { x0: 182, y0: 404, x1: 354, y1: 404, sag: 16 },
+    ] : [
       { x0: 6, y0: 150, x1: 354, y1: 150, sag: 26 },
       { x0: 50, y0: 250, x1: 310, y1: 250, sag: 44 },
       { x0: 6, y0: 470, x1: 178, y1: 470, sag: 22 }, { x0: 182, y0: 470, x1: 354, y1: 470, sag: 22 },
@@ -478,14 +483,38 @@
         field(c, x0, 120, x1, 450, 3, (x, y) => { const v = 0.9 + nz.fbm(x * 0.02, y * 0.02, 3) * 0.15; return [dusk[0] * v, dusk[1] * v, dusk[2] * v]; });
         if (boarded) { c.strokeStyle = 'rgba(30,40,70,0.35)'; c.lineWidth = 2; for (let x = 0; x < 360; x += 22) { c.beginPath(); c.moveTo(x, 130); c.lineTo(x, 450); c.stroke(); } }
         // snowy eaves
-        c.fillStyle = where === 'cove' ? '#6b4a32' : '#5b3a2e'; c.fillRect(x0, 118, x1 - x0, 22);
+        c.fillStyle = where === 'cove' ? '#6b4a32' : boat ? '#9a2f2c' : where === 'books' ? '#24382f' : '#5b3a2e'; c.fillRect(x0, 118, x1 - x0, 22);
         c.fillStyle = '#f4f8fc'; c.beginPath(); c.moveTo(x0, 116); for (let x = x0; x <= x1; x += 12) c.lineTo(x, 112 + Math.sin(x * 0.3) * 2); c.lineTo(x1, 124); for (let x = x1; x >= x0; x -= 18) c.lineTo(x, 124 + (Math.floor(x / 18) % 3 === 0 ? 7 : 2)); c.closePath(); c.fill();
-        // the window with a warm glow
-        c.fillStyle = '#ffd98a'; c.fillRect(110, 270, 140, 120);
-        const glow = c.createRadialGradient(180, 330, 10, 180, 330, 150);
-        glow.addColorStop(0, 'rgba(255,217,138,0.35)'); glow.addColorStop(1, 'rgba(255,217,138,0)');
-        c.fillStyle = glow; c.fillRect(30, 200, 300, 260);
-        c.fillStyle = '#f7f3ea'; c.fillRect(104, 264, 152, 7); c.fillRect(104, 390, 152, 8); c.fillRect(104, 264, 7, 132); c.fillRect(249, 264, 7, 132); c.fillRect(176, 270, 7, 120);
+        if (boat) {
+          // three portholes glowing warm in the cabin side, inside a cream coachline
+          c.strokeStyle = 'rgba(243,226,176,0.75)'; c.lineWidth = 2; c.strokeRect(14, 160, 332, 222);
+          for (const px of [90, 180, 270]) {
+            const g = c.createRadialGradient(px, 304, 4, px, 304, 74);
+            g.addColorStop(0, 'rgba(255,217,138,0.4)'); g.addColorStop(1, 'rgba(255,217,138,0)');
+            c.fillStyle = g; c.fillRect(px - 74, 230, 148, 148);
+            dot(c, px, 304, 27, '#c9a24a'); dot(c, px, 304, 21, '#ffd98a'); dot(c, px - 6, 298, 8, '#fff1c4');
+          }
+        } else if (where === 'books') {
+          // the shop window full of books, and gold letters on the fascia
+          c.fillStyle = '#ffd98a'; c.fillRect(64, 254, 232, 170);
+          for (const sy of [300, 350, 400]) {
+            for (let x = 70; x < 290; x += 7 + ((x * 7) % 5)) { c.fillStyle = U.pick(r, ['#c9474f', '#3d5a86', '#4e7b5b', '#d98b63', '#bba9df', '#7a4a2a']); c.fillRect(x, sy - 24 - (x % 9), 5, 24 + (x % 9)); }
+            c.fillStyle = '#7a4a2a'; c.fillRect(64, sy, 232, 5);
+          }
+          const g = c.createRadialGradient(180, 336, 10, 180, 336, 170);
+          g.addColorStop(0, 'rgba(255,217,138,0.4)'); g.addColorStop(1, 'rgba(255,217,138,0)');
+          c.fillStyle = g; c.fillRect(10, 190, 340, 270);
+          c.fillStyle = '#f7f3ea'; c.fillRect(58, 248, 244, 7); c.fillRect(58, 424, 244, 8); c.fillRect(58, 248, 7, 184); c.fillRect(295, 248, 7, 184);
+          for (const x of [120, 178, 236]) c.fillRect(x, 254, 5, 170);
+          c.fillStyle = '#e9bd55'; c.font = 'bold 30px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('BOOKS', 180, 204);
+        } else {
+          // the window with a warm glow
+          c.fillStyle = '#ffd98a'; c.fillRect(110, 270, 140, 120);
+          const glow = c.createRadialGradient(180, 330, 10, 180, 330, 150);
+          glow.addColorStop(0, 'rgba(255,217,138,0.35)'); glow.addColorStop(1, 'rgba(255,217,138,0)');
+          c.fillStyle = glow; c.fillRect(30, 200, 300, 260);
+          c.fillStyle = '#f7f3ea'; c.fillRect(104, 264, 152, 7); c.fillRect(104, 390, 152, 8); c.fillRect(104, 264, 7, 132); c.fillRect(249, 264, 7, 132); c.fillRect(176, 270, 7, 120);
+        }
         if (where === 'cottage') { c.strokeStyle = '#4f8a3c'; c.lineWidth = 7; c.beginPath(); c.arc(180, 330, 26, 0, 7); c.stroke(); dot(c, 180, 304, 4, '#d9534f'); }
         if (where === 'rescue') {
           // a lucky horseshoe over the barn window, the open end up
@@ -502,11 +531,21 @@
           for (let x = 124; x < 240; x += 26) { c.fillStyle = '#b8653f'; c.fillRect(x, 372, 16, 16); c.fillStyle = '#4f8a3a'; c.beginPath(); c.ellipse(x + 8, 366, 10, 7, 0, 0, 7); c.fill(); }
         }
         if (where === 'cafe') { c.fillStyle = '#2f8068'; c.fillRect(96, 228, 168, 14); for (let x = 96; x < 264; x += 24) { c.fillStyle = x % 48 ? '#f4ecda' : '#2f8068'; c.fillRect(x, 242, 24, 10); } }
-        // ground, fence or rail, and snow
-        c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
-        c.fillStyle = boarded ? '#a2734a' : '#f4ecdc';
-        for (let x = 10; x < 360; x += 26) { c.fillRect(x, 470, 10, 90); c.beginPath(); c.moveTo(x, 470); c.lineTo(x + 5, 462); c.lineTo(x + 10, 470); c.fill(); }
-        c.fillRect(0, 490, 360, 8); c.fillRect(0, 530, 360, 8);
+        if (boat) {
+          // the black hull, then dark water with the lights in it
+          c.fillStyle = '#1b1c1e'; c.fillRect(x0, 392, x1 - x0, 10);
+          c.fillStyle = '#26282b'; c.fillRect(x0, 402, x1 - x0, 54);
+          c.fillStyle = '#9a2f2c'; c.fillRect(x0, 410, x1 - x0, 3);
+          const wg = c.createLinearGradient(0, 456, 0, y1); wg.addColorStop(0, '#16222a'); wg.addColorStop(1, '#24343c');
+          c.fillStyle = wg; c.fillRect(x0, 456, x1 - x0, y1 - 456);
+          for (let i = 0; i < 46; i++) { c.fillStyle = `rgba(255,${200 + ((r() * 50) | 0)},140,${(0.12 + r() * 0.3).toFixed(2)})`; c.fillRect(x0 + r() * (x1 - x0), 462 + r() * Math.max(1, y1 - 470), 6 + r() * 14, 1.5); }
+        } else {
+          // ground, fence or rail, and snow
+          c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
+          c.fillStyle = boarded ? '#a2734a' : where === 'books' ? '#2b2f33' : '#f4ecdc';
+          for (let x = 10; x < 360; x += 26) { c.fillRect(x, 470, 10, 90); c.beginPath(); c.moveTo(x, 470); c.lineTo(x + 5, 462); c.lineTo(x + 10, 470); c.fill(); }
+          c.fillRect(0, 490, 360, 8); c.fillRect(0, 530, 360, 8);
+        }
         // the wires
         c.strokeStyle = '#1f3a24'; c.lineWidth = 1.3;
         for (const s of strings) { c.beginPath(); for (let i = 0; i <= 30; i++) { const p = at(s, i / 30); if (i) c.lineTo(p.x, p.y); else c.moveTo(p.x, p.y); } c.stroke(); }

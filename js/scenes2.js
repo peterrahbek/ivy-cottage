@@ -536,6 +536,43 @@
       c.beginPath(); c.arc(x0 + 107, y1 - 36, 11, Math.PI, 0); c.stroke();
       glow(c, (x0 + x1) / 2, 200, 220, 'rgba(255,250,220,0.18)');
     },
+    bookshop(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      const spine = ['#c9474f', '#3d5a86', '#f2d88a', '#4e7b5b', '#efb4ae', '#bba9df', '#d98b63', '#2f4a3e', '#f4ecdc'];
+      // shelves of books right up to the ceiling
+      c.fillStyle = '#5b3a26'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let sy = y0 + 50; sy < 380; sy += 64) {
+        let bx = x0 + 4;
+        while (bx < x1 - 8) {
+          const bw = 7 + r() * 9, bh = 34 + r() * 20;
+          if (r() < 0.07) { bx += 9; continue; }
+          c.fillStyle = U.pick(r, spine); c.fillRect(bx, sy - bh, bw - 1.5, bh);
+          c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(bx + 1, sy - bh + 6, bw - 3.5, 2); c.fillRect(bx + 1, sy - 10, bw - 3.5, 2);
+          bx += bw;
+        }
+        c.fillStyle = '#3e2718'; c.fillRect(x0, sy, w, 8);
+        c.fillStyle = 'rgba(255,255,255,0.12)'; c.fillRect(x0, sy, w, 2);
+      }
+      glow(c, (x0 + x1) / 2, y0 + 80, 220, 'rgba(255,214,140,0.35)');
+      // the window display: two steps of books standing face out, and a stack
+      c.fillStyle = '#8a5a3c'; c.fillRect(x0, 404, w, 12); c.fillRect(x0, 456, w, y1 - 456);
+      c.fillStyle = '#a7774f'; c.fillRect(x0, 404, w, 3); c.fillRect(x0, 456, w, 3);
+      const cover = (x, y, bw, bh, col) => {
+        c.fillStyle = 'rgba(30,20,10,0.3)'; c.fillRect(x + 3, y + 3, bw, bh);
+        c.fillStyle = col; c.fillRect(x, y, bw, bh);
+        c.fillStyle = 'rgba(255,255,255,0.75)'; c.fillRect(x + 5, y + 8, bw - 10, 5); c.fillRect(x + 8, y + 16, bw - 16, 3);
+        c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.arc(x + bw / 2, y + bh * 0.62, bw * 0.22, 0, 7); c.fill();
+      };
+      for (let x = x0 + 12; x < x1 - 48; x += 64) cover(x, 346 - r() * 8, 40, 58, U.pick(r, spine.slice(0, 7)));
+      for (let x = x0 + 44; x < x1 - 80; x += 72) cover(x, 404, 36, 52, U.pick(r, spine.slice(0, 7)));
+      for (let k = 0; k < 5; k++) { c.fillStyle = U.pick(r, spine); c.fillRect(x1 - 70 + (r() - 0.5) * 6, 446 - k * 10, 54, 9); c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(x1 - 66, 449 - k * 10, 46, 1.5); }
+      // a little OPEN card hanging in the glass
+      const ox = x0 + w * 0.25;
+      c.strokeStyle = '#3b3226'; c.lineWidth = 1; c.beginPath(); c.moveTo(ox - 14, y0); c.lineTo(ox - 22, 124); c.moveTo(ox + 14, y0); c.lineTo(ox + 22, 124); c.stroke();
+      c.fillStyle = '#fffaf0'; c.fillRect(ox - 30, 124, 60, 28);
+      c.strokeStyle = '#c9474f'; c.lineWidth = 1.5; c.strokeRect(ox - 27, 127, 54, 22);
+      c.fillStyle = '#c9474f'; c.font = '800 14px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('OPEN', ox, 139);
+    },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);

@@ -8,8 +8,10 @@ coins buy better tools, little helper robots, decorations and new places:
 a little corner café to bring back to life with some light building and
 planting, a seaside cove with a beach hut, a rowing boat, an old camper
 van and a lighthouse, an animal rescue on an old farm, where dogs need
-feeding and walking, a cat wants brushing and the rabbits fresh straw, and a
-walled garden with an old glasshouse. Some jobs take a little thinking
+feeding and walking, a cat wants brushing and the rabbits fresh straw, a
+walled garden with an old glasshouse, a canal lock with a narrowboat, and an
+old bookshop with a reading nook. New places open over the in-game years,
+not all at once. Some jobs take a little thinking
 instead of a tool; a puzzle room, open from the start, is where new ones are
 tried out first.
 
@@ -32,8 +34,9 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   with five, a soft brush to a double brush for the cat, a hand fork to a
   wheelbarrow for mucking out ...). Every place has its own toolbox: tools
   stay where you buy them, a new place starts with simple tools, and tools
-  cost twice as much at the café, three times as much at the cove and four
-  times as much at the rescue. The next
+  cost twice as much at the café, three times as much at the cove, four
+  times as much at the rescue and five, six and seven times as much at the
+  glasshouse, the canal and the bookshop. The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
   Tap the tool at the bottom to switch to any tool you already own (the shears
   are sometimes nicer than the tractor).
@@ -46,6 +49,16 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   collects them.
 - **The cottage.** 20 jobs restore the whole house. Painted colours carry over
   to the cottage picture.
+- **How new places open.** A place goes up for sale when three things are
+  true, ticked off one by one on its card in Places: the place before it is
+  restored, enough seasons have turned since then (none for the café, one for
+  the cove, two for the rescue, three for the glasshouse, a whole year for the
+  canal and the bookshop), and there are enough coins. Seasons only turn when
+  their jobs are done, never on their own, so the wait is always in your own
+  hands and nothing is lost while waiting. The card says which season the
+  place opens in and how many seasons are left; the season that opens it says
+  so once, quietly. A game from before this rule keeps every place it could
+  already reach; the canal and the bookshop wait from then on.
 - **Places.** Once the cottage is restored, Marigold Café is for sale (9,000
   coins). Its 16 jobs: sweep the floor, wash the shop window, scrub the
   terrace, wipe the tables, polish the coffee machine, clean the awning, paint
@@ -74,20 +87,38 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   the lily pond, pots by the door, the door in the wall, and two puzzles:
   water the glasshouse and the cutting garden (one of each flower in every row
   and column).
+- **Kingfisher Lock.** A year after the glasshouse is restored the canal is
+  for sale (55,000 coins). Its 15 jobs: moss on the towpath, duckweed on the
+  canal, litter along the towpath, the long grass on the bank, the grimy
+  portholes, paint the narrowboat (roses and castles come with the fresh
+  paint), mend the lock gates and the humpback bridge, pots on the boat roof,
+  the lock-keeper's fence, door and window, the little rowing boat, the lock
+  sign, and a puzzle: load the boat.
+- **Hollyhock Books.** A year after the canal is restored the bookshop is for
+  sale (70,000 coins). Its 15 jobs: the shop floor, the shop window, the
+  striped awning, the coffee corner, the sign and the door, window boxes, the
+  shop cat, tea for the readers, the reading tables, the dusty stockroom, the
+  courtyard, the hollyhock bed, a new reading bench, and a puzzle: back on
+  the shelves.
 - **Puzzles.** Jobs done by hand with a little thinking, with no tools and no
   robots: put the cups away at the café (each shelf one kind, each coaster one
   glaze), feeding time at the rescue (follow the chart: the right food and the
   right number of scoops for each animal), who sleeps where at the rescue
   (tuck the animals in so every note on the board holds), and at the
   glasshouse water the glasshouse (tap the pipes to turn them until the water
-  reaches every pot) and the cutting garden. A move that is not right just
+  reaches every pot) and the cutting garden, load the boat at the canal (every
+  piece into the hold, tap a piece to turn it; a piece that would leave a gap
+  nothing else can fill glides back), and back on the shelves at the bookshop
+  (move the end book of a shelf until every series has a shelf of its own).
+  The last two also turn up in the seasons at the older places: packing the
+  camper van at the cove and books back on the shelves at the cottage. A move that is not right just
   glides back; Hint at the bottom shows one right move. Every puzzle comes out
   different each time and a half-done one is kept for later. Each is a job in
   its place and comes back in that place's seasons, at most one a season.
 - **The Puzzle Room (beta).** Open from the start, first on the Places list:
   every puzzle in the game, to play in any order and as often as you like, and
   where new kinds of jobs are tried out before they move out to the places.
-- **Music.** Five quiet tunes of the game's own, one per place, in a key that
+- **Music.** Seven quiet tunes of the game's own, one per place, in a key that
   follows the season and slower in the evening; volume in Settings.
 - **Cloud save and friends (optional).** Settings > Save in the cloud gives a
   12-character cloud code; on another phone, I have a code picks the game up
@@ -114,8 +145,8 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   cold light in winter, drifting leaves in autumn, petals in spring and a few
   seeds on the air in summer.
 - **Decorate.** Sixteen things to buy for the cottage, from a garden gnome to a
-  hot-air balloon, and twelve each for the café, the cove, the rescue and the
-  glasshouse.
+  hot-air balloon, and twelve each for the café, the cove, the rescue, the
+  glasshouse, the canal and the bookshop.
 - **Coins.** Jobs pay modestly on purpose, so tools, helpers, decorations and
   new places take a while to save up for.
 - **Before and after.** The finish card shows a small before-and-after picture
@@ -190,19 +221,23 @@ then open http://localhost:8790.
   sandcastle, Christmas lights, the drinks fridge, the dog bath
 - `js/scenes9.js` coffee, napkins and tables at the café, the seal, dog bowls,
   the dog walk, the cat and the rabbit hutch
+- `js/scenes10.js` the narrowboat's side to paint and its portholes to wash
 - `js/puzzles.js` the contract every puzzle follows, its house rules (calm, no
   timers, nothing ever wrong for long) and a few shared helpers
 - `js/pz-cups.js`, `js/pz-feed.js`, `js/pz-hose.js`, `js/pz-beds.js`,
-  `js/pz-plan.js` the five puzzles (each a job in its place and in the puzzle room)
+  `js/pz-plan.js`, `js/pz-pack.js`, `js/pz-books.js` the seven puzzles (each a
+  job in its place and in the puzzle room)
 - `js/beta.js` the puzzle room overview (SVG): a pinboard of puzzle cards
 - `js/house.js` the cottage overview (SVG), seasons, evening, decorations
 - `js/cafe.js` the café overview (SVG), same conventions
 - `js/cove.js` the cove overview (SVG), same conventions
 - `js/rescue.js` the rescue overview (SVG), same conventions
 - `js/glasshouse.js` the glasshouse overview (SVG), same conventions
+- `js/canal.js` the canal overview (SVG), same conventions
+- `js/books.js` the bookshop overview (SVG), same conventions
 - `js/tools.js` tool families, tiers and their drawings
 - `js/data.js` places, jobs, season pools, finds, decorations, prices
-- `js/audio.js` synthesised sound and five composed tunes (no audio files)
+- `js/audio.js` synthesised sound and seven composed tunes (no audio files)
 - `js/main.js` screens, saving, shed, jobs, finds, photo
 - `sw.js` + `manifest.webmanifest` offline support and home screen install
 - `test/` a bench that plays one puzzle in headless Chrome with real touches
@@ -212,7 +247,7 @@ then open http://localhost:8790.
 Bump `CACHE` in `sw.js` whenever a file changes.
 
     node test/run.mjs puzzle js/pz-cups.js cups --seeds 20
-    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds,plan
+    node test/run.mjs place js/beta.js BETA cups,feed,hose,beds,plan,books,pack
     node test/game.mjs --out /tmp/ivy-game
 
 Test hooks in the browser console: `__ivy.startChore(i)`, `__ivy.startCafe(i)`, `__ivy.startCove(i)`, `__ivy.startRescue(i)`,

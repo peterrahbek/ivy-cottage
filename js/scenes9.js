@@ -55,6 +55,7 @@
     coffee: { pour: ['#3b2213', '#583219', '#9c6a3c'], full: ['#b88656', '#93603a', '#c99766'] },
     cocoa: { pour: ['#3e2216', '#5a3322', '#7a4a33'], full: ['#7a4a35', '#5e3626', '#8c5a42'] },
     iced: { pour: ['#5b3a22', '#7a4f2e', '#a0703f'], full: ['#d3a57a', '#b8865a', '#e2c19e'] },
+    tea: { pour: ['#6b3410', '#8a4a1a', '#b06a2a'], full: ['#cf9450', '#ad6c30', '#dfa866'] },
   };
   function drinkDisc(c, x, y, R, cols) {
     const g = c.createRadialGradient(x - R * 0.25, y - R * 0.25, 1, x, y, R);
@@ -96,6 +97,13 @@
         c.fillStyle = rr() < 0.5 ? '#f7c6d4' : '#fffaf2'; rect(c, -3.4, -3.4, 6.8, 6.8, 2.2); c.fill(); c.restore();
       }
       for (let i = 0; i < 16; i++) dot(c, (rr() - 0.5) * R * 0.9, (rr() - 0.5) * R * 0.9, 0.7, 'rgba(90,50,30,0.6)');
+    } else if (u.drink === 'tea') {
+      // amber tea with a curl of milk turning in it
+      c.strokeStyle = 'rgba(255,246,232,0.72)'; c.lineWidth = 2.2; c.lineCap = 'round';
+      c.beginPath();
+      for (let k = 0; k <= 40; k++) { const a = k * 0.3, d = R * (0.08 + k * 0.014); if (k) c.lineTo(Math.cos(a) * d, Math.sin(a) * d); else c.moveTo(Math.cos(a) * d, Math.sin(a) * d); }
+      c.stroke();
+      c.fillStyle = 'rgba(255,250,240,0.5)'; c.beginPath(); c.ellipse(-R * 0.35, -R * 0.42, R * 0.18, R * 0.07, -0.5, 0, 7); c.fill();
     } else {
       // iced coffee: a swirl of milk and a few ice cubes
       c.strokeStyle = 'rgba(255,245,230,0.75)'; c.lineWidth = 2.4; c.beginPath(); c.arc(0, 0, R * 0.42, 0.4, 4.6); c.stroke();
