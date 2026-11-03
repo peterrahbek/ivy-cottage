@@ -2,17 +2,27 @@
 // Node's own WebSocket and fetch. Used by run.mjs and game.mjs.
 
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// The Mac's Chrome, a cloud session's Chromium in /opt/pw-browsers, or a
+// Linux runner's Chrome; $CHROME wins over all of them.
+function findChrome() {
+  const pw = existsSync('/opt/pw-browsers') ? readdirSync('/opt/pw-browsers').filter((d) => d.startsWith('chromium-')).sort().reverse()
+    .map((d) => `/opt/pw-browsers/${d}/chrome-linux/chrome`) : [];
+  const all = [process.env.CHROME, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...pw,
+    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
+  return all.find((p) => p && existsSync(p)) || all[1];
+}
+const CHROME = findChrome();
+const LINUX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function launch() {
   const profile = mkdtempSync(join(tmpdir(), 'ivy-chrome-'));
   const proc = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check',
-    '--allow-file-access-from-files', '--hide-scrollbars', '--mute-audio', 'about:blank'], { stdio: 'ignore' });
+    '--allow-file-access-from-files', '--hide-scrollbars', '--mute-audio', ...LINUX, 'about:blank'], { stdio: 'ignore' });
   const close = () => { try { proc.kill('SIGKILL'); } catch (_) {} setTimeout(() => { try { rmSync(profile, { recursive: true, force: true }); } catch (_) {} }, 400); };
   try {
     let port;
