@@ -1023,8 +1023,153 @@
     };
   }
 
+  // ------------------------------- MARCHBANK'S CURIOSITIES: THE BRASS LAMP
+  // An old brass oil lamp on the shop's desk: a tall glass chimney rising out
+  // of a big etched glass globe, the brass font and column below. Wash the
+  // dust and soot off the glass and it glows warm again. lantern { where: 'curio' }
+  function brassLamp(S) {
+    const { r, nz, bleed } = S;
+    const cx = 180, gcy = 268, grx = 132, gry = 122;
+    // the globe is open at the top (for the chimney) and the bottom (on its gallery)
+    const yAt = (dx, sgn) => gcy + sgn * gry * Math.sqrt(Math.max(0, 1 - (dx / grx) ** 2));
+    const TOP = 30, BOT = 60, ytop = yAt(TOP, -1), ybot = yAt(BOT, 1);
+    const a0 = Math.acos(TOP / grx), a1 = Math.acos(BOT / grx);
+    const CH = { x0: cx - 22, x1: cx + 22, y0: 30 };
+    const region = new Path2D();
+    region.moveTo(cx + TOP, ytop);
+    for (let k = 0; k <= 48; k++) { const a = -a0 + ((a0 + a1) * k) / 48; region.lineTo(cx + grx * Math.cos(a), gcy + gry * Math.sin(a)); }
+    region.lineTo(cx - BOT, ybot);
+    for (let k = 0; k <= 48; k++) { const a = Math.PI - a1 + ((a1 + a0) * k) / 48; region.lineTo(cx + grx * Math.cos(a), gcy + gry * Math.sin(a)); }
+    region.closePath();
+    region.moveTo(CH.x0, ytop); region.lineTo(CH.x0, CH.y0 + 8); region.quadraticCurveTo(CH.x0, CH.y0, CH.x0 + 8, CH.y0);
+    region.lineTo(CH.x1 - 8, CH.y0); region.quadraticCurveTo(CH.x1, CH.y0, CH.x1, CH.y0 + 8); region.lineTo(CH.x1, ytop); region.closePath();
+    const inGlobe = (x, y) => ((x - cx) / grx) ** 2 + ((y - gcy) / gry) ** 2 <= 1 && y >= ytop && y <= ybot;
+    const BRASS = '#c9a24a', BRASS2 = '#e0bd62', BRASS3 = '#8a6a26';
+    function wall(c, x0, y0, x1, y1) {
+      c.fillStyle = '#2f4a3e'; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+      // a faint damask
+      c.fillStyle = 'rgba(80,115,95,0.22)';
+      for (let y = Math.floor(y0 / 46) * 46; y < y1; y += 46) for (let x = Math.floor(x0 / 40) * 40 + ((y / 46) % 2) * 20; x < x1; x += 40) {
+        c.beginPath(); c.moveTo(x, y - 12); c.quadraticCurveTo(x + 9, y, x, y + 12); c.quadraticCurveTo(x - 9, y, x, y - 12); c.fill();
+      }
+    }
+    return {
+      family: 'wash', particle: 'suds', region,
+      tough(x, y) {
+        if (y < ytop) return x < CH.x0 + 6 || x > CH.x1 - 6 ? 1.3 : 1;
+        return inGlobe(x, y) && ((x - cx) / grx) ** 2 + ((y - gcy) / gry) ** 2 > 0.82 ? 1.3 : 1;
+      },
+      decor(c) {
+        const { x0, y0, x1, y1 } = bleed;
+        wall(c, x0, y0, x1, 470);
+        // the corner of a gilt frame and the dado rail
+        c.fillStyle = '#b8913d'; c.fillRect(x0, 60, 52 - x0, 150); c.fillStyle = '#e9d9b0'; c.fillRect(x0, 70, 42 - x0, 130);
+        c.fillStyle = '#9cb38a'; c.beginPath(); c.ellipse(16, 130, 16, 30, 0.3, 0, 7); c.fill();
+        c.fillStyle = '#5a3a26'; c.fillRect(x0, 440, x1 - x0, 8); c.fillStyle = 'rgba(255,220,150,0.2)'; c.fillRect(x0, 440, x1 - x0, 2);
+        // the desk: mahogany with a green leather top tooled in gold
+        c.fillStyle = '#4a2418'; c.fillRect(x0, 470, x1 - x0, y1 - 470);
+        c.fillStyle = '#5a2e22'; c.fillRect(x0, 470, x1 - x0, 16);
+        c.fillStyle = '#3f5f3a'; c.fillRect(x0, 486, x1 - x0, y1 - 486);
+        c.strokeStyle = '#c9a24a'; c.lineWidth = 1.2; c.strokeRect(x0 + 10, 494, x1 - x0 - 20, y1 - 494 + 20);
+        // two books, an inkwell and a quill, a pocket watch
+        c.fillStyle = 'rgba(20,10,5,0.3)'; c.fillRect(24, 520, 92, 26);
+        c.fillStyle = '#7d2a34'; c.fillRect(20, 516, 92, 14); c.fillStyle = '#2f5546'; c.fillRect(26, 528, 84, 14);
+        c.fillStyle = '#f2e8d2'; c.fillRect(108, 518, 4, 10); c.fillRect(106, 530, 4, 10);
+        c.fillStyle = '#c9a24a'; c.fillRect(30, 520, 3, 6); c.fillRect(36, 532, 3, 6);
+        c.fillStyle = '#26262b'; c.beginPath(); c.arc(306, 532, 13, 0, 7); c.fill(); c.fillStyle = '#4a4a55'; c.beginPath(); c.arc(303, 529, 6, 0, 7); c.fill();
+        c.strokeStyle = '#f4ecdc'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(306, 528); c.quadraticCurveTo(326, 500, 340, 470); c.stroke();
+        c.strokeStyle = '#d8b25a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(268, 562); c.quadraticCurveTo(284, 584, 304, 566); c.stroke();
+        c.fillStyle = BRASS; c.beginPath(); c.arc(262, 560, 11, 0, 7); c.fill(); c.fillStyle = '#f7f1e2'; c.beginPath(); c.arc(262, 560, 8, 0, 7); c.fill();
+        c.strokeStyle = '#3a2814'; c.lineWidth = 1; c.beginPath(); c.moveTo(262, 560); c.lineTo(266, 555); c.moveTo(262, 560); c.lineTo(262, 553); c.stroke();
+        softShadow(c, region, 10, 0.3, 4, 5);
+      },
+      clean(c) {
+        // through the chimney: the wall behind, and a thread of heat
+        wall(c, CH.x0, CH.y0, CH.x1, ytop + 2);
+        c.fillStyle = 'rgba(255,240,200,0.18)'; c.fillRect(CH.x0, CH.y0, CH.x1 - CH.x0, ytop - CH.y0);
+        // the globe: frosted glass lit warm from within, with an etched wreath round its middle
+        const g = c.createRadialGradient(cx, gcy + 26, 8, cx, gcy, grx * 1.05);
+        g.addColorStop(0, '#fff8de'); g.addColorStop(0.45, '#fbe9bf'); g.addColorStop(1, '#e9c98e');
+        c.fillStyle = g; c.fillRect(cx - grx - 4, ytop - 4, grx * 2 + 8, ybot - ytop + 8);
+        c.strokeStyle = 'rgba(190,140,70,0.45)'; c.lineWidth = 1.6;
+        for (const dy of [-20, 20]) { c.beginPath(); c.ellipse(cx, gcy + dy, grx * 0.98, 14, 0, 0, Math.PI); c.stroke(); }
+        for (let k = 0; k < 14; k++) {
+          const t = k / 13, x = cx - grx * 0.9 + grx * 1.8 * t, y = gcy + Math.sin(t * Math.PI) * 10;
+          c.save(); c.translate(x, y); c.rotate((t - 0.5) * 0.6);
+          c.strokeStyle = 'rgba(190,140,70,0.5)'; c.lineWidth = 1.2;
+          c.beginPath(); c.ellipse(-5, -4, 6, 3, -0.5, 0, 7); c.stroke(); c.beginPath(); c.ellipse(5, -4, 6, 3, 0.5, 0, 7); c.stroke();
+          if (k % 2) { c.beginPath(); c.arc(0, 4, 3.4, 0, 7); c.stroke(); }
+          c.restore();
+        }
+        for (let k = 0; k < 26; k++) { const a = r() * 6.283, d = r() * 0.8; c.fillStyle = 'rgba(190,140,70,0.35)'; c.beginPath(); c.arc(cx + Math.cos(a) * grx * d, gcy - 50 + Math.sin(a) * gry * d * 0.4, 1.4, 0, 7); c.fill(); }
+        // the flame glowing through, low in the globe
+        const f = c.createRadialGradient(cx, gcy + 40, 2, cx, gcy + 40, 60);
+        f.addColorStop(0, 'rgba(255,214,110,0.75)'); f.addColorStop(1, 'rgba(255,214,110,0)');
+        c.fillStyle = f; c.beginPath(); c.arc(cx, gcy + 40, 60, 0, 7); c.fill();
+      },
+      cleanOver(c) {
+        // round like a ball: a bright window of reflection and darker edges; a glint down the chimney
+        const e = c.createRadialGradient(cx - 30, gcy - 40, 10, cx, gcy, grx);
+        e.addColorStop(0, 'rgba(255,255,255,0.35)'); e.addColorStop(0.5, 'rgba(255,255,255,0)'); e.addColorStop(1, 'rgba(120,80,30,0.25)');
+        c.fillStyle = e; c.fillRect(cx - grx, ytop, grx * 2, ybot - ytop);
+        c.fillStyle = 'rgba(255,255,255,0.45)'; c.beginPath(); c.ellipse(cx - 62, gcy - 58, 22, 11, -0.6, 0, 7); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(CH.x0 + 6, CH.y0 + 8, 5, ytop - CH.y0 - 8);
+        c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(CH.x1 - 6, CH.y0 + 8, 4, ytop - CH.y0 - 8);
+      },
+      dirt(c) {
+        // dust settled thickest on top, a smoky film, soot at the chimney's mouth
+        const g = ramp(['#8d8476', '#9f978a', '#b2aa9c', '#c3bcae']);
+        field(c, cx - grx - 4, CH.y0 - 4, cx + grx + 4, ybot + 4, 2, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 5); return [...g(v), Math.min(255, 205 + v * 40 + (1 - (y - CH.y0) / (ybot - CH.y0)) * 30)]; });
+        const sg = c.createLinearGradient(0, CH.y0, 0, CH.y0 + 70);
+        sg.addColorStop(0, 'rgba(30,26,24,0.75)'); sg.addColorStop(1, 'rgba(30,26,24,0)');
+        c.fillStyle = sg; c.fillRect(CH.x0, CH.y0, CH.x1 - CH.x0, 70);
+        const tg = c.createRadialGradient(cx, ytop + 4, 4, cx, ytop + 4, 70);
+        tg.addColorStop(0, 'rgba(40,34,30,0.45)'); tg.addColorStop(1, 'rgba(40,34,30,0)');
+        c.fillStyle = tg; c.fillRect(cx - 80, ytop, 160, 80);
+        for (let i = 0; i < 1600; i++) { c.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(70,60,50,0.35)'; c.fillRect(cx - grx + r() * grx * 2, CH.y0 + r() * (ybot - CH.y0), 1 + r(), 1 + r()); }
+        grime(c, r, cx - grx, ytop, cx + grx, ybot, 18);
+        // fingerprints where someone turned the wick
+        for (const [fx, fy] of [[cx + 70, gcy + 54], [cx + 86, gcy + 30], [cx - 90, gcy + 40]]) {
+          c.strokeStyle = 'rgba(90,75,60,0.3)'; c.lineWidth = 0.9;
+          for (let k = 1; k < 6; k++) { c.beginPath(); c.ellipse(fx, fy, k * 2.2, k * 3, 0.3, 0, 7); c.stroke(); }
+        }
+        // a cobweb from the chimney to the globe's shoulder
+        c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 0.7;
+        const wx = CH.x1, wy = ytop - 6;
+        for (let k = 0; k < 6; k++) { const a = -0.2 + (k / 5) * 1.2; c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + Math.cos(a) * 64, wy + Math.sin(a) * 64); c.stroke(); }
+        for (let ring = 12; ring < 64; ring += 11) { c.beginPath(); for (let k = 0; k <= 5; k++) { const a = -0.2 + (k / 5) * 1.2; c.lineTo(wx + Math.cos(a) * ring, wy + Math.sin(a) * ring); } c.stroke(); }
+      },
+      top(c) {
+        // the glass lip round the globe's opening, and the chimney's rolled rim
+        c.fillStyle = 'rgba(255,250,235,0.55)'; c.beginPath(); c.ellipse(cx, ytop, TOP + 2, 4, 0, 0, 7); c.fill();
+        c.strokeStyle = 'rgba(150,120,80,0.6)'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(cx, ytop, TOP + 2, 4, 0, 0, 7); c.stroke();
+        c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(CH.x0 - 2, CH.y0 - 2, CH.x1 - CH.x0 + 4, 5);
+        // the brass gallery the globe sits in, the wick knob, the font, the column and the foot
+        const gy = ybot - 4;
+        c.fillStyle = BRASS3; c.beginPath(); c.moveTo(cx - BOT - 14, gy); c.lineTo(cx + BOT + 14, gy); c.lineTo(cx + BOT - 4, gy + 22); c.lineTo(cx - BOT + 4, gy + 22); c.closePath(); c.fill();
+        c.fillStyle = BRASS; c.beginPath(); c.moveTo(cx - BOT - 12, gy); c.lineTo(cx + BOT + 12, gy); c.lineTo(cx + BOT - 4, gy + 18); c.lineTo(cx - BOT + 4, gy + 18); c.closePath(); c.fill();
+        for (let x = cx - BOT; x <= cx + BOT; x += 15) { c.fillStyle = BRASS3; c.beginPath(); c.arc(x, gy + 4, 4, Math.PI, 0); c.fill(); }
+        c.fillStyle = BRASS2; c.fillRect(cx - BOT - 12, gy, (BOT + 12) * 2, 3);
+        c.fillStyle = BRASS; c.fillRect(cx + BOT - 6, gy + 10, 24, 7); dot(c, cx + BOT + 20, gy + 13.5, 7, BRASS3); dot(c, cx + BOT + 20, gy + 13.5, 4.6, BRASS2);
+        const fy = gy + 22;
+        c.fillStyle = BRASS; c.beginPath(); c.ellipse(cx, fy + 20, 66, 26, 0, 0, 7); c.fill();
+        c.fillStyle = BRASS2; c.beginPath(); c.ellipse(cx - 18, fy + 12, 30, 9, -0.1, 0, 7); c.fill();
+        c.fillStyle = 'rgba(90,60,20,0.3)'; c.beginPath(); c.ellipse(cx + 20, fy + 30, 44, 12, 0.1, 0, 7); c.fill();
+        c.fillStyle = BRASS3; c.fillRect(cx - 12, fy + 42, 24, 14);
+        c.fillStyle = BRASS; c.beginPath(); c.moveTo(cx - 10, fy + 54); c.lineTo(cx + 10, fy + 54); c.lineTo(cx + 14, 536); c.lineTo(cx - 14, 536); c.closePath(); c.fill();
+        c.fillStyle = BRASS2; c.fillRect(cx - 7, fy + 58, 4, 536 - fy - 60);
+        for (const yy of [fy + 70, fy + 96]) { c.fillStyle = BRASS3; c.beginPath(); c.ellipse(cx, yy, 15, 5, 0, 0, 7); c.fill(); c.fillStyle = BRASS2; c.beginPath(); c.ellipse(cx, yy - 1.5, 13, 3, 0, 0, 7); c.fill(); }
+        c.fillStyle = 'rgba(20,10,5,0.35)'; c.beginPath(); c.ellipse(cx + 6, 566, 64, 9, 0, 0, 7); c.fill();
+        c.fillStyle = BRASS3; c.fillRect(cx - 52, 548, 104, 16);
+        c.fillStyle = BRASS; c.fillRect(cx - 44, 532, 88, 18); c.fillRect(cx - 52, 546, 104, 14);
+        c.fillStyle = BRASS2; c.fillRect(cx - 44, 532, 88, 3); c.fillRect(cx - 52, 546, 104, 3);
+      },
+    };
+  }
+
   function lantern(S) {
     if (S.opts.where === 'halt') return platformLamp(S);
+    if (S.opts.where === 'curio') return brassLamp(S);
     const { r, nz, bleed } = S;
     const cx = 180, R = 150, gy0 = 156, gy1 = 466, ty = 312, mw = 10;
     const posts = [-62, -21, 21, 62].map((d) => cx + R * Math.sin((d * Math.PI) / 180));

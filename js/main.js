@@ -125,7 +125,7 @@
   // then a few seasons of looking after it (a whole year for the later ones),
   // and the coins. Seasons only turn when their jobs are done, never on their
   // own, so the wait is always in your own hands and nothing is ever lost.
-  const NEWER = new Set(['canal', 'books', 'pottery', 'halt']); // older saves wait for these only
+  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio']); // older saves wait for these only
   const yearOf = (n) => 1 + Math.floor(n / 4);
   const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
   const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
@@ -164,6 +164,8 @@
     if (id === 'books' && typeof BOOKS !== 'undefined') return BOOKS.render(st, S.colours, opts);
     if (id === 'pottery' && typeof POTTERY !== 'undefined') return POTTERY.render(st, S.colours, opts);
     if (id === 'halt' && typeof HALT !== 'undefined') return HALT.render(st, S.colours, opts);
+    if (id === 'beads' && typeof BEADS !== 'undefined') return BEADS.render(st, S.colours, opts);
+    if (id === 'curio' && typeof CURIO !== 'undefined') return CURIO.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -796,30 +798,43 @@
     b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
     clearTimeout(bannerT); bannerT = setTimeout(() => b.classList.remove('on'), 2600);
   }
+  // The shelf is folded by place: only the place you are at is open, and
+  // every place has one line counting what has been found there. A tap on a
+  // line opens or folds it.
   function openFinds() {
-    let places = '';
+    const fold = (key, name, got, of, inner, open) => `<div class="findsFold${open ? ' open' : ''}" data-fold="${key}">
+      <button class="findsHead" aria-expanded="${open}"><span class="fName">${name}</span><span class="fCount">${got} of ${of}</span></button><div class="findsBody">${inner}</div></div>`;
+    const cell = (has, e, nm, hidden) => `<div class="find${has ? ' has' : ''}"><i>${has ? e : '?'}</i><span>${has ? nm : hidden}</span></div>`;
+    let html = '';
     for (const p of DATA.PLACES) {
       if (!owned(p.id)) continue;
       const all = p.chores.filter((c) => DATA.FINDS[c.id]);
       const got = all.filter((c) => S.finds[c.id]).length;
       const cells = all.map((c) => {
-        const f = DATA.FINDS[c.id], has = !!S.finds[c.id];
-        const where = p.beta ? `A reward for “${c.name}”` : 'Hidden in ' + c.name.replace(/^The /, 'the ');
-        return `<div class="find${has ? ' has' : ''}"><i>${has ? f[0] : '?'}</i><span>${has ? f[1] : where}</span></div>`;
+        const f = DATA.FINDS[c.id];
+        return cell(!!S.finds[c.id], f[0], f[1], p.beta ? `A reward for “${c.name}”` : 'Hidden in ' + c.name.replace(/^The /, 'the '));
       }).join('');
-      places += `<div class="findsHead">${placeName(p.id)} · ${got} of ${all.length}</div><div class="findsGrid">${cells}</div>`;
+      html += fold(p.id, placeName(p.id), got, all.length, `<div class="findsGrid">${cells}</div>`, p.id === S.place);
     }
-    let seasons = '';
+    // the seasons' own secrets fold together, as one more line
     if (S.seasonNo > 0) {
+      let inner = '', got = 0, of = 0;
       for (const sn of DATA.SEASON_ORDER) {
         const list = DATA.SEASON_FINDS[sn];
         const n = list.filter((_, i) => S.finds[`${sn}-${i}`]).length;
-        seasons += `<div class="findsHead">${DATA.SEASON_NAMES[sn]} · ${n} of ${list.length}</div><div class="findsGrid">` +
-          list.map(([e, nm], i) => { const has = !!S.finds[`${sn}-${i}`]; return `<div class="find${has ? ' has' : ''}"><i>${has ? e : '?'}</i><span>${has ? nm : 'A ' + sn + ' secret'}</span></div>`; }).join('') + '</div>';
+        got += n; of += list.length;
+        inner += `<div class="findsSub">${DATA.SEASON_NAMES[sn]} · ${n} of ${list.length}</div><div class="findsGrid">` +
+          list.map(([e, nm], i) => cell(!!S.finds[`${sn}-${i}`], e, nm, 'A ' + sn + ' secret')).join('') + '</div>';
       }
+      html += fold('seasons', 'The seasons', got, of, inner, false);
     }
-    openSheet('Finds', `${places}${seasons}
-      <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins. Each season has its own secrets.</div>`);
+    openSheet('Finds', `${html}
+      <div class="setNote">Every job hides one keepsake under the mess, plus a few little stashes of coins. Each season has its own secrets. Tap a place to open its shelf.</div>`, (body) => {
+      body.querySelectorAll('.findsHead').forEach((h) => h.onclick = () => {
+        const f = h.parentElement, open = !f.classList.contains('open');
+        f.classList.toggle('open', open); h.setAttribute('aria-expanded', open); AUDIO.soft();
+      });
+    });
   }
 
   // ---------------------------------------------------------------- toast
@@ -1244,8 +1259,8 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
-    render: () => renderHome(), save, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
+    render: () => renderHome(), save, openFinds, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
     setHour(h) { fakeHour = h; }, renderTitle, nextChore, nextPlaceWithJobs, resting, stopNow, oneJob,
   };
 })();

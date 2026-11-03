@@ -865,6 +865,218 @@
       });
       glow(c, (x0 + x1) / 2, 200, 220, 'rgba(255,250,225,0.16)');
     },
+    // a haberdashery behind a bow window: bead garlands in the glass, a rack
+    // of ribbon reels, jars of buttons, cubbies of wool, a dress form with a
+    // tape measure round its neck, and bolts of cloth on the display step
+    haberdashery(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      c.fillStyle = '#f3ddd6'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let x = x0 + 6; x < x1; x += 18) { c.fillStyle = 'rgba(214,160,150,0.22)'; c.fillRect(x, y0, 7, y1 - y0); }
+      glow(c, x0 + w * 0.5, y0 + 60, 230, 'rgba(255,226,170,0.32)');
+      const RIB = ['#e2574c', '#efb4ae', '#5f9e9b', '#f2d88a', '#bba9df', '#3d5a86', '#9cc5a1', '#d98b63', '#f4ecdc'];
+      // the ribbon rack: three dowels of reels, one ribbon looping down
+      c.fillStyle = '#c99e69'; c.fillRect(x0 + 6, y0 + 50, 118, 168);
+      c.fillStyle = 'rgba(80,50,25,0.25)'; c.fillRect(x0 + 6, y0 + 214, 118, 4);
+      let k = 0;
+      for (const ry of [y0 + 78, y0 + 130, y0 + 182]) {
+        c.fillStyle = '#8a6142'; c.fillRect(x0 + 6, ry - 1.5, 118, 3);
+        for (let x = x0 + 18; x < x0 + 120; x += 21) {
+          const col = RIB[k++ % RIB.length];
+          c.fillStyle = 'rgba(60,35,20,0.2)'; c.fillRect(x - 6, ry - 9, 15, 24);
+          c.fillStyle = col; c.fillRect(x - 8, ry - 11, 16, 22);
+          c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(x - 8, ry - 9, 16, 3);
+          c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(x - 8, ry + 7, 16, 4);
+          for (const fx of [x - 9, x + 9]) { c.fillStyle = '#e3c79a'; c.beginPath(); c.ellipse(fx, ry, 2.6, 13, 0, 0, 7); c.fill(); c.fillStyle = '#b8935f'; c.beginPath(); c.ellipse(fx, ry, 1, 3, 0, 0, 7); c.fill(); }
+        }
+      }
+      c.strokeStyle = '#e2574c'; c.lineWidth = 5; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(x0 + 60, y0 + 193); c.bezierCurveTo(x0 + 56, y0 + 250, x0 + 98, y0 + 262, x0 + 84, y0 + 226); c.stroke();
+      // jars of buttons on two shelves
+      for (const sy of [y0 + 104, y0 + 186]) {
+        c.fillStyle = '#9a6b45'; c.fillRect(x0 + 140, sy, w - 146, 7);
+        c.fillStyle = 'rgba(40,25,15,0.2)'; c.fillRect(x0 + 140, sy + 7, w - 146, 5);
+        for (let x = x0 + 158; x < x1 - 16; x += 37) {
+          c.fillStyle = 'rgba(220,235,240,0.55)'; c.beginPath(); c.roundRect(x - 14, sy - 46, 28, 46, 6); c.fill();
+          for (let b = 0; b < 9; b++) {
+            const bx = x - 9 + (b % 3) * 9 + (r() - 0.5) * 3, by = sy - 8 - Math.floor(b / 3) * 9 + (r() - 0.5) * 2, bc = U.pick(r, RIB);
+            c.fillStyle = bc; c.beginPath(); c.arc(bx, by, 4.2, 0, 7); c.fill();
+            c.fillStyle = U.shade(bc, -0.35); for (const [hx, hy] of [[-1.2, -1.2], [1.2, 1.2], [1.2, -1.2], [-1.2, 1.2]].slice(0, b % 2 ? 2 : 4)) { c.beginPath(); c.arc(bx + hx, by + hy, 0.7, 0, 7); c.fill(); }
+          }
+          c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(x - 11, sy - 42, 3, 36);
+          c.fillStyle = '#c9a24a'; c.fillRect(x - 15, sy - 52, 30, 7); c.fillStyle = '#f2d88a'; c.fillRect(x - 15, sy - 52, 30, 2);
+        }
+      }
+      // cubbies of wool
+      c.fillStyle = '#b98f5a'; c.fillRect(x0 + 8, y0 + 232, 116, 112);
+      for (let j = 0; j < 2; j++) for (let i = 0; i < 3; i++) {
+        const cx = x0 + 14 + i * 36, cy = y0 + 238 + j * 52;
+        c.fillStyle = '#6b4a32'; c.fillRect(cx, cy, 32, 46);
+        const col = U.pick(r, RIB);
+        for (const [bx, by, br] of [[cx + 10, cy + 34, 9], [cx + 23, cy + 35, 8.5], [cx + 16, cy + 20, 8.5]]) {
+          c.fillStyle = col; c.beginPath(); c.arc(bx, by, br, 0, 7); c.fill();
+          c.strokeStyle = U.shade(col, -0.25); c.lineWidth = 0.9;
+          for (let l = -1; l <= 1; l++) { c.beginPath(); c.arc(bx + l * 2, by, br * 0.7, 3.6, 5.6); c.stroke(); }
+        }
+      }
+      // the dress form, a rose bodice pinned on, the tape measure round its neck
+      const fx = x0 + 196, fy = y0 + 236;
+      c.fillStyle = '#5b3a26'; c.fillRect(fx - 3, fy + 128, 6, 72);
+      c.strokeStyle = '#5b3a26'; c.lineWidth = 5; c.beginPath(); c.moveTo(fx, y1 - 70); c.lineTo(fx - 30, y1 - 58); c.moveTo(fx, y1 - 70); c.lineTo(fx + 30, y1 - 58); c.stroke();
+      c.fillStyle = '#e8dcc6'; c.beginPath();
+      c.moveTo(fx - 12, fy); c.quadraticCurveTo(fx - 44, fy + 6, fx - 42, fy + 40); c.quadraticCurveTo(fx - 26, fy + 74, fx - 38, fy + 128);
+      c.lineTo(fx + 38, fy + 128); c.quadraticCurveTo(fx + 26, fy + 74, fx + 42, fy + 40); c.quadraticCurveTo(fx + 44, fy + 6, fx + 12, fy); c.closePath(); c.fill();
+      c.fillStyle = '#c9b89c'; c.beginPath(); c.ellipse(fx, fy - 4, 12, 6, 0, 0, 7); c.fill();
+      c.fillStyle = '#e9a39b'; c.beginPath();
+      c.moveTo(fx - 34, fy + 18); c.quadraticCurveTo(fx, fy + 30, fx + 34, fy + 18); c.lineTo(fx + 36, fy + 72); c.quadraticCurveTo(fx, fy + 82, fx - 36, fy + 72); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(150,70,70,0.35)'; c.lineWidth = 1; c.setLineDash([3, 3]); c.beginPath(); c.moveTo(fx, fy + 28); c.lineTo(fx, fy + 78); c.stroke(); c.setLineDash([]);
+      for (let p = 0; p < 6; p++) { c.fillStyle = U.pick(r, ['#3d5a86', '#f2d88a', '#e2574c']); c.beginPath(); c.arc(fx - 30 + p * 12, fy + 74 - (p % 2) * 3, 1.6, 0, 7); c.fill(); }
+      c.strokeStyle = '#f2d88a'; c.lineWidth = 6; c.beginPath(); c.moveTo(fx - 22, fy + 60); c.quadraticCurveTo(fx - 14, fy + 4, fx, fy + 2); c.quadraticCurveTo(fx + 16, fy + 4, fx + 20, fy + 70); c.stroke();
+      c.strokeStyle = '#6b6157'; c.lineWidth = 1; for (let t = 0; t < 12; t++) { const yy = fy + 12 + t * 4.6; c.beginPath(); c.moveTo(fx - 20 + t * 0.2, yy); c.lineTo(fx - 16 + t * 0.2, yy); c.stroke(); }
+      // the display step: teal felt, bolts of cloth, a tomato pincushion, scissors and spools
+      c.fillStyle = '#4b8682'; c.fillRect(x0, y1 - 62, w, 62);
+      c.fillStyle = '#6aa7a3'; c.fillRect(x0, y1 - 62, w, 8);
+      const bolt = (x, y, bw, col, dots) => {
+        c.fillStyle = 'rgba(30,40,40,0.25)'; c.fillRect(x + 3, y + 4, bw, 20);
+        c.fillStyle = col; c.fillRect(x, y, bw, 20);
+        c.fillStyle = dots; if (col === '#f4ecdc') for (let gx = x + 3; gx < x + bw; gx += 7) for (let gy = y + 3; gy < y + 20; gy += 7) c.fillRect(gx, gy, 3.5, 3.5);
+        else for (let gx = x + 4; gx < x + bw; gx += 8) for (let gy = y + 4; gy < y + 20; gy += 8) { c.beginPath(); c.arc(gx, gy, 1.6, 0, 7); c.fill(); }
+        c.fillStyle = U.shade(col, -0.2); c.beginPath(); c.ellipse(x + bw, y + 10, 4, 10, 0, 0, 7); c.fill();
+      };
+      bolt(x0 + 12, y1 - 54, 74, '#3d5a86', '#f4ecdc'); bolt(x0 + 20, y1 - 32, 70, '#f4ecdc', 'rgba(226,87,76,0.6)');
+      c.fillStyle = '#e2574c'; c.beginPath(); c.ellipse(x0 + 128, y1 - 30, 16, 12, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(120,30,30,0.5)'; c.lineWidth = 1; for (const a of [-0.8, 0, 0.8]) { c.beginPath(); c.moveTo(x0 + 128, y1 - 42); c.quadraticCurveTo(x0 + 128 + a * 14, y1 - 30, x0 + 128, y1 - 18); c.stroke(); }
+      c.fillStyle = '#4f8a3a'; c.beginPath(); c.moveTo(x0 + 122, y1 - 42); c.lineTo(x0 + 128, y1 - 48); c.lineTo(x0 + 134, y1 - 42); c.closePath(); c.fill();
+      for (const [px, py] of [[118, -40], [134, -38], [126, -44], [140, -32]]) { c.strokeStyle = '#b9c0c4'; c.lineWidth = 1; c.beginPath(); c.moveTo(x0 + px, y1 + py); c.lineTo(x0 + px + 2, y1 + py - 8); c.stroke(); c.fillStyle = U.pick(r, ['#3d5a86', '#f2d88a', '#f4ecdc']); c.beginPath(); c.arc(x0 + px + 2, y1 + py - 8, 1.8, 0, 7); c.fill(); }
+      c.strokeStyle = '#a9b1b7'; c.lineWidth = 3; c.beginPath(); c.moveTo(x0 + 160, y1 - 14); c.lineTo(x0 + 196, y1 - 36); c.moveTo(x0 + 160, y1 - 30); c.lineTo(x0 + 196, y1 - 12); c.stroke();
+      c.strokeStyle = '#c9a24a'; c.lineWidth = 2.4; c.beginPath(); c.arc(x0 + 154, y1 - 12, 5, 0, 7); c.arc(x0 + 154, y1 - 32, 5, 0, 7); c.stroke();
+      for (let s = 0; s < 4; s++) {
+        const sx = x1 - 84 + s * 18, col = RIB[(s * 2 + 1) % RIB.length];
+        c.fillStyle = '#e3c79a'; c.fillRect(sx - 7, y1 - 44, 14, 3); c.fillRect(sx - 7, y1 - 22, 14, 3);
+        c.fillStyle = col; c.fillRect(sx - 5.5, y1 - 41, 11, 19);
+        c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(sx - 4, y1 - 40, 2, 17);
+      }
+      // bead garlands hanging in swags across the top of the glass
+      for (const [sy, sag] of [[y0 + 6, 26], [y0 + 4, 42]]) {
+        for (let i = 0; i <= 30; i++) {
+          const t = i / 30, x = x0 + 4 + (w - 8) * t, y = sy + Math.sin(t * Math.PI * 2) ** 2 * sag;
+          c.fillStyle = RIB[(i + (sag > 30 ? 3 : 0)) % RIB.length]; c.beginPath(); c.arc(x, y, i % 3 ? 3 : 4.2, 0, 7); c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.55)'; c.beginPath(); c.arc(x - 1, y - 1, 1, 0, 7); c.fill();
+        }
+      }
+      glow(c, x0 + w * 0.5, y1 - 130, 200, 'rgba(255,236,200,0.12)');
+    },
+    // a curiosity shop behind old, faintly green glass with seeds of air in
+    // it: a framed map, a ship in a bottle, books and a brass telescope, a
+    // mantel clock, a candle, and treasures on a velvet cloth in the window
+    curio(c, r, x0, y0, x1, y1) {
+      const w = x1 - x0;
+      c.fillStyle = '#2f4a3e'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let i = 0; i < 18; i++) { c.fillStyle = `rgba(${r() < 0.5 ? '20,35,28' : '80,110,90'},${(0.06 + r() * 0.08).toFixed(2)})`; c.beginPath(); c.ellipse(x0 + r() * w, y0 + r() * (y1 - y0), 20 + r() * 40, 12 + r() * 24, r() * 3, 0, 7); c.fill(); }
+      c.fillStyle = '#22362d'; c.fillRect(x0, y0 + 316, w, y1 - y0 - 316);
+      c.fillStyle = '#7d5a2e'; c.fillRect(x0, y0 + 312, w, 6); c.fillStyle = 'rgba(255,220,150,0.25)'; c.fillRect(x0, y0 + 312, w, 2);
+      for (let x = x0 + 10; x < x1; x += 44) { c.strokeStyle = 'rgba(10,20,15,0.4)'; c.lineWidth = 1.4; c.strokeRect(x, y0 + 330, 34, 40); }
+      // a brass pendant lamp
+      const lx = x0 + w * 0.3;
+      c.strokeStyle = '#1d1d22'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(lx, y0); c.lineTo(lx, y0 + 18); c.stroke();
+      c.fillStyle = '#c9a24a'; c.beginPath(); c.moveTo(lx - 18, y0 + 38); c.lineTo(lx + 18, y0 + 38); c.lineTo(lx + 6, y0 + 18); c.lineTo(lx - 6, y0 + 18); c.closePath(); c.fill();
+      c.fillStyle = '#fff1c4'; c.beginPath(); c.ellipse(lx, y0 + 38, 12, 3.4, 0, 0, Math.PI); c.fill();
+      glow(c, lx, y0 + 50, 190, 'rgba(255,206,130,0.42)');
+      // an old map in a gilt frame, with a compass rose
+      const my = y0 + 46;
+      c.fillStyle = '#b8913d'; c.fillRect(x0 + 10, my, 112, 88);
+      c.fillStyle = '#e9d9b0'; c.fillRect(x0 + 16, my + 6, 100, 76);
+      c.fillStyle = 'rgba(160,120,60,0.25)'; c.fillRect(x0 + 16, my + 6, 100, 76);
+      c.fillStyle = '#9cb38a';
+      c.beginPath(); c.moveTo(x0 + 26, my + 22); c.quadraticCurveTo(x0 + 48, my + 12, x0 + 58, my + 28); c.quadraticCurveTo(x0 + 50, my + 54, x0 + 32, my + 50); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x0 + 70, my + 42); c.quadraticCurveTo(x0 + 96, my + 30, x0 + 104, my + 54); c.quadraticCurveTo(x0 + 86, my + 74, x0 + 72, my + 62); c.closePath(); c.fill();
+      c.strokeStyle = '#7d2a34'; c.lineWidth = 1; c.setLineDash([2, 2]); c.beginPath(); c.moveTo(x0 + 44, my + 36); c.quadraticCurveTo(x0 + 66, my + 22, x0 + 86, my + 48); c.stroke(); c.setLineDash([]);
+      c.fillStyle = '#7d2a34'; c.beginPath(); c.moveTo(x0 + 98, my + 14); c.lineTo(x0 + 101, my + 22); c.lineTo(x0 + 98, my + 30); c.lineTo(x0 + 95, my + 22); c.closePath(); c.fill();
+      // a shelf with a ship in a bottle
+      const sy = y0 + 186;
+      c.fillStyle = '#5a3a26'; c.fillRect(x0 + 6, sy, 124, 8); c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(x0 + 6, sy + 8, 124, 5);
+      c.fillStyle = '#6b452c'; c.fillRect(x0 + 34, sy - 8, 10, 8); c.fillRect(x0 + 96, sy - 8, 10, 8);
+      c.fillStyle = 'rgba(200,230,215,0.35)'; c.beginPath(); c.roundRect(x0 + 18, sy - 38, 96, 32, 14); c.fill();
+      c.fillStyle = 'rgba(200,230,215,0.35)'; c.fillRect(x0 + 112, sy - 28, 14, 12); c.fillStyle = '#8a6142'; c.fillRect(x0 + 124, sy - 29, 6, 14);
+      c.fillStyle = '#7a4a2a'; c.beginPath(); c.moveTo(x0 + 40, sy - 16); c.lineTo(x0 + 94, sy - 16); c.lineTo(x0 + 88, sy - 9); c.lineTo(x0 + 46, sy - 9); c.closePath(); c.fill();
+      c.fillStyle = '#f4ecdc';
+      for (const [mx2, h] of [[54, 18], [68, 22], [82, 16]]) { c.fillRect(x0 + mx2, sy - 16 - h, 1.2, h); c.beginPath(); c.moveTo(x0 + mx2 + 1, sy - 16 - h); c.quadraticCurveTo(x0 + mx2 + 9, sy - 16 - h * 0.6, x0 + mx2 + 1, sy - 18 - h * 0.2); c.closePath(); c.fill(); }
+      c.fillStyle = 'rgba(255,255,255,0.5)'; c.fillRect(x0 + 26, sy - 34, 50, 2.4);
+      // a brass diving helmet on its stand
+      const hx = x0 + 64, hy = y0 + 270;
+      c.fillStyle = '#6b452c'; c.fillRect(hx - 30, hy + 40, 60, 10); c.fillRect(hx - 6, hy + 30, 12, 12);
+      c.fillStyle = '#9a7a2e'; c.beginPath(); c.ellipse(hx, hy + 30, 34, 9, 0, 0, 7); c.fill();
+      c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(hx, hy, 32, 0, 7); c.fill();
+      c.fillStyle = '#e0bd62'; c.beginPath(); c.arc(hx - 8, hy - 10, 16, 0, 7); c.fill();
+      for (const [px, py, pr] of [[hx, hy + 2, 13], [hx - 24, hy + 4, 7], [hx + 24, hy + 4, 7]]) {
+        c.fillStyle = '#8a6a26'; c.beginPath(); c.arc(px, py, pr + 3, 0, 7); c.fill();
+        c.fillStyle = '#28493c'; c.beginPath(); c.arc(px, py, pr, 0, 7); c.fill();
+        c.fillStyle = 'rgba(200,235,225,0.45)'; c.beginPath(); c.arc(px - pr * 0.3, py - pr * 0.3, pr * 0.4, 0, 7); c.fill();
+      }
+      c.strokeStyle = '#8a6a26'; c.lineWidth = 1.4; for (const a of [0.8, 1.6, 2.4]) { c.beginPath(); c.moveTo(hx + Math.cos(a) * 13, hy + 2 + Math.sin(a) * 13); c.lineTo(hx + Math.cos(a) * 16, hy + 2 + Math.sin(a) * 16); c.stroke(); }
+      // books and a brass telescope on the right
+      c.fillStyle = '#5a3a26'; c.fillRect(x0 + 138, y0 + 136, w - 142, 8); c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(x0 + 138, y0 + 144, w - 142, 5);
+      let bx = x0 + 142;
+      while (bx < x0 + 220) {
+        const bw = 8 + r() * 7, bh = 36 + r() * 16, col = U.pick(r, ['#7d2a34', '#2f5546', '#6b452c', '#3d5a86', '#8a6a26']);
+        c.fillStyle = col; c.fillRect(bx, y0 + 136 - bh, bw - 1.4, bh);
+        c.fillStyle = '#c9a24a'; c.fillRect(bx + 1, y0 + 136 - bh + 6, bw - 3.4, 2); c.fillRect(bx + 1, y0 + 128, bw - 3.4, 2);
+        bx += bw;
+      }
+      c.save(); c.translate(x0 + 252, y0 + 104); c.rotate(-0.35);
+      c.fillStyle = '#b8913d'; c.fillRect(-36, -6, 72, 12); c.fillStyle = '#d8b25a'; c.fillRect(-36, -6, 72, 3);
+      c.fillStyle = '#9a7a2e'; c.fillRect(-42, -8, 8, 16); c.fillRect(30, -5, 14, 10);
+      c.fillStyle = '#c9e2ea'; c.beginPath(); c.ellipse(-42, 0, 3, 8, 0, 0, 7); c.fill();
+      c.restore();
+      c.strokeStyle = '#6b452c'; c.lineWidth = 3; c.beginPath(); c.moveTo(x0 + 252, y0 + 108); c.lineTo(x0 + 236, y0 + 136); c.moveTo(x0 + 252, y0 + 108); c.lineTo(x0 + 268, y0 + 136); c.stroke();
+      // the mantel clock on the second shelf, and a candle
+      const shy = y0 + 292;
+      c.fillStyle = '#5a3a26'; c.fillRect(x0 + 138, shy, w - 142, 8); c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(x0 + 138, shy + 8, w - 142, 5);
+      const ccx = x0 + 204, ccy = shy - 40;
+      c.fillStyle = '#6b3a24'; c.beginPath(); c.moveTo(ccx - 36, shy); c.lineTo(ccx - 36, ccy); c.quadraticCurveTo(ccx, ccy - 44, ccx + 36, ccy); c.lineTo(ccx + 36, shy); c.closePath(); c.fill();
+      c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(ccx, ccy + 4, 21, 0, 7); c.fill();
+      c.fillStyle = '#f7f1e2'; c.beginPath(); c.arc(ccx, ccy + 4, 17, 0, 7); c.fill();
+      c.strokeStyle = '#3a2814'; c.lineWidth = 1.2;
+      for (let t = 0; t < 12; t++) { const a = (t / 12) * 6.283; c.beginPath(); c.moveTo(ccx + Math.cos(a) * 13, ccy + 4 + Math.sin(a) * 13); c.lineTo(ccx + Math.cos(a) * 15.5, ccy + 4 + Math.sin(a) * 15.5); c.stroke(); }
+      c.lineWidth = 1.8; c.beginPath(); c.moveTo(ccx, ccy + 4); c.lineTo(ccx + 7, ccy - 4); c.moveTo(ccx, ccy + 4); c.lineTo(ccx - 2, ccy - 9); c.stroke();
+      const kx = x1 - 24;
+      c.fillStyle = '#c9a24a'; c.fillRect(kx - 9, shy - 6, 18, 6); c.fillRect(kx - 3, shy - 28, 6, 22);
+      c.fillStyle = '#f4ecdc'; c.fillRect(kx - 4, shy - 54, 8, 26);
+      c.fillStyle = '#ffd36a'; c.beginPath(); c.ellipse(kx, shy - 60, 3.4, 6.5, 0, 0, 7); c.fill();
+      glow(c, kx, shy - 58, 70, 'rgba(255,200,110,0.5)');
+      // the window display: an oxblood velvet cloth, a key, a pocket watch, a magnifier, a small globe
+      c.fillStyle = '#5e1f27'; c.fillRect(x0, y1 - 66, w, 66);
+      c.fillStyle = '#7d2a34'; c.beginPath(); c.moveTo(x0, y1 - 66); for (let x = x0; x <= x1; x += 22) c.quadraticCurveTo(x + 11, y1 - 58, x + 22, y1 - 66); c.lineTo(x1, y1); c.lineTo(x0, y1); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(255,200,200,0.12)'; c.lineWidth = 2; for (let x = x0 + 14; x < x1; x += 22) { c.beginPath(); c.moveTo(x, y1 - 56); c.lineTo(x + 4, y1); c.stroke(); }
+      c.save(); c.translate(x0 + 52, y1 - 30); c.rotate(-0.2);
+      c.strokeStyle = '#d8b25a'; c.lineWidth = 3.4; c.beginPath(); c.arc(-14, 0, 8, 0, 7); c.stroke();
+      c.fillStyle = '#d8b25a'; c.fillRect(-6, -2, 34, 4); c.fillRect(20, 2, 4, 8); c.fillRect(26, 2, 3, 6);
+      c.restore();
+      c.strokeStyle = '#d8b25a'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x0 + 112, y1 - 40); c.quadraticCurveTo(x0 + 130, y1 - 8, x0 + 150, y1 - 30); c.stroke();
+      c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(x0 + 112, y1 - 30, 12, 0, 7); c.fill();
+      c.fillStyle = '#f7f1e2'; c.beginPath(); c.arc(x0 + 112, y1 - 30, 9, 0, 7); c.fill();
+      c.strokeStyle = '#3a2814'; c.lineWidth = 1; c.beginPath(); c.moveTo(x0 + 112, y1 - 30); c.lineTo(x0 + 116, y1 - 35); c.moveTo(x0 + 112, y1 - 30); c.lineTo(x0 + 112, y1 - 37); c.stroke();
+      c.strokeStyle = '#6b452c'; c.lineWidth = 4; c.beginPath(); c.moveTo(x0 + 178, y1 - 16); c.lineTo(x0 + 196, y1 - 30); c.stroke();
+      c.strokeStyle = '#c9a24a'; c.lineWidth = 3; c.beginPath(); c.arc(x0 + 206, y1 - 38, 12, 0, 7); c.stroke();
+      c.fillStyle = 'rgba(210,235,245,0.4)'; c.beginPath(); c.arc(x0 + 206, y1 - 38, 10.5, 0, 7); c.fill();
+      const gx = x1 - 38, gy = y1 - 58;
+      c.fillStyle = '#6b452c'; c.fillRect(gx - 3, gy + 18, 6, 22); c.fillRect(gx - 13, gy + 38, 26, 5);
+      c.strokeStyle = '#c9a24a'; c.lineWidth = 2; c.beginPath(); c.arc(gx, gy, 22, -2.2, 1.0); c.stroke();
+      c.fillStyle = '#8fbfe6'; c.beginPath(); c.arc(gx, gy, 18, 0, 7); c.fill();
+      c.fillStyle = '#c9b48f'; c.beginPath(); c.moveTo(gx - 12, gy - 9); c.quadraticCurveTo(gx - 1, gy - 15, gx + 3, gy - 4); c.quadraticCurveTo(gx - 4, gy + 7, gx - 11, gy + 3); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(gx + 4, gy + 4); c.quadraticCurveTo(gx + 13, gy + 1, gx + 15, gy + 9); c.quadraticCurveTo(gx + 8, gy + 15, gx + 5, gy + 11); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.3)'; c.beginPath(); c.ellipse(gx - 6, gy - 7, 5.5, 3.4, -0.6, 0, 7); c.fill();
+      // old glass: a faint green cast and seeds of air
+      c.fillStyle = 'rgba(190,210,150,0.07)'; c.fillRect(x0, y0, w, y1 - y0);
+      for (let i = 0; i < 46; i++) {
+        const bx2 = x0 + r() * w, by2 = y0 + r() * (y1 - y0), br = 0.8 + r() * 2.2;
+        c.strokeStyle = 'rgba(255,255,255,0.32)'; c.lineWidth = 0.7; c.beginPath(); c.ellipse(bx2, by2, br * 1.6, br, 0, 0, 7); c.stroke();
+      }
+    },
+  };
+  // shop windows sit in a painted timber shopfront: its colours, and the frame's
+  const SHOPFRONT = {
+    haberdashery: { body: '#e2b4ad', trim: '#5f9e9b', panel: '#d59f97', frame: '#6aa7a3', dk: '#4b8682' },
+    curio: { body: '#2f5546', trim: '#c9a24a', panel: '#28493c', frame: '#2a4a3d', dk: '#1c3329' },
   };
   function glow(c, x, y, rad, col) {
     const g = c.createRadialGradient(x, y, 0, x, y, rad);
@@ -890,8 +1102,10 @@
     const room = ROOM[opts.room] || ROOM.living;
     // a glasshouse is glass all round, on a low brick wall, not a window in plaster
     const gh = opts.room === 'glasshouse';
-    // the pottery is an old brick barn; the station is cream weatherboarding
-    const wallKind = opts.room === 'pottery' ? 'brick' : opts.room === 'waiting' || opts.room === 'signalbox' ? 'boards' : '';
+    // the pottery is an old brick barn; the station is cream weatherboarding;
+    // the shops have painted timber shopfronts
+    const wallKind = opts.room === 'pottery' ? 'brick' : opts.room === 'waiting' || opts.room === 'signalbox' ? 'boards' : SHOPFRONT[opts.room] ? 'shop' : '';
+    const sf = SHOPFRONT[opts.room];
     return {
       family: 'wash', particle: 'suds', region,
       tough(x, y) {
@@ -928,6 +1142,23 @@
           ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 14, 1);
         } else if (wallKind === 'boards') {
           weatherboards(c, r, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1);
+        } else if (wallKind === 'shop') {
+          // fluted pilasters either side, the fascia above and panelled stall risers below
+          const { x0, y0, x1, y1 } = bleed;
+          c.fillStyle = sf.body; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+          c.fillStyle = sf.panel; c.fillRect(x0, y0, x1 - x0, fy0 - 24 - y0);
+          c.fillStyle = sf.trim; c.fillRect(x0, fy0 - 26, x1 - x0, 5); c.fillRect(x0, fy0 - 16, x1 - x0, 3);
+          for (const [a, b] of [[x0, fx0 - 9], [fx1 + 9, x1]]) {
+            c.fillStyle = sf.panel; c.fillRect(a, y0, b - a, y1 - y0);
+            for (let x = a + 5; x < b - 4; x += 7) { c.fillStyle = 'rgba(0,0,0,0.13)'; c.fillRect(x, y0, 2, y1 - y0); c.fillStyle = 'rgba(255,255,255,0.1)'; c.fillRect(x + 2, y0, 1.2, y1 - y0); }
+            c.fillStyle = sf.trim; c.fillRect(a, y0, 2.5, y1 - y0); c.fillRect(b - 2.5, y0, 2.5, y1 - y0);
+          }
+          const ry = fy1 + 56;
+          for (const [a, b] of [[fx0 + 2, 176], [184, fx1 - 2]]) {
+            c.fillStyle = sf.panel; c.fillRect(a, ry, b - a, y1 - ry + 10);
+            c.strokeStyle = sf.trim; c.lineWidth = 2.5; c.strokeRect(a + 6, ry + 6, b - a - 12, y1 - ry);
+          }
+          for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(${r() < 0.5 ? '0,0,0' : '255,255,255'},${(0.04 + r() * 0.05).toFixed(2)})`; c.beginPath(); c.ellipse(x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 4 + r() * 10, 2 + r() * 5, r() * 3, 0, 7); c.fill(); }
         } else if (opts.wallColor) {
           paintedPlaster(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, opts.wallColor);
           ivySprig(c, r, bleed.x0 + 8, bleed.y1 - 10, 12, 1);
@@ -984,7 +1215,7 @@
         for (let ring = 12; ring < 70; ring += 11) { c.beginPath(); for (let k = 0; k <= 6; k++) { const a = Math.PI / 2 + (k / 6) * (Math.PI / 2); const rr = ring + (k % 2) * 2; c.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } c.stroke(); }
       },
       top(c) {
-        const frame = wallKind === 'boards' ? '#8e3b3f' : wallKind === 'brick' ? '#a9c2a4' : '#f1ebdd', dk = wallKind === 'boards' ? '#6b2a2e' : wallKind === 'brick' ? '#86a283' : '#cfc6b3';
+        const frame = wallKind === 'boards' ? '#8e3b3f' : wallKind === 'brick' ? '#a9c2a4' : wallKind === 'shop' ? sf.frame : '#f1ebdd', dk = wallKind === 'boards' ? '#6b2a2e' : wallKind === 'brick' ? '#86a283' : wallKind === 'shop' ? sf.dk : '#cfc6b3';
         c.fillStyle = frame;
         c.beginPath(); c.rect(fx0, fy0, fx1 - fx0, fy1 - fy0); c.rect(gx1, gy0, gx0 - gx1, gy1 - gy0); c.fill('evenodd');
         if (grid === 2) { c.fillRect(mx - m / 2, gy0, m, gy1 - gy0); c.fillRect(gx0, my - m / 2, gx1 - gx0, m); }

@@ -5,7 +5,8 @@
 // with a lamp, a mug, pencils, wool and a sleeping cat. An unsolved card is a
 // pencil sketch on cream paper, a little askew; a solved one is the same
 // picture in soft colour with a gold star. The nine newest kinds hang as a
-// three by three grid; the oldest are small tickets pinned along the top. Every id carries a 'b' prefix
+// three by three grid; the older ones are small tickets pinned in rows along
+// the top, and the grid makes room for them. Every id carries a 'b' prefix
 // (plus opts.uid when given) so this picture can share a page with the others.
 
 const BETA = (() => {
@@ -44,26 +45,33 @@ const BETA = (() => {
   };
   const HILL = { spring: ['#a9cf8f', '#8fbd78'], summer: ['#86b971', '#6f9a5c'], autumn: ['#d4b06c', '#b98f5a'], winter: ['#eef3f7', '#dfe8f0'] };
 
-  // the cards: where they hang, how askew, their tint and pin colour. The nine
-  // newest kinds hang as a three by three grid, drawn at CARD_K of their full
-  // size, oldest top left and newest bottom right; the oldest kinds (TICKETS)
-  // are small tickets pinned along the top of the board, either side of the tape
-  const CARDS = {
-    hose: { x: 189, y: 113, tilt: -4, label: 'Watering', tint: '#8fbfe6', pin: '#6f9a6a' },
-    beds: { x: 261, y: 111, tilt: 3, label: 'Bedtime', tint: '#bba9df', pin: '#d98b63' },
-    plan: { x: 333, y: 114, tilt: -3, label: 'Planting', tint: '#c6dcb4', pin: '#efb4ae' },
-    books: { x: 190, y: 192, tilt: 3.5, label: 'Shelves', tint: '#efb4ae', pin: '#8fbfe6' },
-    pack: { x: 262, y: 194, tilt: -3, label: 'Packing', tint: '#d6b07e', pin: '#6f9a6a' },
-    wheel: { x: 332, y: 191, tilt: 4, label: 'Pottery', tint: '#f2d88a', pin: '#bba9df' },
-    owners: { x: 189, y: 271, tilt: -3.5, label: 'Lost property', tint: '#a6d3d4', pin: '#efb4ae' },
-    post: { x: 261, y: 273, tilt: 3, label: 'Parcels', tint: '#bba9df', pin: '#f2d88a' },
-    seek: { x: 333, y: 270, tilt: -4, label: 'Finding', tint: '#c6dcb4', pin: '#8fbfe6' },
-  };
-  const CARD_K = 0.55;
-  const TICKETS = {
-    cups: { x: 187, y: 56, tilt: -4, label: 'Cups', tint: '#a6d3d4', pin: '#efb4ae' },
-    feed: { x: 335, y: 57, tilt: 3.5, label: 'Feeding', tint: '#f2d88a', pin: '#8fbfe6' },
-  };
+  // every kind of puzzle, oldest first: its label, the tint once solved and
+  // the colour of its pin. The nine newest hang as a three by three grid of
+  // cards, oldest top left and newest bottom right; the older ones are small
+  // tickets in rows of three along the top of the board, and the grid shrinks
+  // (CARD_K of a card's full size) to make room for them
+  const ORDER = [
+    ['cups', 'Cups', '#a6d3d4', '#efb4ae'], ['feed', 'Feeding', '#f2d88a', '#8fbfe6'], ['hose', 'Watering', '#8fbfe6', '#6f9a6a'],
+    ['beds', 'Bedtime', '#bba9df', '#d98b63'], ['plan', 'Planting', '#c6dcb4', '#efb4ae'], ['books', 'Shelves', '#efb4ae', '#8fbfe6'],
+    ['pack', 'Packing', '#d6b07e', '#6f9a6a'], ['wheel', 'Pottery', '#f2d88a', '#bba9df'], ['owners', 'Lost property', '#a6d3d4', '#efb4ae'],
+    ['post', 'Parcels', '#bba9df', '#f2d88a'], ['seek', 'Finding', '#c6dcb4', '#8fbfe6'], ['beads', 'Beads', '#efb4ae', '#a6d3d4'],
+    ['buttons', 'Buttons', '#f2d88a', '#efb4ae'], ['lock', 'Locked box', '#d6b07e', '#bba9df'], ['jigsaw', 'Jigsaw', '#a6d3d4', '#f2d88a'],
+  ];
+  const TILTS = [-4, 3, -3, 3.5, -3, 4, -3.5, 3, -4];
+  const NCARDS = 9, TK = 0.92, TY = 56, TROW = 34;
+  const nTickets = Math.max(0, ORDER.length - NCARDS), tRows = Math.ceil(nTickets / 3);
+  const GTOP = tRows ? TY + (tRows - 1) * TROW + 24 : 58, GPITCH = (312 - GTOP) / 3;
+  const CARD_K = Math.min(0.55, (GPITCH - 8) / 116);
+  const CARDS = {}, TICKETS = {};
+  ORDER.forEach(([k, label, tint, pin], i) => {
+    if (i < nTickets) {
+      const row = Math.floor(i / 3), col = i % 3, n = Math.min(3, nTickets - row * 3);
+      TICKETS[k] = { x: 261 + (col - (n - 1) / 2) * 74, y: TY + row * TROW, tilt: (col - 1) * 2.4 + (row % 2 ? 1.6 : -1.6), label, tint, pin };
+    } else {
+      const j = i - nTickets, row = Math.floor(j / 3);
+      CARDS[k] = { x: 189 + (j % 3) * 72, y: GTOP + GPITCH * (row + 0.5), tilt: TILTS[j % 9], label, tint, pin };
+    }
+  });
 
   // a sleeping cat breathes, the mug steams, petals and snow drift past the window
   function style() {
@@ -189,9 +197,9 @@ const BETA = (() => {
       <rect x="146" y="38" width="230" height="274" fill="${url('Cork')}"/><rect x="146" y="38" width="230" height="5" fill="#3b2a1a" opacity="0.12"/>
       <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>`;
   }
-  // the BETA tape label across the top of the board
+  // the BETA tape label across the bottom of the frame
   function tape() {
-    return `<g transform="translate(261 33) rotate(-4)">
+    return `<g transform="translate(261 318) rotate(-3)">
       <path d="M-28 -9 l2 3 l-2 3 l2 3 l-2 3 l2 3 l-2 3 H28 l-2 -3 l2 -3 l-2 -3 l2 -3 l-2 -3 l2 -3Z" fill="#f2d88a" opacity="0.92"/>
       <text x="0" y="4.6" text-anchor="middle" font-family="${FONT}" font-size="13" font-weight="900" letter-spacing="2" fill="#6b6157">BETA</text></g>`;
   }
@@ -321,6 +329,53 @@ const BETA = (() => {
       s += P('M16 52 h14 v14 h-14Z', '#a6d3d4') + P('M18.4 54.4 h9.2 v9.2 h-9.2Z', light('#a6d3d4', 0.5)) + E(23, 59, 2.6, 2.6, '#f2d88a');
       return s + L('M16 78 h16 M16 83.4 h12', '#8a7a62', 1);
     },
+    // stringing beads: the pattern carries on round the necklace, one place to go
+    beads() {
+      const at = (t) => [(1 - t) * (1 - t) * 14 + 2 * (1 - t) * t * 50 + t * t * 86, (1 - t) * (1 - t) * 18 + 2 * (1 - t) * t * 102 + t * t * 18];
+      let s = L('M14 18 Q50 102 86 18', '#b5ab9c', 1.1) + E(14, 18, 2.4, 2.4, '#c99a2e') + E(86, 18, 2.4, 2.4, '#c99a2e');
+      const kinds = [
+        (x, y) => E(x, y, 5.8, 5.8, '#e2768b') + E(x - 1.9, y - 1.9, 1.5, 1.5, '#fbd3dc'),
+        (x, y) => P(`M${f1(x - 5)} ${f1(y - 5)} h10 v10 h-10Z`, '#5fa8b0') + L(`M${f1(x - 3)} ${f1(y - 2.6)} h3`, '#bfe3e6', 1.2),
+        (x, y) => P(star(x, y, 6.8, 3.1), '#e9bf4f'),
+      ];
+      [0.15, 0.27, 0.39, 0.51, 0.63, 0.75].forEach((t, i) => { const [x, y] = at(t); s += kinds[i % 3](x, y); });
+      const [ex, ey] = at(0.87);
+      s += `<circle cx="${f1(ex)}" cy="${f1(ey)}" r="6" fill="none" stroke="${COL ? '#c99a2e' : PEN}" stroke-width="1" stroke-dasharray="2 2"/>`;
+      // the next bead, on its way
+      return s + kinds[0](ex - 2, ey - 26) + L(`M${f1(ex + 6)} ${f1(ey - 34)} l3 -3 M${f1(ex + 9)} ${f1(ey - 26)} h4`, '#e9bf4f', 1.2);
+    },
+    // sorting buttons: a jar for each colour and number of holes
+    buttons() {
+      const btn = (x, y, r, c, four) => E(x, y, r, r, c) + E(x, y, r * 0.7, r * 0.7, light(c, 0.22)) +
+        (four ? [[-1, -1], [1, -1], [-1, 1], [1, 1]] : [[-1, 0], [1, 0]]).map(([dx, dy]) => E(x + dx * r * 0.3, y + dy * r * 0.3, r * 0.14, r * 0.14, dark(c, 0.5))).join('');
+      let s = P('M21 22 h38 v7 h-38Z', '#b98f5a') + P('M18 34 Q18 29 24 29 H56 Q62 29 62 34 V87 Q62 94 55 94 H25 Q18 94 18 87Z', '#e4f0f0');
+      s += btn(29, 84, 7, '#efb4ae') + btn(45, 85, 7.4, '#efb4ae') + btn(37, 72, 7, '#efb4ae') + btn(52, 71, 6.6, '#efb4ae');
+      s += P('M25 40 h30 v17 h-30Z', '#fffaf1') + btn(40, 48.5, 5.2, '#efb4ae') + L('M22 62 v20', '#ffffff', 1.6);
+      return s + btn(80, 38, 8, '#8fbfe6', true) + btn(77, 63, 9, '#f2d88a', true) + btn(83, 86, 7, '#bba9df');
+    },
+    // the locked box: three dials, each under its own symbol
+    lock() {
+      let s = P('M12 42 Q12 32 22 32 H78 Q88 32 88 42 V50 H12Z', '#a8743f', true) + P('M12 50 H88 V90 Q88 94 84 94 H16 Q12 94 12 90Z', '#c08a50');
+      s += L('M18 41 H82', light('#a8743f', 0.3), 1.2) + P('M45 46 h10 v9 h-10Z', '#c99a2e');
+      const win = (x) => P(`M${x - 9} 59 h18 v29 h-18Z`, '#fffaf1');
+      s += win(28) + win(50) + win(72);
+      s += E(28, 65, 2.8, 2.8, '#e2768b') + P('M50 62 l3.2 5.4 h-6.4Z', '#5fa8b0') + P('M69.3 62.3 h5.4 v5.4 h-5.4Z', '#e9bf4f');
+      const digit = (x, d) => `<text x="${x}" y="84" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="900" fill="${COL ? '#3b352e' : PEN}">${d}</text>`;
+      return s + digit(28, 3) + digit(50, 7) + digit(72, 4) + L('M24 23 l-4 -6 M50 21 v-7 M76 23 l4 -6', '#e9bf4f', 1.3);
+    },
+    // the jigsaw: a little picture of a cottage, one piece still to go in
+    jigsaw() {
+      let s = P('M10 16 H90 V86 H10Z', '#b98f5a', true) + P('M14 20 H86 V82 H14Z', '#bfe2ef');
+      s += P('M14 62 Q36 50 56 58 T86 54 V82 H14Z', '#8fbd78') + E(74, 32, 5, 5, '#f2d88a');
+      s += P('M26 62 V48 H48 V62Z', '#f2d88a') + P('M23 49 L37 38 L51 49Z', '#c4704b') + P('M34 62 v-8 h5 v8Z', '#6f9a6a');
+      // the cut lines, each with a little tab
+      const v = (x) => `M${x} 20 V${31 - 3} a3 3 0 1 1 0 6 V${51 - 3} a3 3 0 1 0 0 6 V${72 - 3} a3 3 0 1 1 0 6 V82`;
+      const h = (y) => `M14 ${y} H${26 - 3} a3 3 0 1 0 6 0 H${50 - 3} a3 3 0 1 1 6 0 H${74 - 3} a3 3 0 1 0 6 0 H86`;
+      s += L(`${v(38)} ${v(62)} ${h(41)} ${h(61)}`, dark('#bfe2ef', 0.35), 0.9);
+      // the hole where the last piece goes, and the piece beside it
+      s += P('M62 61 H86 V82 H62Z', '#8a6a4a');
+      return s + `<g transform="translate(70 88) rotate(-14)">${P('M-12 -8 H12 V10 H-12Z', '#8fbd78')}${P('M-12 -8 H12 V-2 Q0 -6 -12 -1Z', '#bfe2ef')}</g>`;
+    },
     // what's missing: a little shelf of odds and ends, one under the glass
     seek() {
       let s = P('M8 16 H74 V94 H8Z', '#d6b07e', true) + P('M12 20 H70 V90 H12Z', '#8a6a4a');
@@ -378,8 +433,8 @@ const BETA = (() => {
     const c = TICKETS[part];
     COL = done;
     const tilt = done ? c.tilt * 0.3 : c.tilt;
-    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt})">
-      <rect x="-42" y="-22" width="84" height="44" fill="#000" fill-opacity="0"/>
+    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) scale(${TK})">
+      <rect x="-40" y="-19" width="80" height="38" fill="#000" fill-opacity="0"/>
       <rect x="-37" y="-14.4" width="76" height="32" rx="1.6" fill="#3b2a1a" opacity="0.2"/>
       <rect x="-38" y="-16" width="76" height="32" rx="1.6" fill="${done ? '#fffaf1' : '#f3e9d4'}"/>
       ${dot(-38, 0, 3, url('Cork'))}${dot(38, 0, 3, url('Cork'))}`;

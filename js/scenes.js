@@ -353,12 +353,58 @@ const SCENES = (() => {
     c.fillStyle = 'rgba(80,60,40,0.18)'; for (let y = bleed.y0; y < bleed.y1; y += 18) c.fillRect(358, y, bleed.x1 - 358, 1.5);
   }
 
+  // round a shop's front step: the foot of the shop front and its door above,
+  // pavement flags either side and the kerb and the cobbled street below
+  function stepSurround(c, r, nz, bleed) {
+    const flag = ramp(['#a39886', '#b3a895', '#c1b6a2', '#ccc2ae']);
+    field(c, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 3, (x, y) => flag(nz.fbm(x * 0.03, y * 0.03, 3) * 0.7 + nz.n2(x * 0.4, y * 0.4) * 0.3));
+    c.fillStyle = 'rgba(70,60,48,0.35)';
+    for (let y = 120; y < 560; y += 74) c.fillRect(bleed.x0, y, bleed.x1 - bleed.x0, 1.6);
+    for (let y = 120, row = 0; y < 560; y += 74, row++) for (let x = bleed.x0 + (row % 2) * 44; x < bleed.x1; x += 88) c.fillRect(x, y, 1.6, 74);
+    // the kerb and the cobbled street
+    c.fillStyle = '#9c968a'; c.fillRect(bleed.x0, 560, bleed.x1 - bleed.x0, 14);
+    c.fillStyle = '#c9c3b7'; c.fillRect(bleed.x0, 560, bleed.x1 - bleed.x0, 4);
+    c.fillStyle = '#6f6a61'; c.fillRect(bleed.x0, 574, bleed.x1 - bleed.x0, bleed.y1 - 574);
+    for (let row = 0, y = 576; y < bleed.y1; y += 11, row++) for (let x = bleed.x0 - (row % 2) * 7; x < bleed.x1; x += 14) {
+      c.fillStyle = U.pick(r, ['#8f897d', '#a09a8e', '#857f74', '#9a9488']); c.beginPath(); c.roundRect(x + 1, y + 1, 12, 9, 3.5); c.fill();
+    }
+    // the shop front: stall risers in dusty rose with teal mouldings either side of the door
+    c.fillStyle = '#d9a8a0'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, 112 - bleed.y0);
+    for (const [a, b] of [[bleed.x0 - 4, 112], [248, bleed.x1 + 4]]) {
+      c.fillStyle = '#5f9e9b'; c.fillRect(a, bleed.y0, b - a, 8 - bleed.y0); c.fillRect(a, 98, b - a, 14);
+      for (let x = a + 14; x < b - 30; x += 52) {
+        c.fillStyle = '#c99590'; c.fillRect(x, 18, 40, 70);
+        c.strokeStyle = '#5f9e9b'; c.lineWidth = 3; c.strokeRect(x + 1.5, 19.5, 37, 67);
+        c.fillStyle = 'rgba(255,240,235,0.25)'; c.fillRect(x + 4, 22, 32, 3);
+      }
+    }
+    c.fillStyle = 'rgba(40,30,30,0.2)'; c.fillRect(bleed.x0, 108, bleed.x1 - bleed.x0, 4);
+    // the foot of the door: two panels, a brass kick plate, the oak sill
+    c.fillStyle = '#4b8682'; c.fillRect(112, bleed.y0, 136, 106 - bleed.y0);
+    c.fillStyle = '#9ccfd0'; c.fillRect(120, bleed.y0, 120, 98 - bleed.y0);
+    for (const x of [128, 184]) { c.fillStyle = '#8bbfc0'; c.fillRect(x, bleed.y0, 48, 52 - bleed.y0); c.strokeStyle = '#6fa3a4'; c.lineWidth = 2; c.strokeRect(x + 1, bleed.y0, 46, 51 - bleed.y0); }
+    c.fillStyle = '#c9a24a'; c.fillRect(122, 64, 116, 30);
+    c.fillStyle = '#f2d88a'; c.fillRect(122, 64, 116, 4);
+    c.fillStyle = 'rgba(120,90,30,0.35)'; for (let x = 126; x < 236; x += 18) c.fillRect(x, 70, 1.2, 22);
+    c.fillStyle = '#8a6a26'; for (const [x, y] of [[126, 68], [234, 68], [126, 90], [234, 90]]) { c.beginPath(); c.arc(x, y, 1.6, 0, 7); c.fill(); }
+    c.fillStyle = '#7a5434'; c.fillRect(108, 98, 144, 14);
+    c.fillStyle = '#a07650'; c.fillRect(108, 98, 144, 3);
+  }
+
   function stonesScene(S) {
     const { r, nz, opts, bleed } = S;
     const region = new Path2D();
     const pavers = [];
     let gapPath = null;
-    if (opts.shape === 'yard') {
+    if (opts.shape === 'step') {
+      // a shop's front step: a broad doorstep on a wider, older step that runs
+      // back to the wall at both sides, seen from above
+      rrPath(region, 22, 112, 316, 376, 8);
+      pavers.push({ x: 58, y: 114, w: 244, h: 176, kind: 'top' }, { x: 58, y: 292, w: 244, h: 16, kind: 'riser' },
+        { x: 24, y: 114, w: 30, h: 194, kind: 'cheek' }, { x: 306, y: 114, w: 30, h: 194, kind: 'cheek' },
+        { x: 24, y: 312, w: 102, h: 156, kind: 'tread' }, { x: 129, y: 312, w: 102, h: 156, kind: 'tread' }, { x: 234, y: 312, w: 102, h: 156, kind: 'tread' },
+        { x: 24, y: 470, w: 312, h: 16, kind: 'riser' });
+    } else if (opts.shape === 'yard') {
       // the pottery's yard: rounded cobbles in rows, a drain in the middle
       rrPath(region, 14, 104, 332, 466, 18);
       for (let y = 104, row = 0; y < 570; row++) {
@@ -437,6 +483,7 @@ const SCENES = (() => {
         if (opts.shape === 'terrace') terraceSurround(c, r, nz, bleed);
         else if (opts.shape === 'yard') yardSurround(c, r, nz, bleed);
         else if (opts.shape === 'platform') platformSurround(c, r, nz, bleed);
+        else if (opts.shape === 'step') stepSurround(c, r, nz, bleed);
         else {
           mowedLawn(c, nz, bleed.x0, bleed.y0, bleed.x1, bleed.y1, true);
           grassGrain(c, r, bleed.x0, bleed.y0, bleed.x1, bleed.y1, 6, 0.2);
@@ -473,6 +520,32 @@ const SCENES = (() => {
           c.fillStyle = '#26221f';
           for (let k = -3; k <= 3; k++) { c.beginPath(); c.roundRect(dx - Math.sqrt(256 - k * k * 20) * 0.95, dy + k * 4.6 - 1.4, Math.sqrt(256 - k * k * 20) * 1.9, 2.8, 1.4); c.fill(); }
           c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 1.2; c.beginPath(); c.arc(dx, dy, 19, 3.5, 5.2); c.stroke();
+        } else if (opts.shape === 'step') {
+          // warm sandstone; the doorstep is worn smooth and hollow where feet have stood
+          for (const p of pavers) {
+            const base = U.pick(r, ['#cdb995', '#c4af8a', '#d4c3a3', '#c9b48f']), col = p.kind === 'riser' ? U.shade(base, -0.24) : base;
+            c.fillStyle = U.shade(col, -0.3); c.beginPath(); c.roundRect(p.x, p.y + 1.5, p.w, p.h, 4); c.fill();
+            c.fillStyle = col; c.beginPath(); c.roundRect(p.x, p.y, p.w, p.h - 1, 4); c.fill();
+            c.save(); c.beginPath(); c.rect(p.x, p.y, p.w, p.h - 1); c.clip();
+            c.lineWidth = 1;
+            for (let k = 0; k < p.h / 9; k++) {
+              const y = p.y + 4 + r() * (p.h - 8);
+              c.strokeStyle = r() < 0.5 ? 'rgba(120,95,60,0.14)' : 'rgba(255,248,230,0.16)';
+              c.beginPath(); c.moveTo(p.x, y); c.quadraticCurveTo(p.x + p.w / 2, y + (r() - 0.5) * 6, p.x + p.w, y + (r() - 0.5) * 4); c.stroke();
+            }
+            c.restore();
+          }
+          const hollow = c.createRadialGradient(180, 206, 4, 180, 206, 96);
+          hollow.addColorStop(0, 'rgba(255,248,228,0.42)'); hollow.addColorStop(1, 'rgba(255,248,228,0)');
+          c.fillStyle = hollow; c.beginPath(); c.ellipse(180, 206, 100, 70, 0, 0, 7); c.fill();
+          // rounded nosings catching the light, and the doorstep's shadow on the stones below
+          c.fillStyle = 'rgba(255,250,235,0.45)'; c.fillRect(60, 285, 240, 3); c.fillRect(26, 463, 308, 3);
+          let sg = c.createLinearGradient(0, 310, 0, 334); sg.addColorStop(0, 'rgba(40,30,20,0.32)'); sg.addColorStop(1, 'rgba(40,30,20,0)');
+          c.fillStyle = sg; c.fillRect(24, 310, 312, 24);
+          sg = c.createLinearGradient(56, 0, 40, 0); sg.addColorStop(0, 'rgba(40,30,20,0.28)'); sg.addColorStop(1, 'rgba(40,30,20,0)');
+          c.fillStyle = sg; c.fillRect(40, 114, 16, 196);
+          sg = c.createLinearGradient(304, 0, 320, 0); sg.addColorStop(0, 'rgba(40,30,20,0.28)'); sg.addColorStop(1, 'rgba(40,30,20,0)');
+          c.fillStyle = sg; c.fillRect(304, 114, 16, 196);
         } else {
           const cols = opts.shape === 'platform' ? ['#d4cdbf', '#c9c1b2', '#ddd6c9', '#c2baab', '#d8cfbd'] : stoneCols;
           for (const p of pavers) {
@@ -541,6 +614,31 @@ const SCENES = (() => {
             c.beginPath(); c.ellipse(0, -5, 5, 7, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, 8, 4, 4.5, 0, 0, 7); c.fill();
             c.restore();
           }
+        } else if (opts.shape === 'step') {
+          // moss packed into the joints, muddy prints up to the door, threads dropped on the way in
+          c.lineCap = 'round';
+          const joints = [[56, 114, 56, 310], [304, 114, 304, 310], [58, 290, 302, 290], [24, 310, 336, 310], [127.5, 312, 127.5, 468], [232.5, 312, 232.5, 468], [24, 469, 336, 469]];
+          for (const [ax, ay, bx, by] of joints) {
+            const n = Math.round(Math.hypot(bx - ax, by - ay) / 6);
+            for (let k = 0; k <= n; k++) {
+              const t = k / n, x = ax + (bx - ax) * t + (r() - 0.5) * 3, y = ay + (by - ay) * t + (r() - 0.5) * 3;
+              c.fillStyle = U.pick(r, ['#4b6626', '#5c7a2e', '#6f9037']); c.beginPath(); c.arc(x, y, 3 + r() * 3.5, 0, 7); c.fill();
+            }
+          }
+          c.fillStyle = 'rgba(92,70,46,0.5)';
+          for (let i = 0, y = 478; y > 134; i++, y -= 36) {
+            const x = 180 + Math.sin(y * 0.012) * 24 + (i % 2 ? 11 : -11);
+            c.save(); c.translate(x, y); c.rotate(Math.sin(y * 0.02) * 0.18);
+            c.beginPath(); c.ellipse(0, -6, 5.5, 8, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, 8, 4.5, 4, 0, 0, 7); c.fill();
+            c.restore();
+          }
+          for (let i = 0; i < 14; i++) {
+            const x = 40 + r() * 280, y = 130 + r() * 330, a = r() * 6.28;
+            c.strokeStyle = U.pick(r, ['#e2574c', '#5f9e9b', '#f2d88a', '#bba9df', '#efb4ae', '#3d5a86']); c.lineWidth = 1.4;
+            c.beginPath(); c.moveTo(x, y);
+            for (let k = 1; k <= 9; k++) c.lineTo(x + Math.cos(a + k * 0.85) * (2 + k * 2.2) + k * 1.6, y + Math.sin(a + k * 0.85) * (2 + k * 2.2));
+            c.stroke();
+          }
         } else if (opts.shape === 'platform') {
           // old tickets and weeds in the joints
           for (let i = 0; i < 9; i++) {
@@ -561,17 +659,34 @@ const SCENES = (() => {
           }
         }
       },
+      // the iron boot scraper by the door stands above the moss
+      top: opts.shape === 'step' ? (c) => {
+        const x0 = 266, x1 = 296, y = 142;
+        c.fillStyle = 'rgba(40,30,20,0.3)'; c.beginPath(); c.ellipse((x0 + x1) / 2 + 3, y + 12, 22, 5, 0, 0, 7); c.fill();
+        c.fillStyle = '#3a3438'; c.fillRect(x0 - 6, y + 6, x1 - x0 + 12, 6);
+        c.strokeStyle = '#2f2b2e'; c.lineWidth = 4; c.lineCap = 'round';
+        for (const [x, d] of [[x0, -1], [x1, 1]]) {
+          c.beginPath(); c.moveTo(x, y + 8); c.lineTo(x, y - 14); c.stroke();
+          c.beginPath(); c.arc(x + d * 5, y - 14, 5, d < 0 ? 0 : Math.PI, d < 0 ? Math.PI * 1.6 : Math.PI * 2.6, d < 0); c.stroke();
+        }
+        c.fillStyle = '#2f2b2e'; c.fillRect(x0, y - 2, x1 - x0, 5);
+        c.fillStyle = 'rgba(255,255,255,0.28)'; c.fillRect(x0 + 2, y - 2, x1 - x0 - 4, 1.4); c.fillRect(x0 - 1.5, y - 12, 1.2, 18); c.fillRect(x1 - 1.5, y - 12, 1.2, 18);
+      } : undefined,
     };
   }
 
   const KINDS = { lawn, stones: stonesScene };
+  // variants of a kind drawn in later files: { kind, test(opts), make(S) };
+  // the first one that matches is built instead of the kind itself
+  const VARIANTS = [];
 
   function build(kind, opts, seed, bleed) {
     const S = { W, H, r: U.rng(seed), nz: U.noise(seed * 7 + 3), opts: opts || {}, bleed };
-    const sc = KINDS[kind](S);
+    const v = VARIANTS.find((x) => x.kind === kind && x.test(S.opts));
+    const sc = (v ? v.make : KINDS[kind])(S);
     return opts && opts.dirt && SCENES.overlay ? SCENES.overlay(sc, opts.dirt, S) : sc;
   }
 
   // shared helpers for later scene files
-  return { W, H, KINDS, build, inside, nearRegion, field, ramp, rrPath, blob, strokesByColour, grassGrain, tallGrass, mowedLawn, mulch, shrub, flowerClump, softShadow, GRASS };
+  return { W, H, KINDS, VARIANTS, build, inside, nearRegion, field, ramp, rrPath, blob, strokesByColour, grassGrain, tallGrass, mowedLawn, mulch, shrub, flowerClump, softShadow, GRASS };
 })();

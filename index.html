@@ -194,8 +194,16 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #found b{font-size:16px}
 .prog.pulse{animation:ppulse .5s ease}
 @keyframes ppulse{40%{transform:scale(1.04);box-shadow:0 0 0 4px rgba(127,184,106,.45)}}
-.findsHead{font-weight:800;color:var(--ink2);margin:14px 4px 10px}
-.findsHead:first-child{margin-top:0}
+.findsFold{border-bottom:1.5px solid var(--line)}
+.findsHead{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:10px 4px;background:none;border:0;font:inherit;font-weight:800;color:var(--ink2);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.findsHead .fName{flex:1}
+.findsHead .fCount{font-weight:700;font-size:13px;color:var(--ink3)}
+.findsHead::after{content:'';width:7px;height:7px;border-right:2px solid var(--ink3);border-bottom:2px solid var(--ink3);transform:translateY(-2px) rotate(45deg);transition:transform .2s;margin-right:4px}
+.findsFold.open .findsHead::after{transform:translateY(2px) rotate(225deg)}
+.findsBody{display:none;padding-bottom:12px}
+.findsFold.open .findsBody{display:block}
+.findsSub{font-weight:800;font-size:13px;color:var(--ink3);margin:10px 4px 8px}
+.findsSub:first-child{margin-top:0}
 .findsGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .find{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 4px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;min-height:96px}
 .find i{font-style:normal;font-size:30px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--paper2);color:var(--ink3);font-weight:900}
@@ -461,6 +469,8 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/scenes9.js"></script>
 <script src="js/scenes10.js"></script>
 <script src="js/scenes11.js"></script>
+<script src="js/scenes12.js"></script>
+<script src="js/scenes13.js"></script>
 <script src="js/puzzles.js"></script>
 <script src="js/pz-cups.js"></script>
 <script src="js/pz-feed.js"></script>
@@ -473,6 +483,10 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/pz-owners.js"></script>
 <script src="js/pz-post.js"></script>
 <script src="js/pz-seek.js"></script>
+<script src="js/pz-beads.js"></script>
+<script src="js/pz-buttons.js"></script>
+<script src="js/pz-lock.js"></script>
+<script src="js/pz-jigsaw.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/cafe.js"></script>
@@ -483,6 +497,8 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/books.js"></script>
 <script src="js/pottery.js"></script>
 <script src="js/halt.js"></script>
+<script src="js/beads.js"></script>
+<script src="js/curio.js"></script>
 <script src="js/beta.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>

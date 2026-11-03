@@ -255,6 +255,42 @@
       }
       for (let i = 0; i < 3; i++) { const a = r() * 6.283, d = s * 0.3; dot(c, Math.cos(a) * d, Math.sin(a) * d, s * 0.16, '#6f7fc4'); }
     },
+    // a lacy fern seen from above: fronds of paired leaflets round a curled fiddlehead
+    fern(c, r, s) {
+      const n = 7 + ((r() * 3) | 0);
+      c.lineCap = 'round';
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 6.283 + r() * 0.4, l = s * (1.15 + r() * 0.3), bend = (r() - 0.5) * 0.5;
+        const col = U.pick(r, ['#4f8a3a', '#5d9a44', '#467e33', '#6aa64c']);
+        c.save(); c.rotate(a);
+        c.strokeStyle = '#3f6f2c'; c.lineWidth = 1.1;
+        c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(l * 0.5, bend * l * 0.4, l, bend * l * 0.5); c.stroke();
+        for (let k = 1; k <= 7; k++) {
+          const t = k / 8, x = l * t, y = bend * l * 0.5 * t * t * 1.6, len = s * 0.38 * (1 - t * 0.75);
+          leaf(c, x, y, -1.1, len, len * 0.32, col);
+          leaf(c, x, y, 1.1, len, len * 0.32, col);
+        }
+        c.restore();
+      }
+      c.strokeStyle = '#7a8a3a'; c.lineWidth = 1.6; c.beginPath();
+      for (let k = 0; k < 16; k++) { const t = k / 15, rr = s * 0.16 * (1 - t), a = t * 9; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      c.stroke();
+    },
+    // a hart's-tongue fern: glossy strap leaves with wavy edges and a pale midrib
+    hartstongue(c, r, s) {
+      const n = 8 + ((r() * 3) | 0);
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * 6.283 + r() * 0.3, l = s * (1.0 + r() * 0.3), w = s * 0.2;
+        c.save(); c.rotate(a);
+        c.fillStyle = U.pick(r, ['#3f7a2f', '#4d8a34', '#45822f']);
+        c.beginPath(); c.moveTo(0, 0);
+        for (let k = 0; k <= 8; k++) { const t = k / 8; c.lineTo(l * t, -w * Math.sin(Math.PI * Math.min(1, t * 1.1)) - Math.sin(k * 2.2) * 1.2); }
+        for (let k = 8; k >= 0; k--) { const t = k / 8; c.lineTo(l * t, w * Math.sin(Math.PI * Math.min(1, t * 1.1)) + Math.sin(k * 2.2) * 1.2); }
+        c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(220,240,180,0.55)'; c.lineWidth = 0.9; c.beginPath(); c.moveTo(2, 0); c.lineTo(l * 0.92, 0); c.stroke();
+        c.restore();
+      }
+    },
     beachrose(c, r, s) {
       rosette(c, r, s * 0.95, 7, ['#4f8a3a', '#5d9a44', '#467e33'], 0.5);
       for (let i = 0; i < 3; i++) {
@@ -270,6 +306,7 @@
     herbs: ['basil', 'rosemary', 'thyme', 'parsley', 'chives'],
     sunflowers: ['sunflower'], bulbs: ['bulb'], veg: ['lettuce', 'cabbage', 'carrot', 'strawberry'],
     lavender: ['lavbush'],
+    ferns: ['fern', 'hartstongue', 'fern', 'fern', 'hartstongue'],
   };
   // hanging baskets under a station canopy: [x, y, rx, ry] of the soil in each
   const BASKETS = [[100, 196, 62, 32], [260, 196, 62, 32], [180, 418, 72, 36]];

@@ -1,12 +1,13 @@
 'use strict';
 // What's missing: a thinking job for looking closely. A cosy, cluttered
 // corner (the lost-property shelves at the station, the cottage attic, the
-// café store room, the bookshop stockroom or the rescue barn) with twelve
-// little things tucked in among the clutter. The list pinned below shows
-// five of them, each as a little picture with its name. Tap one of them in
-// the picture and it is ticked off the list; a tap anywhere else only stirs
-// up a little puff of dust. Every thing has a shape of its own, so colour
-// is never the only clue, and the list always shows exactly what to look for.
+// café store room, the bookshop stockroom, the rescue barn or the curiosity
+// shop's cabinet) with twelve little things tucked in among the clutter. The
+// list pinned below shows five of them, each as a little picture with its
+// name. Tap one of them in the picture and it is ticked off the list; a tap
+// anywhere else only stirs up a little puff of dust. Every thing has a shape
+// of its own, so colour is never the only clue, and the list always shows
+// exactly what to look for.
 //   node test/run.mjs puzzle js/pz-seek.js seek --seeds 30 [--opts '{"where":"attic"}']
 
 (() => {
@@ -492,6 +493,68 @@
       fs(c, p2((p) => p.roundRect(-9, -16, 15, 4.4, 1.4)), '#6f9a6a', 0.9);
       shine(c, -4, -3, 1.4, 6, 0.3, 0);
     } },
+    // the curiosity shop's own: a ship in a bottle, a telescope, a shell, dice and a mask
+    ship: { name: 'Ship in a bottle', draw(c) {
+      fs(c, p2((p) => { p.moveTo(-14, 15); p.lineTo(-11, 9); p.lineTo(-6, 9); p.lineTo(-3, 15); p.closePath(); p.moveTo(3, 15); p.lineTo(6, 9); p.lineTo(11, 9); p.lineTo(14, 15); p.closePath(); }), '#8a5a3a', 1);
+      const b = p2((p) => { p.moveTo(-15, -6); p.lineTo(4, -6); p.quadraticCurveTo(10, -6, 11, -1); p.lineTo(15, -0.5); p.lineTo(15, 5.5); p.lineTo(11, 6); p.quadraticCurveTo(10, 11, 4, 11); p.lineTo(-15, 11); p.quadraticCurveTo(-19, 11, -19, 2.5); p.quadraticCurveTo(-19, -6, -15, -6); p.closePath(); });
+      c.fillStyle = 'rgba(205,232,236,0.55)'; c.fill(b);
+      c.save(); c.clip(b);
+      c.fillStyle = '#5f9ab8'; c.beginPath(); c.moveTo(-20, 7); c.quadraticCurveTo(-12, 4, -4, 7); c.quadraticCurveTo(4, 10, 12, 6); c.lineTo(12, 12); c.lineTo(-20, 12); c.closePath(); c.fill();
+      c.fillStyle = '#8a4f2e'; c.beginPath(); c.moveTo(-13, 4); c.lineTo(5, 4); c.lineTo(2, 8); c.lineTo(-10, 8); c.closePath(); c.fill();
+      ln(c, [-7, 4, -7, -4.5], '#5a3a22', 1); ln(c, [-1, 4, -1, -2.5], '#5a3a22', 1);
+      c.fillStyle = '#fffaf1'; c.beginPath(); c.moveTo(-6.4, -4); c.lineTo(-2.6, 2.4); c.lineTo(-6.4, 2.4); c.closePath(); c.moveTo(-0.4, -2); c.lineTo(3.4, 2.4); c.lineTo(-0.4, 2.4); c.closePath(); c.moveTo(-7.6, -3); c.lineTo(-11.4, 2.4); c.lineTo(-7.6, 2.4); c.closePath(); c.fill();
+      c.fillStyle = '#c9474f'; c.fillRect(-7, -5.6, 3, 1.6);
+      c.restore();
+      c.strokeStyle = INKL; c.lineWidth = 1.2; c.lineJoin = 'round'; c.stroke(b);
+      fs(c, p2((p) => p.roundRect(14.5, -0.6, 5, 6.2, 1.4)), '#c99a5a', 0.9);
+      shine(c, -8, -3.4, 7, 1.1, 0.75, 0);
+    } },
+    spyglass: { name: 'Telescope', draw(c) {
+      ln(c, [0, 3, -9, 15], '#6b4a32', 1.8); ln(c, [0, 3, 9, 15], '#6b4a32', 1.8); ln(c, [0, 3, 1.5, 15], '#6b4a32', 1.8);
+      c.save(); c.translate(0, -2); c.rotate(-0.36);
+      fs(c, p2((p) => p.rect(-18, -2.6, 9, 5.2)), '#b8902f', 1);
+      fs(c, p2((p) => p.rect(-9.5, -3.6, 11, 7.2)), '#d9ad45', 1);
+      fs(c, p2((p) => p.rect(1, -5, 15, 10)), '#c49a35', 1);
+      c.fillStyle = '#8a6a2a'; c.fillRect(-10, -3.6, 1.6, 7.2); c.fillRect(0.6, -5, 1.8, 10); c.fillRect(13.5, -5, 1.6, 10);
+      fs(c, p2((p) => E(p, 16.6, 0, 1.8, 5)), '#bfe2ef', 0.9);
+      shine(c, 6, -3, 5, 0.9, 0.55, 0);
+      c.restore();
+      fs(c, p2((p) => E(p, 0, 2.4, 2.2, 2.2)), '#8a6a2a', 0.8);
+    } },
+    shell: { name: 'Shell', draw(c) {
+      const s = p2((p) => { p.moveTo(0, 11); p.lineTo(-14, -1); p.quadraticCurveTo(-14, -14, 0, -15); p.quadraticCurveTo(14, -14, 14, -1); p.closePath(); });
+      fs(c, s, '#f6c9b0');
+      c.save(); c.clip(s); c.strokeStyle = '#e09a82'; c.lineWidth = 1.4;
+      for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(0, 11); c.lineTo(k * 4.6, -16); c.stroke(); }
+      c.restore();
+      c.strokeStyle = INKL; c.lineWidth = 1.2; c.stroke(s);
+      fs(c, p2((p) => { p.moveTo(-6, 9); p.lineTo(6, 9); p.lineTo(4.4, 15); p.lineTo(-4.4, 15); p.closePath(); }), '#eab49a', 1);
+      shine(c, -5, -8, 3, 1.4, 0.55, -0.4);
+    } },
+    dice: { name: 'Dice', draw(c) {
+      const die = (x, y, s, rot, pips) => {
+        c.save(); c.translate(x, y); c.rotate(rot);
+        fs(c, p2((p) => p.roundRect(-s / 2 + 2.6, -s / 2 + 2.6, s, s, 3.4)), '#d9cfc0', 1);
+        fs(c, p2((p) => p.roundRect(-s / 2, -s / 2, s, s, 3.4)), '#fffdf7', 1.2);
+        c.fillStyle = '#3b352e';
+        for (const [i, j] of pips) { c.beginPath(); c.arc(i * s * 0.27, j * s * 0.27, s * 0.09, 0, TAU); c.fill(); }
+        c.restore();
+      };
+      die(-6, 2, 17, -0.22, [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]]);
+      die(8, 6.5, 15, 0.3, [[-1, -1], [0, 0], [1, 1]]);
+    } },
+    mask: { name: 'Mask', draw(c) {
+      ln(c, [8, 3, 13, 15], '#c49a35', 2.2);
+      const m = p2((p) => {
+        p.moveTo(-17, -7); p.quadraticCurveTo(-9, -12, 0, -6); p.quadraticCurveTo(9, -12, 17, -7);
+        p.quadraticCurveTo(17, 4, 8, 5); p.quadraticCurveTo(2, 5, 0, 1); p.quadraticCurveTo(-2, 5, -8, 5); p.quadraticCurveTo(-17, 4, -17, -7); p.closePath();
+        E(p, -7.5, -2.5, 4.4, 2.8, 0.15, true); E(p, 7.5, -2.5, 4.4, 2.8, -0.15, true);
+      });
+      fs(c, m, '#7a63b3');
+      c.strokeStyle = '#e2c25a'; c.lineWidth = 1.2; c.stroke(m);
+      fs(c, p2((p) => { p.moveTo(-15, -8); p.quadraticCurveTo(-22, -16, -17, -22); p.quadraticCurveTo(-13, -15, -12, -9); p.closePath(); }), '#e98aa6', 0.9);
+      c.fillStyle = '#e2c25a'; for (const x of [-12, 0, 12]) { c.beginPath(); c.arc(x, x ? -7.6 : -5, 1.2, 0, TAU); c.fill(); }
+    } },
   };
 
   // ------------------------------------------------------------ the clutter
@@ -639,6 +702,33 @@
         xx += w + 0.6;
       }
     },
+    vase(c, x, y, r) { // a tall vase, blue and white or a deep red glaze
+      const blue = r() < 0.5, col = blue ? '#f4f1ea' : '#8e3b46', deep = blue ? '#3d5a86' : '#c9a14a';
+      const v = p2((p) => { p.moveTo(x - 7, y - 44); p.lineTo(x + 7, y - 44); p.quadraticCurveTo(x + 5, y - 36, x + 13, y - 26); p.quadraticCurveTo(x + 20, y - 12, x + 10, y); p.lineTo(x - 10, y); p.quadraticCurveTo(x - 20, y - 12, x - 13, y - 26); p.quadraticCurveTo(x - 5, y - 36, x - 7, y - 44); p.closePath(); });
+      fs(c, v, col);
+      c.save(); c.clip(v); c.fillStyle = deep;
+      c.fillRect(x - 20, y - 30, 40, 3); c.fillRect(x - 20, y - 8, 40, 2.4);
+      for (const dx of [-8, 0, 8]) { c.beginPath(); c.arc(x + dx, y - 18, 3, 0, TAU); c.fill(); }
+      c.restore();
+      fs(c, p2((p) => E(p, x, y - 44, 8, 2.4)), blue ? '#e6e1d6' : '#a8475a', 1);
+      shine(c, x - 8, y - 22, 1.6, 7, 0.4, 0.2);
+    },
+    birdcage(c, x, y) { // an old brass birdcage, empty and open
+      fs(c, p2((p) => E(p, x, y - 3, 19, 4.4)), '#b8902f', 1);
+      c.strokeStyle = '#c49a35'; c.lineWidth = 1.4;
+      for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(x + k * 5.6, y - 5); c.lineTo(x + k * 5.6, y - 30); c.quadraticCurveTo(x + k * 3, y - 46, x, y - 48); c.stroke(); }
+      c.strokeStyle = '#b8902f'; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y - 30, 17, 3.6, 0, 0, TAU); c.stroke();
+      ln(c, [x - 6, y - 18, x + 6, y - 18], '#8a5a3a', 2);
+      c.strokeStyle = '#c49a35'; c.lineWidth = 2; c.beginPath(); c.arc(x, y - 52, 4, 0, TAU); c.stroke();
+    },
+    bust(c, x, y) { // a plaster bust on a little plinth
+      fs(c, p2((p) => p.rect(x - 13, y - 10, 26, 10)), '#d9cfc0', 1);
+      fs(c, p2((p) => { p.moveTo(x - 17, y - 10); p.quadraticCurveTo(x - 17, y - 26, x - 5, y - 28); p.lineTo(x + 5, y - 28); p.quadraticCurveTo(x + 17, y - 26, x + 17, y - 10); p.closePath(); }), '#efe6d6');
+      fs(c, p2((p) => p.rect(x - 4, y - 32, 8, 6)), '#efe6d6', 0.8);
+      fs(c, p2((p) => E(p, x, y - 40, 8.4, 10)), '#efe6d6');
+      fs(c, p2((p) => { p.moveTo(x - 8.6, y - 42); p.quadraticCurveTo(x - 9, y - 52, x, y - 51); p.quadraticCurveTo(x + 9, y - 52, x + 8.6, y - 42); p.quadraticCurveTo(x + 2, y - 46, x - 8.6, y - 42); p.closePath(); }), '#e2d7c4', 0.8);
+      ln(c, [x + 8, y - 40, x + 10, y - 37, x + 8, y - 36], INKL, 1);
+    },
   };
   // little things tucked between the spots, behind the things
   const FILL = {
@@ -648,6 +738,7 @@
     pot(c, x, y, r) { fs(c, p2((p) => p.roundRect(x - 6, y - 15, 12, 15, 3)), 'rgba(225,238,242,0.85)', 0.9); c.fillStyle = r() < 0.5 ? '#c4704b' : '#e9c77a'; c.fillRect(x - 5, y - 9, 10, 8); fs(c, p2((p) => p.rect(x - 7, y - 18, 14, 3.4)), '#b98f5a', 0.7); },
     tuft(c, x, y, r) { CLUTTER.straw(c, x, y, r); },
     spines(c, x, y, r) { for (let k = -2; k <= 1; k++) fs(c, p2((p) => p.rect(x + k * 6, y - 24 - (k & 1) * 3, 5.4, 24 + (k & 1) * 3)), ['#c9474f', '#3d5a86', '#4e7b5b', '#d4873a', '#7a63b3'][Math.floor(r() * 5)], 0.6); },
+    coins(c, x, y, r) { const n = 2 + Math.floor(r() * 3); for (let i = 0; i < n; i++) fs(c, p2((p) => E(p, x + (r() - 0.5) * 3, y - 2 - i * 3, 7, 2.4)), i % 2 ? '#d9ad45' : '#c49a35', 0.8); },
   };
 
   // ------------------------------------------------------------ the corners
@@ -702,6 +793,26 @@
       c.fillStyle = 'rgba(255,240,200,0.55)'; c.fillRect(x + 1.2, y - h + 5, w - 2.4, 1.2); c.fillRect(x + 1.2, y - 8, w - 2.4, 1.2);
       c.restore();
       x += w + (lean ? 6 : 0.4);
+    }
+  }
+  // bottles, little boxes and vases at the back of the cabinet's shelves
+  function backCurios(c, rr, y) {
+    const cols = ['#6f9a6a', '#8fbfe6', '#c4704b', '#bba9df', '#d2a874', '#a6d3d4'];
+    for (let x = 22 + rr() * 8; x < 338;) {
+      const k = rr(), col = cols[Math.floor(rr() * cols.length)];
+      if (k < 0.4) {
+        const h = 22 + rr() * 14;
+        fs(c, p2((p) => { p.moveTo(x - 7, y); p.lineTo(x - 7, y - h + 10); p.quadraticCurveTo(x - 7, y - h + 4, x - 2.4, y - h + 3); p.lineTo(x - 2.4, y - h); p.lineTo(x + 2.4, y - h); p.lineTo(x + 2.4, y - h + 3); p.quadraticCurveTo(x + 7, y - h + 4, x + 7, y - h + 10); p.lineTo(x + 7, y); p.closePath(); }), col, 0.8);
+        x += 20 + rr() * 8;
+      } else if (k < 0.7) {
+        const w = 22 + rr() * 12, h = 12 + rr() * 10;
+        fs(c, p2((p) => p.rect(x - w / 2, y - h, w, h)), MUTED[Math.floor(rr() * MUTED.length)], 0.8);
+        c.fillStyle = 'rgba(201,161,74,0.8)'; c.fillRect(x - 2, y - h / 2 - 1.5, 4, 3);
+        x += w + 6 + rr() * 8;
+      } else {
+        fs(c, p2((p) => { p.moveTo(x - 5, y - 26); p.lineTo(x + 5, y - 26); p.quadraticCurveTo(x + 13, y - 14, x + 7, y); p.lineTo(x - 7, y); p.quadraticCurveTo(x - 13, y - 14, x - 5, y - 26); p.closePath(); }), col, 0.8);
+        x += 24 + rr() * 8;
+      }
     }
   }
   function backJars(c, rr, y) {
@@ -856,6 +967,56 @@
           c.fillStyle = 'rgba(255,245,200,0.35)'; c.fillRect(x0 + 3, 301, x1 - x0 - 6, 2);
         }
       },
+    },
+    // the curiosity shop: a tall glass-fronted cabinet against a deep green
+    // wall, a clock and an old map above it and a rug on the floor
+    curio: {
+      items: ['key', 'compass', 'quill', 'magnifier', 'hourglass', 'candle', 'inkpot', 'glasses', 'bell', 'teacup', 'ship', 'spyglass', 'shell', 'dice', 'mask'],
+      spots: [...row(156, xs5), ...row(252, xs5), ...row(348, xs5), ...row(438, [70, 180, 290])],
+      clutter: ['vase', 'birdcage', 'bust', 'stack', 'vase', 'trunk'],
+      fill: ['coins', 'flat', 'mini'],
+      back(c, b, rr) {
+        c.fillStyle = '#34503f'; c.fillRect(b.x0, b.y0, b.x1 - b.x0, 392 - b.y0);
+        for (let x = Math.floor(b.x0 / 30) * 30; x < b.x1; x += 30) { c.fillStyle = 'rgba(255,240,200,0.05)'; c.fillRect(x, b.y0, 13, 392 - b.y0); }
+        for (let y = 40, k = 0; y < 80; y += 30, k++) for (let x = Math.floor(b.x0 / 30) * 30 + (k % 2 ? 21 : 6); x < b.x1; x += 30) {
+          c.fillStyle = 'rgba(214,180,90,0.3)'; c.beginPath(); c.arc(x, y, 1.6, 0, TAU); c.arc(x - 3, y + 3.4, 1.1, 0, TAU); c.arc(x + 3, y + 3.4, 1.1, 0, TAU); c.fill();
+        }
+        // the shop's name on a brass plate
+        c.fillStyle = 'rgba(15,25,15,0.3)'; PZ.rr(c, 98, 45, 164, 28, 5); c.fill();
+        c.fillStyle = '#c9a14a'; PZ.rr(c, 96, 42, 164, 28, 5); c.fill();
+        c.strokeStyle = 'rgba(110,80,20,0.6)'; c.lineWidth = 1.2; PZ.rr(c, 100, 46, 156, 20, 3); c.stroke();
+        PZ.text(c, 'CURIOSITIES', 178, 56.5, { size: 13.5, weight: 900, color: '#4a3510' });
+        // a little wall clock on the left and an old map on the right
+        fs(c, p2((p) => E(p, 46, 56, 15, 15)), '#c49a35'); fs(c, p2((p) => E(p, 46, 56, 11.5, 11.5)), '#fbf3e2', 0.8);
+        c.fillStyle = '#6b6157'; for (let i = 0; i < 12; i++) { const a = (i / 12) * TAU; c.beginPath(); c.arc(46 + Math.cos(a) * 9, 56 + Math.sin(a) * 9, i % 3 ? 0.5 : 1, 0, TAU); c.fill(); }
+        ln(c, [46, 56, 46, 49], '#3b352e', 1.4); ln(c, [46, 56, 51, 58], '#3b352e', 1.1);
+        fs(c, p2((p) => p.rect(288, 40, 52, 32)), '#8a5a3a'); fs(c, p2((p) => p.rect(291.5, 43.5, 45, 25)), '#efe1c4', 0.6);
+        c.fillStyle = 'rgba(111,154,106,0.55)'; c.beginPath(); c.moveTo(294, 66); c.quadraticCurveTo(300, 50, 312, 52); c.quadraticCurveTo(322, 60, 330, 48); c.lineTo(334, 66); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(201,71,79,0.8)'; c.lineWidth = 1; c.setLineDash([2, 2]); c.beginPath(); c.moveTo(298, 62); c.quadraticCurveTo(312, 58, 324, 54); c.stroke(); c.setLineDash([]);
+        ln(c, [322, 51, 326, 55], '#c9474f', 1.3); ln(c, [326, 51, 322, 55], '#c9474f', 1.3);
+        // the cabinet: a cornice, two sides, a pale lining behind the shelves
+        wood(c, rr, b.x0, 78, b.x1 - b.x0, 18, '#6b3f28', 'rgba(30,15,5,0.28)');
+        c.fillStyle = 'rgba(255,230,190,0.3)'; c.fillRect(b.x0, 78, b.x1 - b.x0, 1.4); c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(b.x0, 94, b.x1 - b.x0, 2);
+        planks(c, 14, 96, 346, 356, '#ece2c8', 22, rr);
+        c.fillStyle = 'rgba(120,90,50,0.12)'; c.fillRect(14, 96, 332, 8);
+        wood(c, rr, b.x0, 96, 14 - b.x0, 292, '#6b3f28', 'rgba(30,15,5,0.28)'); wood(c, rr, 346, 96, b.x1 - 346, 292, '#6b3f28', 'rgba(30,15,5,0.28)');
+        c.fillStyle = 'rgba(255,255,255,0.18)'; c.fillRect(10, 96, 2, 260); c.fillRect(348, 96, 2, 260);
+        for (const y of [156, 252, 348]) shelf(c, rr, 14, 346, y, '#8a5a3a');
+        // little drawers in the cabinet's foot, each with a brass knob
+        wood(c, rr, b.x0, 356, b.x1 - b.x0, 32, '#6b3f28', 'rgba(30,15,5,0.28)');
+        for (let k = 0; k < 6; k++) {
+          const x0 = 16 + k * 55;
+          c.strokeStyle = 'rgba(20,10,5,0.4)'; c.lineWidth = 1.2; c.strokeRect(x0, 361, 50, 22);
+          c.fillStyle = '#c9a14a'; c.beginPath(); c.arc(x0 + 25, 372, 2.6, 0, TAU); c.fill();
+        }
+        // the floor, and a rug with a cream middle so small things show
+        floorboards(c, b.x0, 388, b.x1, BOT, '#b98f5a', rr);
+        fs(c, p2((p) => p.roundRect(14, 404, 332, 50, 4)), '#8e3b46', 0);
+        fs(c, p2((p) => p.roundRect(22, 410, 316, 40, 3)), '#efe1c4', 0);
+        c.strokeStyle = 'rgba(201,161,74,0.7)'; c.lineWidth = 1.4; c.strokeRect(26, 414, 308, 32);
+        c.fillStyle = 'rgba(142,59,70,0.35)'; for (let x = 34; x < 330; x += 16) { c.beginPath(); c.moveTo(x, 430); c.lineTo(x + 5, 425); c.lineTo(x + 10, 430); c.lineTo(x + 5, 435); c.closePath(); c.fill(); }
+      },
+      backRow(c, rr) { for (const y of [156, 252, 348]) backCurios(c, rr, y - 2); },
     },
   };
 

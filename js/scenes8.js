@@ -590,9 +590,9 @@
   }
   function lights(S) {
     const { r, nz, opts, bleed } = S;
-    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc' }[where] || '#f2d88a';
-    const pottery = where === 'pottery', halt = where === 'halt';
+    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt' || where === 'curio';
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc', beads: '#e2b4ad', curio: '#2f5546' }[where] || '#f2d88a';
+    const pottery = where === 'pottery', halt = where === 'halt', beads = where === 'beads', curio = where === 'curio';
     const boarded = where === 'cove' || where === 'rescue', boat = where === 'canal';
     // three strings: under the eaves, across the window, along the fence
     // (on the narrowboat: under the roof edge, along the cabin side and along the gunwale)
@@ -641,8 +641,14 @@
           c.fillStyle = '#6e2630'; rect(c, 92, 214, 176, 32, 4); c.fill();
           c.fillStyle = '#f4ecdc'; c.font = '800 15px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('HALFPENNY HALT', 180, 231);
         }
+        if (beads || curio) {
+          // a painted timber shopfront: fluted pilasters either side, a moulding over the fascia
+          c.fillStyle = 'rgba(20,25,45,0.22)';
+          for (const [a, b] of [[x0, 30], [330, x1]]) for (let x = a + 3; x < b - 2; x += 6) c.fillRect(x, 140, 2, 310);
+          c.fillStyle = curio ? '#b8913d' : '#5f9e9b'; c.fillRect(x0, 236, x1 - x0, 4); c.fillRect(x0, 176, x1 - x0, 3);
+        }
         // snowy eaves
-        c.fillStyle = where === 'cove' ? '#6b4a32' : boat ? '#9a2f2c' : where === 'books' ? '#24382f' : halt ? '#2f3d36' : '#5b3a2e'; c.fillRect(x0, 118, x1 - x0, 22);
+        c.fillStyle = where === 'cove' ? '#6b4a32' : boat ? '#9a2f2c' : where === 'books' ? '#24382f' : halt ? '#2f3d36' : beads ? '#467c79' : curio ? '#1c3329' : '#5b3a2e'; c.fillRect(x0, 118, x1 - x0, 22);
         c.fillStyle = '#f4f8fc'; c.beginPath(); c.moveTo(x0, 116); for (let x = x0; x <= x1; x += 12) c.lineTo(x, 112 + Math.sin(x * 0.3) * 2); c.lineTo(x1, 124); for (let x = x1; x >= x0; x -= 18) c.lineTo(x, 124 + (Math.floor(x / 18) % 3 === 0 ? 7 : 2)); c.closePath(); c.fill();
         if (halt) {
           // the canopy's pointed valance boards under the snow
@@ -674,6 +680,35 @@
           c.fillStyle = '#f7f3ea'; c.fillRect(58, 248, 244, 7); c.fillRect(58, 424, 244, 8); c.fillRect(58, 248, 7, 184); c.fillRect(295, 248, 7, 184);
           for (const x of [120, 178, 236]) c.fillRect(x, 254, 5, 170);
           c.fillStyle = '#e9bd55'; c.font = 'bold 30px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('BOOKS', 180, 204);
+        } else if (beads) {
+          // the bow window aglow: reels of ribbon, a dress form, bead garlands; gold letters on the fascia
+          c.fillStyle = '#ffd98a'; c.fillRect(64, 254, 232, 170);
+          const g = c.createRadialGradient(180, 336, 10, 180, 336, 170);
+          g.addColorStop(0, 'rgba(255,217,138,0.4)'); g.addColorStop(1, 'rgba(255,217,138,0)');
+          c.fillStyle = g; c.fillRect(10, 190, 340, 270);
+          const RIB = ['#e2574c', '#5f9e9b', '#bba9df', '#3d5a86', '#efb4ae', '#9cc5a1'];
+          for (const ry of [292, 330]) { c.fillStyle = '#8a6142'; c.fillRect(74, ry, 92, 3); for (let k = 0; k < 5; k++) { c.fillStyle = RIB[(k + ry) % RIB.length]; c.fillRect(80 + k * 17, ry - 10, 12, 20); } }
+          c.fillStyle = '#8a5a3c'; c.fillRect(237, 360, 4, 60);
+          c.fillStyle = '#c99a8e'; c.beginPath(); c.moveTo(230, 282); c.quadraticCurveTo(206, 288, 212, 314); c.quadraticCurveTo(222, 336, 214, 362); c.lineTo(264, 362); c.quadraticCurveTo(256, 336, 266, 314); c.quadraticCurveTo(272, 288, 248, 282); c.closePath(); c.fill();
+          for (let i = 0; i <= 18; i++) { const t = i / 18; c.fillStyle = RIB[i % RIB.length]; c.beginPath(); c.arc(70 + 220 * t, 262 + Math.sin(t * Math.PI * 2) ** 2 * 18, 2.6, 0, 7); c.fill(); }
+          c.fillStyle = '#4b8682'; c.fillRect(58, 248, 244, 7); c.fillRect(58, 424, 244, 8); c.fillRect(58, 248, 7, 184); c.fillRect(295, 248, 7, 184);
+          for (const x of [120, 178, 236]) c.fillRect(x, 254, 5, 170);
+          c.fillStyle = '#e9bd55'; c.font = 'bold 26px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('BUTTON & BEAD', 180, 206, 300);
+        } else if (curio) {
+          // a bow window of little panes, the curiosities dark against the lamplight
+          c.fillStyle = '#ffd98a'; c.fillRect(64, 254, 232, 170);
+          const g = c.createRadialGradient(180, 336, 10, 180, 336, 170);
+          g.addColorStop(0, 'rgba(255,200,120,0.42)'); g.addColorStop(1, 'rgba(255,200,120,0)');
+          c.fillStyle = g; c.fillRect(10, 190, 340, 270);
+          c.fillStyle = 'rgba(90,50,25,0.75)';
+          c.beginPath(); c.arc(106, 380, 20, 0, 7); c.fill(); c.fillRect(104, 398, 4, 18); c.fillRect(94, 414, 24, 4);
+          c.beginPath(); c.moveTo(162, 416); c.lineTo(162, 352); c.quadraticCurveTo(180, 330, 198, 352); c.lineTo(198, 416); c.closePath(); c.fill();
+          c.fillStyle = '#ffe9b0'; c.beginPath(); c.arc(180, 366, 9, 0, 7); c.fill();
+          c.fillStyle = 'rgba(90,50,25,0.75)'; c.beginPath(); c.roundRect(222, 392, 60, 20, 9); c.fill(); c.fillRect(280, 397, 8, 9);
+          c.fillStyle = '#1c3329'; c.fillRect(58, 248, 244, 7); c.fillRect(58, 424, 244, 8); c.fillRect(58, 248, 7, 184); c.fillRect(295, 248, 7, 184);
+          for (const x of [101, 140, 179, 218, 257]) c.fillRect(x, 254, 4, 170);
+          for (const y of [296, 340, 382]) c.fillRect(64, y, 232, 4);
+          c.fillStyle = '#e9bd55'; c.font = 'bold 28px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('CURIOSITIES', 180, 206, 300);
         } else if (pottery) {
           // a wide barn window with shelves of pots against the glow
           c.fillStyle = '#ffd98a'; c.fillRect(96, 262, 168, 128);
@@ -728,6 +763,15 @@
             for (let x = 22; x < 350; x += 30) { if (Math.abs(x - 182) < 12) continue; const h = 12 + ((x * 7) % 8); c.fillStyle = '#7d4a36'; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x - 5, y - h); c.lineTo(x + 5, y - h); c.lineTo(x + 7, y); c.fill(); c.fillStyle = '#f4f8fc'; c.fillRect(x - 5, y - h - 2, 10, 2.5); }
           }
           c.fillStyle = '#6b4a32'; c.fillRect(x0, 462, x1 - x0, 8); c.fillStyle = '#f4f8fc'; c.fillRect(x0, 458, x1 - x0, 4);
+        } else if (beads || curio) {
+          // a snowy pavement and the black railings along the shop front
+          c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
+          c.fillStyle = '#c9ced4'; c.fillRect(x0, 556, x1 - x0, 10);
+          c.fillStyle = '#26282d';
+          for (let x = 12; x < 360; x += 18) { c.fillRect(x, 468, 4, 82); c.beginPath(); c.moveTo(x - 2, 468); c.lineTo(x + 2, 458); c.lineTo(x + 6, 468); c.fill(); }
+          c.fillRect(0, 476, 360, 5); c.fillRect(0, 540, 360, 5);
+          if (curio) for (const x of [6, 180, 354]) { c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(x, 462, 6, 0, 7); c.fill(); }
+          c.fillStyle = '#f4f8fc'; c.fillRect(0, 472, 360, 4);
         } else if (halt) {
           // the platform under snow, its white edge, and the line below
           c.fillStyle = '#dfe6ee'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
