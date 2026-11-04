@@ -10,6 +10,7 @@
 //   tough(x,y)   optional, how stubborn the dirt is at a point (1 = normal)
 //   stamp(...)   optional, paints the clean layer as the tool passes
 //   live(c,t)    optional, animated things between clean and dirt (fish)
+//   toolSprite(c,tier,paint)  optional, drawn instead of the tool's own picture
 
 const SCENES = (() => {
   const W = 360, H = 600;

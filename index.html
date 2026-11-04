@@ -82,6 +82,12 @@ button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:poin
 #scene .smoke circle{animation:smoke 4s ease-in infinite}
 #scene .smoke circle:nth-child(2){animation-delay:1.3s}#scene .smoke circle:nth-child(3){animation-delay:2.6s}
 @keyframes smoke{0%{transform:translate(0,20px);opacity:0}30%{opacity:.6}100%{transform:translate(8px,-20px);opacity:0}}
+@media (prefers-reduced-motion: no-preference){
+  #scene .rest-stretch{animation:reststretch 11s ease-in-out infinite;transform-box:fill-box;transform-origin:15% 100%}
+  @keyframes reststretch{0%,58%,100%{transform:none}68%,84%{transform:scale(1.2,.84)}}
+  #scene .rest-glide{animation:restglide 30s ease-in-out infinite alternate}
+  @keyframes restglide{from{transform:translateX(-34px)}to{transform:translateX(34px)}}
+}
 #scene .bfly{animation:fly1 14s ease-in-out infinite}
 #scene .b2{animation:fly2 18s ease-in-out infinite}
 @keyframes fly1{0%{transform:translate(90px,380px)}25%{transform:translate(150px,345px)}50%{transform:translate(70px,330px)}75%{transform:translate(40px,390px)}100%{transform:translate(90px,380px)}}
@@ -471,6 +477,8 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/scenes11.js"></script>
 <script src="js/scenes12.js"></script>
 <script src="js/scenes13.js"></script>
+<script src="js/scenes14.js"></script>
+<script src="js/scenes15.js"></script>
 <script src="js/puzzles.js"></script>
 <script src="js/pz-cups.js"></script>
 <script src="js/pz-feed.js"></script>
@@ -487,6 +495,10 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/pz-buttons.js"></script>
 <script src="js/pz-lock.js"></script>
 <script src="js/pz-jigsaw.js"></script>
+<script src="js/paintings.js"></script>
+<script src="js/pz-numbers.js"></script>
+<script src="js/pz-stars.js"></script>
+<script src="js/pz-mix.js"></script>
 <script src="js/data.js"></script>
 <script src="js/house.js"></script>
 <script src="js/cafe.js"></script>
@@ -499,6 +511,8 @@ body.pausing .dock button.alert::after{display:none}
 <script src="js/halt.js"></script>
 <script src="js/beads.js"></script>
 <script src="js/curio.js"></script>
+<script src="js/stables.js"></script>
+<script src="js/loft.js"></script>
 <script src="js/beta.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/engine.js"></script>

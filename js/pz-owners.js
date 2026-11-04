@@ -6,7 +6,8 @@
 // together they fit only one way. Drag each thing to its owner: the right
 // one smiles and holds it; anyone else shakes their head and it glides back.
 // opts.what: 'lost' (the station, the default), 'cafe' (left behind at the
-// café) or 'leads' (the rescue: whose lead, collar or coat is whose).
+// café), 'leads' (the rescue: whose lead, collar or coat is whose) or
+// 'saddles' (the stables: four ponies in their stalls and whose tack is whose).
 //   node test/run.mjs puzzle js/pz-owners.js owners --seeds 30 [--opts '{"what":"leads"}']
 
 (() => {
@@ -210,6 +211,74 @@
       c.restore();
       c.fillStyle = '#6f9a6a'; c.fillRect(-26, -10, 5, 18); c.fillRect(21, -10, 5, 18);
     } },
+    saddle: { name: 'The saddle', draw(c) {
+      const hide = '#9a6238', dark = '#7a4a2a';
+      line(c, dark, 3, [[-2, 6], [-2, 21]]);
+      c.strokeStyle = '#c9c3bb'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(-10, 29); c.lineTo(6, 29); c.moveTo(-8, 29); c.quadraticCurveTo(-8, 20, -2, 20); c.quadraticCurveTo(4, 20, 4, 29); c.stroke();
+      c.fillStyle = hide; c.beginPath(); c.moveTo(-26, -14); c.quadraticCurveTo(-23, -21, -16, -15); c.quadraticCurveTo(0, -4, 14, -12); c.quadraticCurveTo(21, -22, 27, -15); c.quadraticCurveTo(29, 0, 16, 5); c.lineTo(-20, 5); c.quadraticCurveTo(-29, 0, -26, -14); c.closePath(); c.fill();
+      c.strokeStyle = EDGE; c.lineWidth = 1.2; c.stroke();
+      c.fillStyle = dark; c.beginPath(); c.moveTo(-17, 0); c.lineTo(11, 0); c.quadraticCurveTo(14, 12, 8, 16); c.lineTo(-12, 16); c.quadraticCurveTo(-19, 12, -17, 0); c.closePath(); c.fill(); c.stroke();
+      c.setLineDash([2.4, 2.4]); c.strokeStyle = 'rgba(246,228,196,0.75)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-14, 3.4); c.lineTo(9, 3.4); c.stroke(); c.setLineDash([]);
+      c.strokeStyle = 'rgba(255,225,180,0.5)'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(-12, -10); c.quadraticCurveTo(0, -1, 12, -8); c.stroke();
+    } },
+    halter: { name: 'The head collar', draw(c) {
+      const col = '#5d7fd8', ring = (x, y) => { c.strokeStyle = '#c99a2e'; c.lineWidth = 2.6; c.beginPath(); c.arc(x, y, 4, 0, 7); c.stroke(); };
+      c.lineCap = 'round';
+      c.strokeStyle = col; c.lineWidth = 6; c.beginPath(); c.ellipse(9, -7, 16, 15, 0.5, 0, 7); c.stroke();
+      c.beginPath(); c.ellipse(-11, 9, 13, 10, 0.3, 0, 7); c.stroke();
+      c.strokeStyle = 'rgba(255,250,241,0.45)'; c.lineWidth = 1.2; c.setLineDash([3, 3.4]);
+      c.beginPath(); c.ellipse(9, -7, 16, 15, 0.5, 0, 7); c.stroke(); c.beginPath(); c.ellipse(-11, 9, 13, 10, 0.3, 0, 7); c.stroke(); c.setLineDash([]);
+      ring(-3, 1); ring(-7, 20);
+      c.strokeStyle = '#d9c7a4'; c.lineWidth = 3; c.beginPath(); c.moveTo(-7, 24); c.quadraticCurveTo(4, 32, 14, 24); c.quadraticCurveTo(20, 18, 24, 26); c.stroke();
+    } },
+    blanket: { name: 'The stripy blanket', draw(c) {
+      const fold = (y, h, col) => {
+        c.save(); c.beginPath(); c.roundRect(-25, y, 50, h, 6); c.clip();
+        c.fillStyle = col; c.fillRect(-25, y, 50, h);
+        c.fillStyle = 'rgba(255,250,241,0.75)'; for (let x = -21; x < 25; x += 12) c.fillRect(x, y, 4, h);
+        c.fillStyle = 'rgba(60,40,20,0.14)'; c.fillRect(-25, y + h - 3, 50, 3);
+        c.restore();
+        c.strokeStyle = EDGE; c.lineWidth = 1.1; c.beginPath(); c.roundRect(-25, y, 50, h, 6); c.stroke();
+      };
+      fold(8, 13, '#6f9a6a'); fold(-4, 14, '#7fae78'); fold(-17, 15, '#8dbb86');
+      c.fillStyle = '#f2d88a'; for (let y = -12; y < 18; y += 6) { c.fillRect(25, y, 3, 2); }
+    } },
+    brush: { name: 'The brush', draw(c) {
+      c.save(); c.rotate(-0.18);
+      c.strokeStyle = '#7a4a2a'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(-15, -10); c.quadraticCurveTo(0, -24, 15, -10); c.stroke();
+      c.fillStyle = '#f0e2c4'; for (let x = -22; x <= 22; x += 3.4) { const h = 11 - Math.abs(x) * 0.13; c.fillRect(x - 0.9, 6, 1.8, h); }
+      c.fillStyle = '#d9c7a4'; c.fillRect(-23, 6, 46, 2);
+      c.fillStyle = '#c08a50'; c.beginPath(); c.moveTo(-26, 6); c.quadraticCurveTo(-27, -12, 0, -13); c.quadraticCurveTo(27, -12, 26, 6); c.closePath(); c.fill();
+      c.strokeStyle = EDGE; c.lineWidth = 1.2; c.stroke();
+      c.strokeStyle = 'rgba(90,55,25,0.3)'; c.lineWidth = 1; c.beginPath(); c.moveTo(-20, 1); c.quadraticCurveTo(0, -3, 20, 1); c.moveTo(-14, -6); c.quadraticCurveTo(0, -9, 14, -6); c.stroke();
+      c.restore();
+    } },
+    rosette: { name: 'The rosette', draw(c) {
+      for (const [dx, col] of [[-1, '#c9474f'], [1, '#d96a70']]) {
+        c.fillStyle = col; c.beginPath(); c.moveTo(dx * 3, 2); c.lineTo(dx * 15, 28); c.lineTo(dx * 8, 25); c.lineTo(dx * 3, 31); c.lineTo(dx * -5, 6); c.closePath(); c.fill();
+      }
+      for (let k = 0; k < 18; k++) { const a = (k / 18) * Math.PI * 2; dot(c, Math.cos(a) * 15, -6 + Math.sin(a) * 15, 5.4, k % 2 ? '#e2574c' : '#c9474f'); }
+      dot(c, 0, -6, 12.5, '#fffaf1'); dot(c, 0, -6, 10.5, '#e9bf4f');
+      c.fillStyle = '#fffaf1'; starPath(c, 0, -6, 7.5); c.fill();
+    } },
+    bucket: { name: 'The bucket', draw(c) {
+      c.strokeStyle = '#8d8578'; c.lineWidth = 2.6; c.beginPath(); c.arc(0, -8, 19, Math.PI, 0); c.stroke();
+      c.fillStyle = '#d98b63'; c.beginPath(); c.moveTo(-21, -8); c.lineTo(21, -8); c.lineTo(15, 22); c.quadraticCurveTo(0, 26, -15, 22); c.closePath(); c.fill();
+      c.strokeStyle = EDGE; c.lineWidth = 1.2; c.stroke();
+      c.fillStyle = 'rgba(255,240,220,0.3)'; c.beginPath(); c.moveTo(-15, -8); c.lineTo(-9, -8); c.lineTo(-7, 22); c.lineTo(-11, 22); c.closePath(); c.fill();
+      c.fillStyle = '#c4704b'; c.beginPath(); c.ellipse(0, -8, 21, 3.6, 0, 0, 7); c.fill(); c.fillStyle = '#a85c3c'; c.beginPath(); c.ellipse(0, -8, 17, 2.4, 0, 0, 7); c.fill();
+      dot(c, -21, -8, 2.6, '#8d8578'); dot(c, 21, -8, 2.6, '#8d8578');
+      heart(c, 3, 8, 6, '#fffaf1');
+    } },
+    horseshoe: { name: 'The lucky horseshoe', draw(c) {
+      c.save(); c.translate(0, -2);
+      c.lineCap = 'round';
+      c.strokeStyle = '#a77d1e'; c.lineWidth = 11; c.beginPath(); c.arc(0, 0, 17, Math.PI * 0.72, Math.PI * 2.28); c.stroke();
+      c.strokeStyle = '#e1b34a'; c.lineWidth = 8.6; c.beginPath(); c.arc(0, 0, 17, Math.PI * 0.72, Math.PI * 2.28); c.stroke();
+      for (let k = 0; k < 6; k++) { const a = Math.PI * (0.92 + (k * 1.16) / 5); dot(c, Math.cos(a) * 17, Math.sin(a) * 17, 1.5, '#7a5a1e'); }
+      c.strokeStyle = 'rgba(255,248,220,0.6)'; c.lineWidth = 1.6; c.beginPath(); c.arc(0, 0, 19.4, Math.PI * 1.2, Math.PI * 1.6); c.stroke();
+      c.restore();
+    } },
   };
 
   // ---------------------------------------------------------------- PEOPLE
@@ -279,11 +348,11 @@
     c.fillStyle = U.shade(col, -0.3); c.fillRect(-15, -149, 30, 5);
     dot(c, -8, -158, 2, 'rgba(255,255,255,0.2)');
   }
-  function bow(c, x, y, col) {
+  function bow(c, x, y, col, k = 1) {
     c.fillStyle = col;
-    c.beginPath(); c.moveTo(x, y); c.lineTo(x - 13, y - 8); c.lineTo(x - 13, y + 8); c.closePath(); c.moveTo(x, y); c.lineTo(x + 13, y - 8); c.lineTo(x + 13, y + 8); c.closePath(); c.fill();
-    c.fillStyle = 'rgba(255,250,241,0.7)'; for (const [dx, dy] of [[-8, -2], [-9, 3], [8, -2], [9, 3]]) dot(c, x + dx, y + dy, 1.3, 'rgba(255,250,241,0.75)');
-    dot(c, x, y, 3.6, U.shade(col, -0.2));
+    c.beginPath(); c.moveTo(x, y); c.lineTo(x - 13 * k, y - 8 * k); c.lineTo(x - 13 * k, y + 8 * k); c.closePath(); c.moveTo(x, y); c.lineTo(x + 13 * k, y - 8 * k); c.lineTo(x + 13 * k, y + 8 * k); c.closePath(); c.fill();
+    if (k === 1) for (const [dx, dy] of [[-8, -2], [-9, 3], [8, -2], [9, 3]]) dot(c, x + dx, y + dy, 1.3, 'rgba(255,250,241,0.75)');
+    dot(c, x, y, 3.6 * k, U.shade(col, -0.2));
   }
   function scarf(c, g) {
     const a = g.scarf[0], b = g.scarf[1];
@@ -351,6 +420,104 @@
     if (o.hold) { c.save(); c.translate(-22, -10); c.rotate(-0.15); c.scale(0.55, 0.55); THINGS[o.hold].draw(c); c.restore(); }
   }
 
+  // ---------------------------------------------------------------- PONIES
+  // A pony in its stall, looking out at you, hooves at 0, 0. p = { coat, mane,
+  // rug, band, tr }; o = { smile, shake, hold, t }. What it is given hangs on the
+  // peg over its stall. White marks are the same white on every pony.
+  const WHITE = '#fbf6ec', PONY_K = 0.86;
+  // one leg, a little narrower towards the hoof; foot lifts it, for the legs further back
+  function ponyLeg(c, x, top, w, col, sock, foot = 0) {
+    const low = foot - 6, n = w - 2;
+    c.fillStyle = col; c.beginPath(); c.moveTo(x - w / 2, top); c.lineTo(x + w / 2, top); c.quadraticCurveTo(x + w / 2, top + 22, x + n / 2, low); c.lineTo(x - n / 2, low); c.quadraticCurveTo(x - w / 2, top + 22, x - w / 2, top); c.closePath(); c.fill();
+    if (sock) { c.fillStyle = WHITE; c.beginPath(); c.roundRect(x - n / 2, low - 19, n, 20, [6, 6, 0, 0]); c.fill(); }
+    c.fillStyle = '#4a3f36'; PZ.rr(c, x - n / 2 - 1.8, foot - 8, n + 3.6, 8, 3); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.16)'; c.fillRect(x - n / 2, foot - 7.4, n, 1.4);
+  }
+  // a check of two lines on a cloth; rug = [cloth, one line, the other]
+  function plaid(c, x, y, w, h, rug) {
+    c.fillStyle = rug[0]; c.fillRect(x, y, w, h);
+    c.fillStyle = rug[1]; for (let i = x + 3; i < x + w; i += 13) c.fillRect(i, y, 4.4, h); for (let j = y + 3; j < y + h; j += 13) c.fillRect(x, j, w, 4.4);
+    c.fillStyle = rug[2]; for (let i = x + 9.6; i < x + w; i += 13) c.fillRect(i, y, 1.5, h); for (let j = y + 9.6; j < y + h; j += 13) c.fillRect(x, j, w, 1.5);
+  }
+  // a plait of hair running from x0, y0 to x1, y1, tied off with a little band
+  function ponyPlait(c, x0, y0, x1, y1, n, hair, band) {
+    const a = Math.atan2(y1 - y0, x1 - x0);
+    for (let k = 0; k < n; k++) {
+      const u = k / (n - 1), x = U.lerp(x0, x1, u), y = U.lerp(y0, y1, u);
+      c.save(); c.translate(x, y); c.rotate(a + (k % 2 ? 0.7 : -0.7));
+      c.fillStyle = k % 2 ? U.shade(hair, 0.3) : hair; c.beginPath(); c.ellipse(0, 0, 6.4, 3.8, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(30,20,15,0.35)'; c.lineWidth = 0.8; c.stroke();
+      c.restore();
+    }
+    c.strokeStyle = hair; c.lineWidth = 3.2; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(x1 + Math.cos(a) * 6, y1 + Math.sin(a) * 6); c.lineTo(x1 + Math.cos(a) * 15, y1 + Math.sin(a) * 15); c.stroke();
+    bow(c, x1 + Math.cos(a) * 7, y1 + Math.sin(a) * 7, band, 0.5);
+  }
+  function pony(c, p, o) {
+    const tr = p.tr, sm = o.smile, deep = U.shade(p.coat, -0.2), soft = U.shade(p.coat, 0.16), nose = U.shade(p.coat, -0.32);
+    c.save(); c.scale(PONY_K, PONY_K);
+    // the tail swishes, slowly, and a little more once it has what it came for
+    const sw = Math.sin(o.t * (sm > 0.5 ? 4.5 : 1.3)) * (sm > 0.5 ? 0.2 : 0.07);
+    c.save(); c.translate(28, -92); c.rotate(-0.12 + sw);
+    c.strokeStyle = p.mane; c.lineWidth = 11; c.lineCap = 'round'; c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(13, 20, 7, 64); c.stroke();
+    c.restore();
+    // the round body behind, the hind legs, the chest and the front legs
+    oval(c, 0, -80, 33, 31, 0, deep);
+    ponyLeg(c, -23, -60, 11, deep, tr.has('socks'), -5); ponyLeg(c, 23, -60, 11, deep, tr.has('socks'), -5);
+    oval(c, 0, -84, 27, 30, 0, p.coat); oval(c, 0, -92, 17, 15, 0, soft);
+    ponyLeg(c, -12, -68, 14, p.coat, tr.has('socks')); ponyLeg(c, 12, -68, 14, p.coat, tr.has('socks'));
+    if (tr.has('spots')) for (const [x, y, rad] of [[-17, -92, 3.6], [-7, -72, 3], [9, -96, 3.2], [18, -78, 3.8], [3, -84, 2.6], [-12, -48, 2.6], [13, -42, 2.8], [-21, -70, 2.6], [12, -62, 2.4]]) dot(c, x, y, rad, WHITE);
+    if (tr.has('rug')) {
+      c.save(); c.beginPath();
+      for (const sd of [-1, 1]) { c.moveTo(sd * 12, -118); c.quadraticCurveTo(sd * 35, -112, sd * 34, -84); c.quadraticCurveTo(sd * 33, -64, sd * 27, -60); c.quadraticCurveTo(sd * 7, -62, sd * 3, -88); c.quadraticCurveTo(sd * 5, -106, sd * 12, -118); c.closePath(); }
+      c.clip(); plaid(c, -36, -120, 72, 62, p.rug); c.restore();
+      c.fillStyle = '#7a4a2a'; c.fillRect(-11, -92, 22, 4.6);
+      c.fillStyle = '#e9bf4f'; PZ.rr(c, -4, -94.4, 8, 9.4, 2); c.fill(); c.fillStyle = '#7a4a2a'; c.fillRect(-1.5, -91.6, 3, 3.8);
+    }
+    // the neck and the mane falling down one side of it
+    c.fillStyle = p.coat; c.beginPath(); c.moveTo(-17, -102); c.quadraticCurveTo(-14, -118, -13, -130); c.lineTo(13, -130); c.quadraticCurveTo(14, -118, 17, -102); c.closePath(); c.fill();
+    if (tr.has('plaits')) { ponyPlait(c, -13, -146, -23, -98, 9, p.mane, p.band); ponyPlait(c, 13, -146, 23, -98, 9, p.mane, p.band); }
+    else { c.fillStyle = p.mane; c.beginPath(); c.moveTo(-5, -144); c.quadraticCurveTo(-23, -132, -21, -114); c.quadraticCurveTo(-26, -102, -18, -96); c.quadraticCurveTo(-11, -110, -11, -124); c.closePath(); c.fill(); }
+    // the head, which shakes a little for "not mine"
+    c.save(); c.translate(0, -116); c.rotate(o.shake * 0.16); c.translate(0, 116);
+    const perk = 0.26 - sm * 0.12;
+    for (const sd of [-1, 1]) {
+      c.save(); c.translate(sd * 11, -148); c.rotate(sd * perk);
+      c.fillStyle = p.coat; c.beginPath(); c.moveTo(-5, 3); c.quadraticCurveTo(-5, -9, 0, -16); c.quadraticCurveTo(5, -9, 5, 3); c.closePath(); c.fill();
+      c.fillStyle = nose; c.beginPath(); c.moveTo(-2.4, 2); c.quadraticCurveTo(-2.4, -6, 0, -11); c.quadraticCurveTo(2.4, -6, 2.4, 2); c.closePath(); c.fill();
+      c.restore();
+    }
+    c.fillStyle = p.coat; c.beginPath(); c.moveTo(-17, -140); c.quadraticCurveTo(-18, -154, 0, -154); c.quadraticCurveTo(18, -154, 17, -140);
+    c.quadraticCurveTo(16, -122, 13, -112); c.quadraticCurveTo(11, -100, 0, -100); c.quadraticCurveTo(-11, -100, -13, -112); c.quadraticCurveTo(-16, -122, -17, -140); c.closePath(); c.fill();
+    oval(c, 0, -109, 12.6, 10, 0, nose);
+    if (tr.has('stripe')) { c.fillStyle = WHITE; c.beginPath(); c.moveTo(-3.4, -147); c.quadraticCurveTo(-4.4, -128, -6, -116); c.quadraticCurveTo(0, -111, 6, -116); c.quadraticCurveTo(4.4, -128, 3.4, -147); c.closePath(); c.fill(); }
+    if (tr.has('star')) { c.fillStyle = WHITE; starPath(c, 0, -136, 8); c.fill(); }
+    dot(c, -5, -111, 1.9, 'rgba(25,15,10,0.8)'); dot(c, 5, -111, 1.9, 'rgba(25,15,10,0.8)');
+    c.strokeStyle = 'rgba(25,15,10,0.75)'; c.lineWidth = 1.7; c.lineCap = 'round'; c.beginPath(); c.arc(0, -107 - sm, 4.5 + sm * 2, 0.2 * Math.PI, 0.8 * Math.PI); c.stroke();
+    for (const sd of [-1, 1]) {
+      dot(c, sd * 11, -132, 3.5, INK); dot(c, sd * 11 + 0.9, -133.2, 1.2, '#fff');
+      c.strokeStyle = 'rgba(40,25,15,0.5)'; c.lineWidth = 1.2; c.beginPath(); c.arc(sd * 11, -132, 5.4, -2.5, -0.65); c.stroke();
+      dot(c, sd * 12.5, -122, 3, 'rgba(239,138,166,' + (0.2 + 0.2 * sm).toFixed(2) + ')');
+    }
+    // the forelock, swept to one side
+    c.fillStyle = p.mane; c.beginPath(); c.moveTo(-9, -153); c.quadraticCurveTo(4, -158, 9, -152); c.quadraticCurveTo(6, -146, 7, -141); c.quadraticCurveTo(1, -146, -3, -145); c.quadraticCurveTo(-7, -148, -9, -153); c.closePath(); c.fill();
+    c.restore();
+    c.restore();
+    if (o.hold) { c.save(); c.translate(0, -168); c.scale(0.6, 0.6); THINGS[o.hold].draw(c); c.restore(); }
+  }
+  // a little pony face for the notes, with one mark on it
+  function ponyFace(c, f, mark) {
+    const nose = U.shade(f.coat, -0.32);
+    c.fillStyle = f.coat;
+    for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 9, -8); c.lineTo(sd * 8.6, -17); c.lineTo(sd * 3.4, -11); c.closePath(); c.fill(); }
+    c.beginPath(); c.moveTo(-10, -7); c.quadraticCurveTo(-10, -14, 0, -14); c.quadraticCurveTo(10, -14, 10, -7); c.quadraticCurveTo(9, 6, 7.4, 10); c.quadraticCurveTo(5, 16, 0, 16); c.quadraticCurveTo(-5, 16, -7.4, 10); c.quadraticCurveTo(-9, 6, -10, -7); c.closePath(); c.fill();
+    oval(c, 0, 10.6, 7.4, 5.4, 0, nose);
+    c.fillStyle = WHITE;
+    if (mark === 'star') { starPath(c, 0, -5, 6); c.fill(); } else { PZ.rr(c, -2.6, -12, 5.2, 19, 2.6); c.fill(); }
+    dot(c, -6.4, -2.4, 1.8, INK); dot(c, 6.4, -2.4, 1.8, INK);
+    dot(c, -2.6, 10, 1, 'rgba(25,15,10,0.8)'); dot(c, 2.6, 10, 1, 'rgba(25,15,10,0.8)');
+  }
+
   // ---------------------------------------------------------------- TRAITS
   // say: the words after "someone" or "a dog"; icon: its little picture on a note
   const PEOPLE_TRAITS = {
@@ -370,6 +537,19 @@
     patch: { say: 'with an eye patch', icon(c, f) { dot(c, 0, 0, 12, f.fur); oval(c, 5, -3, 5.6, 5, 0.2, f.spot); dot(c, -5, -3, 1.8, INK); dot(c, 5, -3, 1.8, INK); oval(c, 0, 4, 2.4, 1.8, 0, INK); } },
     bow: { say: 'with a bow', icon(c, f) { bow(c, 0, 0, f.bow); } },
   };
+  const PONY_TRAITS = {
+    stripe: { say: 'with a white stripe', icon(c, f) { ponyFace(c, f, 'stripe'); } },
+    star: { say: 'with a star', icon(c, f) { ponyFace(c, f, 'star'); } },
+    socks: { say: 'with white socks', icon(c, f) { ponyLegIcon(c, f); } },
+    plaits: { say: 'with plaits', icon(c, f) { ponyPlait(c, -11, -11, 7, 8, 5, f.mane, f.band); } },
+    rug: { say: 'with a plaid rug', icon(c, f) { c.save(); c.beginPath(); c.roundRect(-14, -11, 28, 22, 5); c.clip(); plaid(c, -14, -11, 28, 22, f.rug); c.restore(); c.strokeStyle = EDGE; c.lineWidth = 1.1; c.beginPath(); c.roundRect(-14, -11, 28, 22, 5); c.stroke(); } },
+    spots: { say: 'with white spots', icon(c, f) { oval(c, 0, 0, 14, 11, 0, f.coat); for (const [x, y, rad] of [[-7, -3, 2.6], [1, 3.6, 2.4], [6, -5, 2.2], [8, 3, 1.8], [-5, 5, 1.7]]) dot(c, x, y, rad, WHITE); } },
+  };
+  function ponyLegIcon(c, f) {
+    c.fillStyle = f.coat; PZ.rr(c, -6, -16, 12, 28, 4); c.fill();
+    c.fillStyle = WHITE; c.beginPath(); c.roundRect(-6, -3, 12, 12, [5, 5, 0, 0]); c.fill();
+    c.fillStyle = '#4a3f36'; PZ.rr(c, -8, 8, 16, 7, 2.6); c.fill();
+  }
 
   // ---------------------------------------------------------------- VARIANTS
   const COATS = ['#9cc5a1', '#d98b63', '#3d5a86', '#e3b65a', '#bba9df', '#c9474f', '#8fbfe6', '#7d8f6a'];
@@ -396,7 +576,14 @@
       verb: 'goes to', verbs: 'go to', who: 'a dog', anyone: 'a dog', ask: 'Read the notes, then give every dog its own',
       exclude: [['spots', 'patch']],
     },
+    saddles: {
+      ponies: true, traits: PONY_TRAITS, things: ['saddle', 'halter', 'blanket', 'brush', 'rosette', 'bucket', 'horseshoe'],
+      verb: 'goes to', verbs: 'go to', who: 'a pony', anyone: 'a pony', ask: 'Read the notes, then give every pony its own',
+      exclude: [['stripe', 'star'], ['spots', 'rug']],
+    },
   };
+  const PONY_COATS = [['#b98354', '#4a3226'], ['#a9693f', '#3b2a22'], ['#a7a29a', '#4f4a44'], ['#cda56a', '#6b4a32'], ['#8a6248', '#2f2622']];
+  const RUGS = [['#3d5a86', 'rgba(242,216,138,0.8)', 'rgba(226,87,76,0.85)'], ['#4e7b5b', 'rgba(242,216,138,0.8)', 'rgba(250,245,235,0.85)'], ['#9b3b45', 'rgba(250,245,235,0.8)', 'rgba(242,216,138,0.85)']];
 
   // a hair colour that stands out from the face
   function hairFor(skin, k) {
@@ -480,6 +667,7 @@
 
   function owners(S) {
     const r = S.r, what = VARIANTS[S.opts.what] ? S.opts.what : 'lost', V = VARIANTS[what];
+    const TALL = V.people || V.ponies; // grown people and ponies stand taller than the dogs
     let P = makePuzzle(r, V);
     for (let k = 0; !P && k < 20; k++) P = makePuzzle(U.rng(9001 + k), V);
     const sol = P.sol;
@@ -494,7 +682,9 @@
     const same = {
       hat: HATS[(looks[0] + 1) % HATS.length], bow: BOWS[looks[1] % BOWS.length], scarf: SCARVES[looks[2] % SCARVES.length],
       pup: ['#c98f52', '#f1e3cb', '#8a6a4a'][looks[3] % 3], band: ['#5d7fd8', '#e2574c', '#6f9a6a', '#e9962c'][looks[0] % 4],
+      rug: RUGS[looks[1] % RUGS.length],
     };
+    const coats = V.ponies ? PZ.shuffle(r, PONY_COATS.slice()) : null;
     const folk = P.owners.map((o, i) => {
       const f = { tr: o.tr, shake: 0, shakeT: 0, smile: 0, joy: -1, hold: null };
       if (V.people) {
@@ -503,6 +693,8 @@
           style: o.tr.has('beard') ? 'short' : o.tr.has('hat') && styles[i] === 'bun' ? 'bob' : styles[i], legs: ['#5d6470', '#6b4a32', '#4b4a52', '#7a6a8a'][i],
           hat: same.hat, bow: same.bow, scarf: same.scarf, pup: same.pup,
         });
+      } else if (V.ponies) {
+        Object.assign(f, { coat: coats[i][0], mane: coats[i][1], rug: same.rug, band: same.band });
       } else {
         const fur = FURS[looks[i] % FURS.length];
         Object.assign(f, { fur: fur[0], light: fur[1], spot: '#6b4a32', band: same.band, bow: same.bow });
@@ -533,7 +725,42 @@
     // ------------------------------------------------------------ the room
     function wall(c) {
       const { x0, y0, x1, y1 } = S.bleed, rr = U.rng(733);
-      if (what === 'leads') {
+      if (what === 'saddles') {
+        // the tack room: limewashed boards and a cork board for the notes
+        c.fillStyle = '#e9dcc2'; c.fillRect(x0, y0, x1 - x0, FEET - y0);
+        for (let x = Math.floor(x0 / 30) * 30; x < x1; x += 30) {
+          c.fillStyle = `rgba(${rr() < 0.5 ? '255,250,235' : '120,90,60'},${(0.04 + rr() * 0.06).toFixed(3)})`; c.fillRect(x, y0, 30, FEET - y0);
+          c.fillStyle = 'rgba(110,80,50,0.2)'; c.fillRect(x, y0, 1.5, FEET - y0);
+        }
+        c.fillStyle = 'rgba(50,35,20,0.2)'; PZ.rr(c, 4, 31, 354, 206, 5); c.fill();
+        c.fillStyle = '#8a6a4a'; PZ.rr(c, 3, 28, 354, 206, 5); c.fill();
+        c.fillStyle = '#cda97a'; c.fillRect(8, 33, 344, 196);
+        for (let i = 0; i < 260; i++) { c.fillStyle = rr() < 0.5 ? 'rgba(110,75,40,0.25)' : 'rgba(255,235,200,0.25)'; c.beginPath(); c.arc(8 + rr() * 344, 33 + rr() * 196, 0.6 + rr() * 0.9, 0, 7); c.fill(); }
+        // a rail of pegs, one over each stall
+        c.fillStyle = '#7a5a3e'; c.fillRect(x0, 240, x1 - x0, 6);
+        c.fillStyle = 'rgba(255,225,180,0.25)'; c.fillRect(x0, 240, x1 - x0, 1.2);
+        for (const gx of GX) { dot(c, gx, 244, 3.4, '#5e4330'); dot(c, gx - 0.8, 243.2, 1.2, 'rgba(255,225,180,0.6)'); }
+        // the stalls: dark inside, boards at the back, straw on the floor, oak all round
+        c.fillStyle = '#5e4330'; c.fillRect(x0, 272, x1 - x0, FEET - 272);
+        GX.forEach((gx) => {
+          const a = gx - 39, w = 78, top = 286;
+          const g = c.createLinearGradient(0, top, 0, FEET); g.addColorStop(0, '#3f2d20'); g.addColorStop(1, '#67492f');
+          c.fillStyle = g; c.fillRect(a, top, w, FEET - top);
+          c.fillStyle = 'rgba(255,225,180,0.05)'; for (let x = a + 13; x < a + w; x += 13) c.fillRect(x, top, 1.4, FEET - top);
+          c.fillStyle = 'rgba(214,176,86,0.5)'; c.beginPath(); c.moveTo(a, FEET); c.quadraticCurveTo(gx, FEET - 16, a + w, FEET); c.closePath(); c.fill();
+          c.strokeStyle = 'rgba(232,202,120,0.8)'; c.lineWidth = 1.2; c.lineCap = 'round';
+          for (let i = 0; i < 16; i++) { const x = a + 3 + rr() * (w - 6), y = FEET - 1 - rr() * 9, an = rr() * 3.14; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(an) * 7, y + Math.sin(an) * 2.4); c.stroke(); }
+          // the half-door, swung back against the post
+          c.fillStyle = '#4e7b5b'; c.beginPath(); c.moveTo(a + w, 352); c.lineTo(a + w - 9, 356); c.lineTo(a + w - 9, FEET - 2); c.lineTo(a + w, FEET); c.closePath(); c.fill();
+          c.fillStyle = '#5f8a6a'; c.fillRect(a + w - 9, 356, 2, FEET - 358);
+        });
+        c.fillStyle = '#6b4c34'; c.fillRect(x0, 272, x1 - x0, 14);
+        c.fillStyle = 'rgba(255,225,180,0.25)'; c.fillRect(x0, 272, x1 - x0, 1.4);
+        c.fillStyle = 'rgba(25,15,10,0.3)'; c.fillRect(x0, 286, x1 - x0, 3);
+        // the swept floor in front of the stalls
+        c.fillStyle = '#c9b48a'; c.fillRect(x0, FEET - 2, x1 - x0, 448 - FEET);
+        c.fillStyle = 'rgba(90,60,30,0.2)'; for (let y = FEET + 6; y < 446; y += 9) c.fillRect(x0, y, x1 - x0, 1.2);
+      } else if (what === 'leads') {
         // the rescue: painted boards in the porch where the leads hang
         c.fillStyle = '#a9bf98'; c.fillRect(x0, y0, x1 - x0, FEET + 2 - y0);
         for (let x = Math.floor(x0 / 30) * 30; x < x1; x += 30) {
@@ -588,7 +815,7 @@
         c.fillStyle = 'rgba(90,60,30,0.16)'; for (let y = 494; y < 600; y += 40) c.fillRect(x0, y, x1 - x0, 1.5);
       }
       // a label tag in the corner says what this is
-      const label = what === 'cafe' ? 'LEFT BEHIND' : what === 'leads' ? 'LEADS & COATS' : 'LOST PROPERTY';
+      const label = what === 'cafe' ? 'LEFT BEHIND' : what === 'leads' ? 'LEADS & COATS' : what === 'saddles' ? 'SADDLES & TACK' : 'LOST PROPERTY';
       c.save(); c.translate(180, 580); c.rotate(-0.02);
       c.fillStyle = 'rgba(60,40,20,0.2)'; PZ.rr(c, -61, -9, 124, 22, 4); c.fill();
       c.fillStyle = what === 'cafe' ? '#4f5a58' : '#f6efe3'; PZ.rr(c, -62, -11, 124, 22, 4); c.fill();
@@ -623,9 +850,9 @@
     function drawOwner(c, f, i, t) {
       c.save(); c.translate(GX[i], FEET);
       const o = { smile: f.smile, shake: f.shakeT > 0 ? Math.sin(f.shakeT * 26) * Math.min(1, f.shakeT * 2.2) : 0, hold: f.hold, wag: Math.sin(t * (f.smile > 0.5 ? 9 : 2)), t };
-      if (V.people) person(c, f, o); else sitDog(c, f, o);
+      if (V.people) person(c, f, o); else if (V.ponies) pony(c, f, o); else sitDog(c, f, o);
       c.restore();
-      if (f.joy >= 0 && f.joy < 1.4) { const k = f.joy / 1.4; heart(c, GX[i] + 10, FEET - (V.people ? 160 : 108) - k * 24, 6 + k * 2, `rgba(233,128,140,${(1 - k).toFixed(2)})`); }
+      if (f.joy >= 0 && f.joy < 1.4) { const k = f.joy / 1.4; heart(c, GX[i] + 10, FEET - (V.people ? 160 : V.ponies ? 136 : 108) - k * 24, 6 + k * 2, `rgba(233,128,140,${(1 - k).toFixed(2)})`); }
     }
     function drawItem(c, it, s) {
       c.save(); c.translate(it.x, it.y); c.rotate(it === held ? 0 : it.rot); c.scale(s, s); THINGS[it.id].draw(c); c.restore();
@@ -642,7 +869,7 @@
       draw(c, t, still) {
         if (hint && hintT > 0 && !still && !hint.given) {
           PZ.glow(c, hint.x, hint.y, R, t);
-          PZ.glow(c, GX[sol[hint.t]], FEET - (V.people ? 74 : 50), V.people ? 46 : 40, t);
+          PZ.glow(c, GX[sol[hint.t]], FEET - (TALL ? 74 : 50), TALL ? 46 : 40, t);
         }
         folk.forEach((f, i) => drawOwner(c, f, i, still ? 0 : t));
         for (const cd of cards) if (cd.tick > 0.02) tickMark(c, cd.x + CW - 6, cd.y + 4, cd.tick);
@@ -678,11 +905,11 @@
         const it = held; held = null;
         const dx = x + gdx, dy = y + gdy - PZ.LIFT; // judged where it is drawn
         let at = -1;
-        if (dy > FEET - (V.people ? 172 : 118) && dy < 446) GX.forEach((gx, i) => { if (Math.abs(dx - gx) < 43 && (at < 0 || Math.abs(dx - gx) < Math.abs(dx - GX[at]))) at = i; });
+        if (dy > FEET - (TALL ? 172 : 118) && dy < 446) GX.forEach((gx, i) => { if (Math.abs(dx - gx) < 43 && (at < 0 || Math.abs(dx - gx) < Math.abs(dx - GX[at]))) at = i; });
         it.tx = it.hx; it.ty = it.hy;
         if (at >= 0 && at === sol[it.t]) {
           give(it); const f = folk[at]; f.joy = 0;
-          fx.sound('happy'); fx.good(GX[at], FEET - (V.people ? 80 : 56));
+          fx.sound('happy'); fx.good(GX[at], FEET - (TALL ? 80 : 56));
           if (hint === it) hintT = 0;
           return;
         }
@@ -703,7 +930,7 @@
       },
       solveAll() { items.forEach((it) => { if (!it.given) give(it, true); }); },
       // finger positions: pick the thing up, let go PZ.LIFT below its owner's middle
-      debugPlan: () => items.filter((it) => !it.given).map((it) => ({ drag: [it.hx, it.hy, GX[sol[it.t]], FEET - (V.people ? 80 : 56) + PZ.LIFT] })),
+      debugPlan: () => items.filter((it) => !it.given).map((it) => ({ drag: [it.hx, it.hy, GX[sol[it.t]], FEET - (TALL ? 80 : 56) + PZ.LIFT] })),
       // for the tests: the notes, and whether they fit only one way
       debugNotes() {
         const fits = ALL.filter((p) => P.clues.every((cl) => holds(cl, p, P.owners)));

@@ -2,28 +2,40 @@
 // Node's own WebSocket and fetch. Used by run.mjs and game.mjs.
 
 import { spawn } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync, readdirSync, openSync } from 'node:fs';
+import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 
-// The Mac's Chrome, a cloud session's Chromium in /opt/pw-browsers, or a
-// Linux runner's Chrome; $CHROME wins over all of them.
+// Never the everyday Chrome on a Mac: macOS allows one "Google Chrome" per login,
+// so a headless one takes the clicks, the quits and the new windows meant for
+// the real one, which then seems broken. There the bench uses Playwright's Chrome
+// for Testing, a full browser with an identity of its own (the whole game has
+// been played in it), or its headless shell, which is lighter but once lost its
+// connection partway through a whole game. A cloud session's Chromium in
+// /opt/pw-browsers and a Linux runner's Chrome are fine; $CHROME wins over all.
+const newest = (dir, prefix, tail) => (existsSync(dir) ? readdirSync(dir).filter((d) => d.startsWith(prefix)).sort().reverse().map((d) => join(dir, d, tail)) : []);
 function findChrome() {
-  const pw = existsSync('/opt/pw-browsers') ? readdirSync('/opt/pw-browsers').filter((d) => d.startsWith('chromium-')).sort().reverse()
-    .map((d) => `/opt/pw-browsers/${d}/chrome-linux/chrome`) : [];
-  const all = [process.env.CHROME, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', ...pw,
-    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
-  return all.find((p) => p && existsSync(p)) || all[1];
+  if (process.env.CHROME) return process.env.CHROME;
+  const mac = join(homedir(), 'Library/Caches/ms-playwright');
+  const all = [...newest(mac, 'chromium-', 'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing'),
+    ...newest(mac, 'chromium_headless_shell-', 'chrome-headless-shell-mac-arm64/chrome-headless-shell'),
+    ...newest('/opt/pw-browsers', 'chromium-', 'chrome-linux/chrome'), '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser'];
+  return all.find((p) => existsSync(p));
 }
 const CHROME = findChrome();
 const LINUX = process.platform === 'linux' ? ['--no-sandbox', '--disable-dev-shm-usage'] : [];
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function launch() {
+  if (!CHROME) throw new Error('no test browser found: run "npx playwright install chromium", or set $CHROME (not the everyday Chrome on a Mac)');
   const profile = mkdtempSync(join(tmpdir(), 'ivy-chrome-'));
   const proc = spawn(CHROME, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`, '--no-first-run', '--no-default-browser-check',
-    '--allow-file-access-from-files', '--hide-scrollbars', '--mute-audio', ...LINUX, 'about:blank'], { stdio: 'ignore' });
-  const close = () => { try { proc.kill('SIGKILL'); } catch (_) {} setTimeout(() => { try { rmSync(profile, { recursive: true, force: true }); } catch (_) {} }, 400); };
+    '--allow-file-access-from-files', '--hide-scrollbars', '--mute-audio', ...LINUX, 'about:blank'], { stdio: process.env.IVY_CHROME_LOG ? ['ignore', 'ignore', openSync(process.env.IVY_CHROME_LOG, 'a')] : 'ignore' });
+  // the profile goes when the test ends, however it ends, and Chrome never outlives it
+  const wipe = () => { try { rmSync(profile, { recursive: true, force: true, maxRetries: 4, retryDelay: 100 }); } catch (_) {} };
+  const close = () => { try { proc.kill('SIGKILL'); } catch (_) {} setTimeout(wipe, 400); };
+  process.once('exit', () => { try { proc.kill('SIGKILL'); } catch (_) {} wipe(); });
+  for (const sig of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.once(sig, () => process.exit(1));
   try {
     let port;
     for (let i = 0; i < 150 && !port; i++) { await sleep(100); try { port = readFileSync(join(profile, 'DevToolsActivePort'), 'utf8').split('\n')[0]; } catch (_) {} }
@@ -37,14 +49,30 @@ export async function launch() {
     ws.onmessage = (m) => {
       const d = JSON.parse(m.data);
       if (d.id && wait.has(d.id)) { const { r, j } = wait.get(d.id); wait.delete(d.id); if (d.error) j(new Error(d.error.message)); else r(d.result); }
+      if (d.method === 'Inspector.targetCrashed') fail('the page crashed');
     };
-    const send = (method, params = {}) => new Promise((r, j) => { const i = ++id; wait.set(i, { r, j }); ws.send(JSON.stringify({ id: i, method, params })); });
+    // an answer that never comes fails the run with the call's name, it never hangs
+    // it: each call has a time limit, and if Chrome goes away everything still
+    // waiting fails at once. A page script may ask for longer, see js()
+    let gone = null;
+    const fail = (why) => { if (gone) return; gone = why; for (const { j } of [...wait.values()]) j(new Error(why)); wait.clear(); };
+    // says how: the signal tells a crash (SIGSEGV, SIGTRAP) from something stopping it (SIGTERM, SIGKILL)
+    proc.on('exit', (code, signal) => fail(`Chrome went away while the test was running (exit ${code}, signal ${signal})`));
+    ws.onclose = (e) => setTimeout(() => fail(`the connection to Chrome closed while the test was running (${e.code} ${e.reason || 'no reason'}, Chrome ${proc.exitCode === null && !proc.signalCode ? 'still running' : 'gone'})`), 500);
+    const send = (method, params = {}, ms = method === 'Runtime.evaluate' ? 5 * 60000 : 60000) => new Promise((r, j) => {
+      if (gone) { j(new Error(gone)); return; }
+      const i = ++id;
+      const limit = setTimeout(() => { wait.delete(i); j(new Error(`no answer to ${method} ${JSON.stringify(params).slice(0, 120)} in ${ms / 1000}s`)); }, ms);
+      wait.set(i, { r: (v) => { clearTimeout(limit); r(v); }, j: (e) => { clearTimeout(limit); j(e); } });
+      ws.send(JSON.stringify({ id: i, method, params }));
+    });
+    await send('Inspector.enable');
     return { send, close: () => { try { ws.close(); } catch (_) {} close(); } };
   } catch (e) { close(); throw e; }
 }
 
-export async function js(b, expression) {
-  const r = await b.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
+export async function js(b, expression, ms) {
+  const r = await b.send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, ms);
   if (r.exceptionDetails) throw new Error((r.exceptionDetails.exception && r.exceptionDetails.exception.description) || r.exceptionDetails.text);
   return r.result.value;
 }

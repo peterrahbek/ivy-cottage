@@ -911,7 +911,7 @@ const CANAL = (() => {
       ${style()}${defs(st)}${sky()}${far()}${ground()}${bridge(st)}${bank(st)}${water(st)}${lockside()}${gates(st)}
       ${cottage()}${door(st, C)}${cottageWindow(st)}${garden()}${fence(st, C)}${willow()}${sign(st, C)}${dinghy(st, C)}
       ${boat(st, C)}${portholes(st)}${hold(st)}${roof(st)}${boatBits(st)}${towpath(st)}${ropes()}${verge()}${litter(st)}${clutter()}${saleSign()}
-      ${decorations(decor)}${life(st)}${weather()}${opts.night ? night(st, decor) : ''}${sparkles(opts.fresh)}
+      ${decorations(decor)}${life(st)}${opts.resting ? `<g class="rest"><g class="rest-glide">${duck(112, 334, true, false)}${duck(92, 339, false, false)}</g></g>` : ''}${weather()}${opts.night ? night(st, decor) : ''}${sparkles(opts.fresh)}
     </svg>`;
   }
 

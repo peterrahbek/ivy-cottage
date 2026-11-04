@@ -433,7 +433,7 @@ const HOUSE = (() => {
       ${windowSvg(134, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}${windowSvg(232, 186, 34, 36, st.winBedroom, 'winBedroom', 'bed')}
       ${windowSvg(122, 248, 40, 50, st.winKitchen, 'winKitchen', 'kitchen')}${windowSvg(238, 248, 40, 50, st.winLiving, 'winLiving', 'living')}
       ${shutters(st, cols.shutters || '#4e7b5b')}${door(s, cols.door)}${ivy(st)}${beds(st)}
-      ${tree(st)}${fence(st, cols.fence)}${faded()}${decorations(opts.decor || {})}${life(st, pct)}${weather()}${opts.night ? night(st, opts.decor || {}) : ''}${sparkles(opts.fresh)}
+      ${tree(st)}${fence(st, cols.fence)}${faded()}${decorations(opts.decor || {})}${life(st, pct)}${opts.resting ? U.restCat(150, 392) : ''}${weather()}${opts.night ? night(st, opts.decor || {}) : ''}${sparkles(opts.fresh)}
     </svg>`;
   }
 

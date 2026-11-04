@@ -4,7 +4,7 @@
 // layers as every other scene (see scenes.js). Needs scenes2.js first.
 
 (() => {
-  const { W, H, field, ramp, softShadow, paintStamp, peelingPaint, grime, barnBricks, weatherboards } = SCENES;
+  const { W, H, field, ramp, softShadow, paintStamp, peelingPaint, grime, barnBricks, weatherboards, limewash } = SCENES;
 
   // ------------------------------------------------------------ shared bits
   function glow(c, x, y, rad, col) {
@@ -87,18 +87,21 @@
   // standing on it), the station's waiting room (old floorboards under
   // dust, the stove, a hat box, a milk churn and a mat by the door), the
   // haberdashery (honey boards, threads and snippets, a dress form, a basket
-  // of wool, bolts of cloth) or the curiosity shop (dark creaky boards, a
-  // worn rug, a floor globe, a leather armchair, a sea chest).
+  // of wool, bolts of cloth), the curiosity shop (dark creaky boards, a
+  // worn rug, a floor globe, a leather armchair, a sea chest) or the painter's
+  // loft (pale scrubbed boards under dried paint, the easel, a stool, a tray of
+  // tins, a jar of brushes).
   function otherFloor(S, where) {
     const { r, nz, bleed } = S;
-    const pottery = where === 'pottery', beads = where === 'beads', curio = where === 'curio';
+    const pottery = where === 'pottery', beads = where === 'beads', curio = where === 'curio', loft = where === 'loft';
     const top = 92, bot = 584;
     const things = pottery
       ? [{ x: 112, y: 262, r: 50, kind: 'wheel' }, { x: 200, y: 330, r: 17, kind: 'stool' }, { x: 286, y: 432, r: 30, kind: 'bin' }, { x: 262, y: 196, r: 19, kind: 'bucket' }, { x: 74, y: 474, r: 24, kind: 'sack' }]
       : beads ? [{ x: 88, y: 230, r: 34, kind: 'form' }, { x: 276, y: 290, r: 30, kind: 'woolbasket' }, { x: 176, y: 400, r: 16, kind: 'stool' }, { x: 290, y: 488, r: 27, kind: 'bolts' }, { x: 64, y: 452, r: 21, kind: 'buttontin' }]
+      : loft ? [{ x: 100, y: 226, r: 2, kind: 'easel' }, { x: 276, y: 196, r: 18, kind: 'stool' }, { x: 278, y: 434, r: 33, kind: 'tins' }, { x: 74, y: 488, r: 22, kind: 'brushjar' }]
       : curio ? [{ x: 74, y: 204, r: 30, kind: 'floorglobe' }, { x: 290, y: 226, r: 38, kind: 'armchair' }, { x: 66, y: 494, r: 20, kind: 'brolly' }, { x: 294, y: 488, r: 28, kind: 'chest' }]
       : [{ x: 276, y: 214, r: 36, kind: 'stove' }, { x: 60, y: 196, r: 27, kind: 'palm' }, { x: 116, y: 410, r: 23, kind: 'hatbox' }, { x: 298, y: 462, r: 21, kind: 'churn' }];
-    const mat = pottery || beads || curio ? null : [112, 516, 136, 56];
+    const mat = pottery || beads || curio || loft ? null : [112, 516, 136, 56];
     // the curiosity shop's worn rug in the middle of the floor
     const RUG = [96, 262, 168, 196];
     function rug(c, dull) {
@@ -141,7 +144,7 @@
         }
       } else {
         // floorboards: honey at the haberdashery, dark and old at the curiosity shop
-        const bw = beads ? 22 : curio ? 30 : 26, crisp = beads ? '#cfa56c' : curio ? '#7a5236' : '#b88a5c', dim = beads ? '#9c8366' : curio ? '#5e4c3e' : '#8c7a64';
+        const bw = beads ? 22 : curio ? 30 : loft ? 36 : 26, crisp = beads ? '#cfa56c' : curio ? '#7a5236' : loft ? '#dcc9a6' : '#b88a5c', dim = beads ? '#9c8366' : curio ? '#5e4c3e' : loft ? '#a2957f' : '#8c7a64';
         for (let i = Math.floor(x0 / bw) - 1; i * bw < x1; i++) {
           const v = nz.n2(i * 1.7, 4);
           c.fillStyle = U.shade(dull ? dim : crisp, (v - 0.5) * 0.22);
@@ -264,6 +267,38 @@
         c.fillStyle = '#7d5434'; c.beginPath(); c.roundRect(x - 20, y - 14, 40, 28, 3); c.fill();
         c.fillStyle = '#3a3438'; for (const dx of [-12, 12]) c.fillRect(x + dx - 2, y - 17, 4, 34);
         c.fillStyle = '#c9a24a'; c.fillRect(x - 4, y + 10, 8, 7); c.fillStyle = '#5a4520'; c.fillRect(x - 1, y + 12, 2, 3);
+      } else if (t.kind === 'easel') {
+        // an easel from above: its three feet spread, the canvas edge on along the ledge
+        c.strokeStyle = 'rgba(40,28,18,0.22)'; c.lineWidth = 8; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(x + 3, y + 9); c.lineTo(x - 31, y + 36); c.moveTo(x + 3, y + 9); c.lineTo(x + 37, y + 36); c.moveTo(x + 3, y + 9); c.lineTo(x + 3, y - 32); c.stroke();
+        c.strokeStyle = '#8a5f3c'; c.lineWidth = 7;
+        c.beginPath(); c.moveTo(x, y + 6); c.lineTo(x - 34, y + 32); c.moveTo(x, y + 6); c.lineTo(x + 34, y + 32); c.moveTo(x, y + 6); c.lineTo(x, y - 36); c.stroke();
+        c.fillStyle = '#a77b56'; c.beginPath(); c.roundRect(x - 44, y - 3, 88, 13, 3); c.fill();
+        c.fillStyle = '#f4efe2'; c.fillRect(x - 40, y - 1, 80, 6);
+        c.fillStyle = '#2f5fa8'; c.fillRect(x - 40, y + 1, 80, 2.4);
+        c.fillStyle = 'rgba(255,230,190,0.3)'; c.fillRect(x - 44, y + 7, 88, 1.6);
+      } else if (t.kind === 'tins') {
+        // a tray of open paint tins, a stick across the cobalt
+        c.fillStyle = '#8a5a3c'; c.beginPath(); c.roundRect(x - t.r, y - t.r, t.r * 2, t.r * 2, 6); c.fill();
+        c.fillStyle = '#a77b56'; c.beginPath(); c.roundRect(x - t.r + 3, y - t.r + 3, t.r * 2 - 6, t.r * 2 - 6, 5); c.fill();
+        for (const [dx, dy, col] of [[-15, -15, '#2f5fa8'], [15, -15, '#d9a53c'], [-15, 15, '#e2392f'], [15, 15, '#f7f3ea']]) {
+          c.fillStyle = '#9aa3ad'; c.beginPath(); c.arc(x + dx, y + dy, 13.5, 0, 7); c.fill();
+          c.fillStyle = '#d5dbde'; c.beginPath(); c.arc(x + dx, y + dy, 12, 0, 7); c.fill();
+          c.fillStyle = col; c.beginPath(); c.arc(x + dx, y + dy, 10.4, 0, 7); c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.3)'; c.beginPath(); c.ellipse(x + dx - 3, y + dy - 3, 4, 2, -0.6, 0, 7); c.fill();
+        }
+        c.strokeStyle = '#c9a77a'; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 26, y - 3); c.lineTo(x - 2, y - 26); c.stroke();
+      } else if (t.kind === 'brushjar') {
+        // a jar of brushes from above, the brushes fanning out over its rim
+        c.fillStyle = '#b9d3dc'; c.beginPath(); c.arc(x, y, t.r, 0, 7); c.fill();
+        c.fillStyle = '#dcecf1'; c.beginPath(); c.arc(x, y, t.r - 3.4, 0, 7); c.fill();
+        c.fillStyle = 'rgba(120,160,185,0.5)'; c.beginPath(); c.arc(x, y, t.r - 8, 0, 7); c.fill();
+        for (const [a, col] of [[0.4, '#b0352c'], [1.5, '#2b3550'], [2.6, '#c8903a'], [3.7, '#3f7f6e'], [4.9, '#7d5434']]) {
+          const ex = x + Math.cos(a) * (t.r + 8), ey = y + Math.sin(a) * (t.r + 8);
+          c.strokeStyle = col; c.lineWidth = 3.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + Math.cos(a) * 4, y + Math.sin(a) * 4); c.lineTo(ex, ey); c.stroke();
+          c.fillStyle = '#d5dbde'; c.beginPath(); c.arc(ex, ey, 3, 0, 7); c.fill();
+          c.fillStyle = '#ead9b4'; c.beginPath(); c.ellipse(ex + Math.cos(a) * 5, ey + Math.sin(a) * 5, 5.6, 3.4, a, 0, 7); c.fill();
+        }
       } else if (t.kind === 'churn') {
         c.fillStyle = '#aab1b8'; c.beginPath(); c.arc(x, y, t.r, 0, 7); c.fill();
         c.fillStyle = '#d0d6db'; c.beginPath(); c.arc(x, y, t.r - 5, 0, 7); c.fill();
@@ -313,6 +348,24 @@
           c.fillStyle = '#c9a24a'; c.fillRect(bleed.x0, bot, bleed.x1 - bleed.x0, 5);
           c.fillStyle = '#b3a895'; c.fillRect(bleed.x0, bot + 5, bleed.x1 - bleed.x0, bleed.y1 - bot);
           for (let x = bleed.x0; x < bleed.x1; x += 60) { c.fillStyle = 'rgba(80,72,60,0.4)'; c.fillRect(x, bot + 5, 1.5, bleed.y1 - bot); }
+        } else if (loft) {
+          // the long painting bench: a big palette, jars, tubes and a rag
+          c.fillStyle = '#b38a5c'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, top - bleed.y0);
+          for (let i = 0; i < 70; i++) { const y = bleed.y0 + r() * (top - 14 - bleed.y0), x = bleed.x0 + r() * (bleed.x1 - bleed.x0); c.strokeStyle = r() < 0.6 ? 'rgba(70,40,20,0.2)' : 'rgba(255,230,190,0.12)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 14 + r() * 30, y); c.stroke(); }
+          for (let i = 0; i < 30; i++) { c.fillStyle = U.pick(r, ['#2f5fa8', '#d9a53c', '#e2392f', '#3f8f8a', '#f7f3ea']); c.beginPath(); c.ellipse(bleed.x0 + r() * (bleed.x1 - bleed.x0), bleed.y0 + r() * (top - 16 - bleed.y0), 1.2 + r() * 3, 1 + r() * 2, 0, 0, 7); c.fill(); }
+          c.fillStyle = 'rgba(40,25,10,0.26)'; c.beginPath(); c.ellipse(84, 46, 56, 25, -0.08, 0, 7); c.fill();
+          c.fillStyle = '#d9b488'; c.beginPath(); c.ellipse(80, 40, 56, 25, -0.08, 0, 7); c.fill();
+          c.fillStyle = '#c0935f'; c.beginPath(); c.ellipse(42, 48, 8, 5.4, 0, 0, 7); c.fill();
+          for (const [dx, dy, col] of [[-16, -13, '#e2392f'], [4, -16, '#d9a53c'], [24, -12, '#2f5fa8'], [37, 0, '#f7f3ea'], [26, 12, '#3f8f8a']]) { c.fillStyle = col; c.beginPath(); c.arc(80 + dx, 40 + dy, 5.6, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,0.35)'; c.beginPath(); c.arc(78.6 + dx, 38.6 + dy, 1.6, 0, 7); c.fill(); }
+          for (const [x, col] of [[190, '#2f5fa8'], [226, '#d9a53c']]) { c.fillStyle = 'rgba(40,25,10,0.25)'; c.beginPath(); c.arc(x + 3, 44, 16, 0, 7); c.fill(); c.fillStyle = '#d5dbde'; c.beginPath(); c.arc(x, 40, 16, 0, 7); c.fill(); c.fillStyle = col; c.beginPath(); c.arc(x, 40, 13, 0, 7); c.fill(); }
+          c.fillStyle = '#f2ecdf'; c.beginPath(); c.moveTo(270, 22); c.quadraticCurveTo(310, 12, 340, 28); c.quadraticCurveTo(346, 50, 322, 62); c.quadraticCurveTo(286, 66, 268, 48); c.closePath(); c.fill();
+          c.fillStyle = '#2f5fa8'; c.beginPath(); c.arc(300, 38, 6, 0, 7); c.fill(); c.fillStyle = '#e2392f'; c.beginPath(); c.arc(318, 46, 3.6, 0, 7); c.fill();
+          c.fillStyle = '#8a5f3c'; c.fillRect(bleed.x0, top - 14, bleed.x1 - bleed.x0, 8);
+          c.fillStyle = '#5b3a26'; c.fillRect(bleed.x0, top - 6, bleed.x1 - bleed.x0, 6);
+          // the door sill and the top of the outside stairs beyond
+          c.fillStyle = '#6b4a32'; c.fillRect(bleed.x0, bot, bleed.x1 - bleed.x0, 6);
+          c.fillStyle = '#b39a76'; c.fillRect(bleed.x0, bot + 6, bleed.x1 - bleed.x0, bleed.y1 - bot);
+          for (let x = bleed.x0; x < bleed.x1; x += 42) { c.fillStyle = 'rgba(70,50,30,0.4)'; c.fillRect(x, bot + 6, 1.5, bleed.y1 - bot); }
         } else if (curio) {
           // the mahogany counter: an open ledger, an inkwell and quill, a brass bell
           c.fillStyle = '#5a2e22'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, top - bleed.y0);
@@ -361,7 +414,7 @@
       },
       dirt(c) {
         floor(c, 0, top, W, bot, true);
-        const g = pottery ? ramp(['#a99e90', '#bab0a2', '#c9c0b3', '#d6cec2']) : curio ? ramp(['#8e8578', '#a0978a', '#b2aa9d', '#c2bbaf']) : ramp(['#a29a8c', '#b3ac9e', '#c3bcaf', '#d0c9bd']);
+        const g = pottery ? ramp(['#a99e90', '#bab0a2', '#c9c0b3', '#d6cec2']) : loft ? ramp(['#ada392', '#bcb2a2', '#cac2b3', '#d6cfc2']) : curio ? ramp(['#8e8578', '#a0978a', '#b2aa9d', '#c2bbaf']) : ramp(['#a29a8c', '#b3ac9e', '#c3bcaf', '#d0c9bd']);
         field(c, 0, top, W, bot, 2, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 5); return [...g(v), 212 + v * 40]; });
         grime(c, r, 0, top, W, bot, 22);
         if (pottery) {
@@ -416,6 +469,35 @@
             c.save(); c.translate(x, y); c.rotate(Math.cos(y * 0.013) * 0.3);
             c.beginPath(); c.ellipse(0, -6, 5, 7.5, 0, 0, 7); c.fill(); c.beginPath(); c.ellipse(0, 7, 4, 3.6, 0, 0, 7); c.fill();
             c.restore();
+          }
+        } else if (loft) {
+          // dried paint everywhere: splats with their drops, wipes of a loaded brush,
+          // scraps of masking tape, and a cat that walked through the cobalt
+          const cols = ['#2f5fa8', '#d9a53c', '#e2392f', '#3f8f8a', '#f7f3ea', '#2f5fa8', '#d9a53c'];
+          c.lineCap = 'round';
+          for (let i = 0; i < 14; i++) {
+            const x = 30 + r() * 300, y = top + 24 + r() * 440, a = r() * 6.28, l = 26 + r() * 50;
+            c.strokeStyle = U.pick(r, cols); c.globalAlpha = 0.8; c.lineWidth = 5 + r() * 6;
+            c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + Math.cos(a + 0.5) * l * 0.5, y + Math.sin(a + 0.5) * l * 0.5, x + Math.cos(a) * l, y + Math.sin(a) * l); c.stroke();
+            c.globalAlpha = 1;
+          }
+          for (let i = 0; i < 40; i++) {
+            const x = 18 + r() * 324, y = top + 16 + r() * 460, s = 4 + r() * 13, col = U.pick(r, cols);
+            c.fillStyle = col; c.beginPath();
+            for (let k = 0; k < 9; k++) { const a = (k / 9) * 6.283, rr = s * (0.62 + r() * 0.5); c.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr * 0.86); }
+            c.closePath(); c.fill();
+            c.fillStyle = 'rgba(255,255,255,0.2)'; c.beginPath(); c.ellipse(x - s * 0.2, y - s * 0.24, s * 0.3, s * 0.14, -0.4, 0, 7); c.fill();
+            for (let k = 0; k < 5; k++) { const a = r() * 6.283, d = s * (1.2 + r() * 1); c.fillStyle = col; c.beginPath(); c.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, 0.8 + r() * 1.8, 0, 7); c.fill(); }
+          }
+          for (let i = 0; i < 9; i++) {
+            c.save(); c.translate(24 + r() * 312, top + 24 + r() * 440); c.rotate(r() * 6.28);
+            c.fillStyle = 'rgba(232,216,170,0.9)'; c.fillRect(-13, -4, 26, 8); c.restore();
+          }
+          c.fillStyle = 'rgba(47,95,168,0.8)';
+          for (let i = 0, t = 0; t < 1; i++, t += 0.075) {
+            const x = 150 + Math.sin(t * 5) * 60 + (i % 2 ? 7 : -7), y = bot - 24 - t * 390;
+            c.beginPath(); c.ellipse(x, y, 4.2, 3.6, 0, 0, 7); c.fill();
+            for (const [dx, dy] of [[-5, -4], [-1.8, -6.4], [1.8, -6.4], [5, -4]]) { c.beginPath(); c.arc(x + dx, y + dy, 1.5, 0, 7); c.fill(); }
           }
         } else if (curio) {
           // old papers and luggage tags, a lost playing card, marbles, leaves by the door, footprints
@@ -485,7 +567,7 @@
   // ------------------------------------------------------------------ FLOOR
   // Looking down at the café floor, from the counter to the door.
   function cafeFloor(S) {
-    if (['pottery', 'halt', 'beads', 'curio'].includes(S.opts.where)) return otherFloor(S, S.opts.where);
+    if (['pottery', 'halt', 'beads', 'curio', 'loft'].includes(S.opts.where)) return otherFloor(S, S.opts.where);
     const { r, nz, bleed } = S;
     const top = 92, bot = 584;
     const stools = [80, 180, 280].map((x) => ({ x, y: 140, r: 17 }));
@@ -917,6 +999,39 @@
       c.strokeStyle = '#3a2814'; c.lineWidth = 1.4; c.beginPath(); c.arc(-s * 0.85, 0, s * 0.38, 0.4, 2.7); c.stroke();
       c.restore();
     }
+    // a lucky horseshoe, the open end up, its nail holes picked out
+    function horseshoeIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round';
+      const shape = () => {
+        c.beginPath(); c.moveTo(-s * 0.66, -s * 1.02);
+        c.bezierCurveTo(-s * 1.4, -s * 0.2, -s * 1.16, s * 1.04, 0, s * 1.04); c.bezierCurveTo(s * 1.16, s * 1.04, s * 1.4, -s * 0.2, s * 0.66, -s * 1.02);
+        c.lineTo(s * 0.26, -s * 1.02);
+        c.bezierCurveTo(s * 0.76, -s * 0.24, s * 0.56, s * 0.46, 0, s * 0.46); c.bezierCurveTo(-s * 0.56, s * 0.46, -s * 0.76, -s * 0.24, -s * 0.26, -s * 1.02);
+        c.closePath();
+      };
+      c.strokeStyle = '#3a2814'; c.lineWidth = 5; shape(); c.stroke();
+      c.fillStyle = gold(c, -s, s); shape(); c.fill();
+      c.fillStyle = '#3a2814';
+      for (const [dx, dy] of [[-0.66, -0.6], [-0.8, -0.18], [-0.68, 0.3], [-0.34, 0.68], [0.66, -0.6], [0.8, -0.18], [0.68, 0.3], [0.34, 0.68]]) { c.beginPath(); c.arc(dx * s, dy * s, s * 0.075, 0, 7); c.fill(); }
+      c.restore();
+    }
+    // a painter's palette with a thumb hole and five dabs, a brush across it
+    function paletteIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round';
+      const shape = () => {
+        c.beginPath(); c.moveTo(-s * 1.15, s * 0.1);
+        c.bezierCurveTo(-s * 1.2, -s * 0.8, s * 0.2, -s * 1.1, s * 0.92, -s * 0.72);
+        c.bezierCurveTo(s * 1.4, -s * 0.42, s * 1.36, s * 0.2, s * 0.82, s * 0.2);
+        c.bezierCurveTo(s * 0.36, s * 0.2, s * 0.4, s * 0.8, 0, s * 0.92);
+        c.bezierCurveTo(-s * 0.6, s * 1.02, -s * 1.1, s * 0.7, -s * 1.15, s * 0.1); c.closePath();
+        c.moveTo(s * 0.46, -s * 0.28); c.arc(s * 0.3, -s * 0.28, s * 0.16, 0, 7);
+      };
+      c.strokeStyle = '#3a2814'; c.lineWidth = 5; shape(); c.stroke();
+      c.fillStyle = gold(c, -s, s); shape(); c.fill('evenodd');
+      c.strokeStyle = '#3a2814'; c.lineWidth = 1.4;
+      for (const [dx, dy] of [[-0.72, 0.06], [-0.5, -0.46], [-0.02, -0.68], [0.5, -0.74], [-0.28, 0.52]]) { c.beginPath(); c.arc(dx * s, dy * s, s * 0.17, 0, 7); c.stroke(); }
+      c.restore();
+    }
     // a long title of two words goes on two lines rather than shrinking away
     function titleLines(c, text) {
       const one = fit(c, text, 86), sp = text.indexOf(' ');
@@ -1013,6 +1128,28 @@
           softShadow(c, board, 12, 0.45, 4, 7);
           return;
         }
+        if (opts.icon === 'palette') {
+          // the loft's white boards under a cobalt eave, a little window above the
+          // board, and poppies along the foot of the wall on the cobbles
+          limewash(c, r, nz, bleed.x0, bleed.y0, bleed.x1, 480);
+          c.fillStyle = '#3f6fb0'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, 26 - bleed.y0);
+          c.fillStyle = 'rgba(0,0,0,0.16)'; c.fillRect(bleed.x0, 26, bleed.x1 - bleed.x0, 5);
+          c.fillStyle = '#3f6fb0'; c.fillRect(130, 48, 100, 90);
+          const gl = c.createLinearGradient(0, 56, 0, 130); gl.addColorStop(0, '#9ec9de'); gl.addColorStop(1, '#d8ecf2');
+          c.fillStyle = gl; c.fillRect(138, 56, 84, 74);
+          c.fillStyle = '#3f6fb0'; c.fillRect(177, 56, 6, 74); c.fillRect(138, 90, 84, 5);
+          c.fillStyle = '#8f8576'; c.fillRect(bleed.x0, 480, bleed.x1 - bleed.x0, bleed.y1 - 480);
+          for (let y = 486; y < bleed.y1 + 8; y += 13) for (let x = bleed.x0 - (y % 26 ? 8 : 0); x < bleed.x1 + 10; x += 19) { c.fillStyle = U.pick(r, ['#a49a8a', '#b3a998', '#978d7e', '#bdb3a2']); c.beginPath(); c.ellipse(x, y, 8.4, 5.4, 0, 0, 7); c.fill(); }
+          for (let i = 0; i < 34; i++) {
+            const x = bleed.x0 + r() * (bleed.x1 - bleed.x0), h = 26 + r() * 46, fx = x + (r() - 0.5) * 10, fy = 482 - h;
+            c.strokeStyle = '#5d8a48'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, 484); c.quadraticCurveTo(x + (r() - 0.5) * 8, 484 - h / 2, fx, fy); c.stroke();
+            c.fillStyle = U.pick(r, ['#e2392f', '#ef5a48', '#d3362a']); c.beginPath(); c.arc(fx, fy, 6 + r() * 3, 0, 7); c.fill();
+            c.fillStyle = '#2b2030'; c.beginPath(); c.arc(fx, fy, 2, 0, 7); c.fill();
+          }
+          const board = new Path2D(); board.rect(ox0, oy0, ox1 - ox0, oy1 - oy0);
+          softShadow(c, board, 12, 0.45, 4, 7);
+          return;
+        }
         if (opts.icon === 'key') {
           // the curiosity shop's deep green shopfront: old brick and a sash window above,
           // fluted pilasters, and the top of the bow window glowing below the board
@@ -1032,6 +1169,28 @@
           c.fillStyle = '#2a4a3d'; c.fillRect(24, 412, 312, 10);
           for (const x of [90, 150, 210, 270]) c.fillRect(x - 3, 420, 6, bleed.y1 - 420);
           c.fillRect(30, 470, 300, 5);
+          const board = new Path2D(); board.rect(ox0, oy0, ox1 - ox0, oy1 - oy0);
+          softShadow(c, board, 12, 0.45, 4, 7);
+          return;
+        }
+        if (opts.icon === 'horseshoe') {
+          // the sign on the stable wall: oak boards under a slate eave, the white
+          // paddock rails and foxgloves along the foot of the wall
+          SCENES.oakBoards(c, r, nz, bleed.x0, bleed.y0, bleed.x1, 470);
+          c.fillStyle = '#4b4f58'; c.fillRect(bleed.x0, bleed.y0, bleed.x1 - bleed.x0, 44 - bleed.y0);
+          c.fillStyle = 'rgba(255,255,255,0.1)'; for (let x = Math.floor(bleed.x0 / 22) * 22; x < bleed.x1; x += 22) c.fillRect(x, bleed.y0, 1.4, 44 - bleed.y0);
+          c.fillStyle = 'rgba(0,0,0,0.3)'; c.fillRect(bleed.x0, 44, bleed.x1 - bleed.x0, 6);
+          c.fillStyle = '#7f9a58'; c.fillRect(bleed.x0, 470, bleed.x1 - bleed.x0, bleed.y1 - 470);
+          for (let i = 0; i < 260; i++) { c.fillStyle = U.pick(r, ['#6b8f48', '#8fae62', '#5d8040']); c.fillRect(bleed.x0 + r() * (bleed.x1 - bleed.x0), 470 + r() * (bleed.y1 - 470), 1.6, 6 + r() * 6); }
+          for (let i = 0; i < 9; i++) {
+            const x = bleed.x0 + 16 + i * 44 + r() * 20, h = 70 + r() * 44, n = 11;
+            c.strokeStyle = '#5f8a4a'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, 486); c.lineTo(x, 486 - h); c.stroke();
+            for (let k = 0; k < n; k++) { const t = k / (n - 1), sz = 8 - t * 5, sd = k % 2 ? 1 : -1; c.fillStyle = U.pick(r, ['#b45f9e', '#c975ad', '#a8518f']); c.beginPath(); c.ellipse(x + sd * sz * 0.7, 486 - h * (0.3 + 0.7 * t), sz * 0.8, sz * 1.15, sd * 0.4, 0, 7); c.fill(); }
+          }
+          c.fillStyle = '#f4f0e6';
+          for (const x of [18, 180, 342]) { c.fillRect(x - 6, 438, 12, bleed.y1 - 438); c.fillStyle = 'rgba(0,0,0,0.12)'; c.fillRect(x + 3, 438, 3, bleed.y1 - 438); c.fillStyle = '#f4f0e6'; }
+          for (const y of [456, 502, 548]) { c.fillRect(bleed.x0, y, bleed.x1 - bleed.x0, 11); }
+          c.fillStyle = 'rgba(0,0,0,0.14)'; for (const y of [465, 511, 557]) c.fillRect(bleed.x0, y, bleed.x1 - bleed.x0, 2);
           const board = new Path2D(); board.rect(ox0, oy0, ox1 - ox0, oy1 - oy0);
           softShadow(c, board, 12, 0.45, 4, 7);
           return;
@@ -1111,6 +1270,8 @@
         else if (opts.icon === 'train') trainIcon(c, cx, iy0 + 50 + iy, 16);
         else if (opts.icon === 'button') buttonIcon(c, cx, iy0 + 46 + iy, 16);
         else if (opts.icon === 'key') keyIcon(c, cx + 4, iy0 + 46 + iy, 17);
+        else if (opts.icon === 'palette') paletteIcon(c, cx, iy0 + 46 + iy, 17);
+        else if (opts.icon === 'horseshoe') horseshoeIcon(c, cx, iy0 + 47 + iy, 16);
         else cup(c, cx, iy0 + 44, 14);
         for (const [t, y, size] of tl.lines) letters(c, t, y, size);
         letters(c, sub, iy1 - 32, fit(c, sub, 17));

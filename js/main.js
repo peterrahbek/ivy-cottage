@@ -7,7 +7,7 @@
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {}, goodnight: true };
+    return { board: 'think', painted: {}, coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {}, goodnight: true };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -125,7 +125,7 @@
   // then a few seasons of looking after it (a whole year for the later ones),
   // and the coins. Seasons only turn when their jobs are done, never on their
   // own, so the wait is always in your own hands and nothing is ever lost.
-  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio']); // older saves wait for these only
+  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio', 'stables', 'loft']); // older saves wait for these only
   const yearOf = (n) => 1 + Math.floor(n / 4);
   const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
   const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
@@ -155,7 +155,7 @@
     return MAIN.find((p) => !owned(p.id) && opened(p));
   }
   function renderPlace(id, st, opts) {
-    if (id === 'beta' && typeof BETA !== 'undefined') return BETA.render(st, S.colours, opts);
+    if (id === 'beta' && typeof BETA !== 'undefined') return BETA.render(st, S.colours, Object.assign({ board: S.board }, opts));
     if (id === 'cafe' && typeof CAFE !== 'undefined') return CAFE.render(st, S.colours, opts);
     if (id === 'cove' && typeof COVE !== 'undefined') return COVE.render(st, S.colours, opts);
     if (id === 'rescue' && typeof RESCUE !== 'undefined') return RESCUE.render(st, S.colours, opts);
@@ -166,6 +166,8 @@
     if (id === 'halt' && typeof HALT !== 'undefined') return HALT.render(st, S.colours, opts);
     if (id === 'beads' && typeof BEADS !== 'undefined') return BEADS.render(st, S.colours, opts);
     if (id === 'curio' && typeof CURIO !== 'undefined') return CURIO.render(st, S.colours, opts);
+    if (id === 'stables' && typeof STABLES !== 'undefined') return STABLES.render(st, S.colours, opts);
+    if (id === 'loft' && typeof LOFT !== 'undefined') return LOFT.render(st, S.colours, Object.assign({ painted: S.painted }, opts));
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -233,7 +235,11 @@
     const pl = here();
     const st = partsDone(pl.id), pending = pendingAt(pl.id);
     const pct = doneCount() / pl.chores.length;
-    $('#scene').innerHTML = renderPlace(pl.id, st, { pct, fresh: freshPart, season: seasonName(), pending, decor: decorAt(pl.id), night: isEvening() });
+    // the board with the puzzle just solved, so its gold star can be seen arriving
+    if (pl.beta && freshPart) S.board = BETA.boardOf(freshPart);
+    // a place with nothing left to do this season gets a little life of its own
+    const idle = !pl.beta && S.seasonNo > 0 && restored(pl.id) && jobsAt(pl.id).every((j) => S.sdone[j.id]);
+    $('#scene').innerHTML = renderPlace(pl.id, st, { pct, fresh: freshPart, season: seasonName(), pending, decor: decorAt(pl.id), night: isEvening(), resting: idle });
     $('#brandName').textContent = placeName();
     $('#brandChev').hidden = DATA.PLACES.filter((p) => owned(p.id)).length < 2;
     if (freshPart) {
@@ -307,6 +313,10 @@
     $('#btnShed').classList.toggle('alert', affordableSomething());
     const offer = placeOffer();
     $('#btnPlaces').classList.toggle('alert', !!offer && S.coins >= offer.price);
+    // the puzzle room has two boards; the arrow turns from one to the other
+    $('#scene').querySelectorAll('[data-board]').forEach((el) => {
+      el.addEventListener('click', () => { AUDIO.soft(); S.board = el.dataset.board; save(); renderHome(); });
+    });
     $('#scene').querySelectorAll('[data-part]').forEach((el) => {
       el.addEventListener('click', () => {
         const part = el.dataset.part;
@@ -522,6 +532,8 @@
     if (cur.seasonNo) { first = !S.sdone[cur.id]; S.sdone[cur.id] = (S.sdone[cur.id] || 0) + 1; }
     else { first = !S.done[cur.id]; S.done[cur.id] = (S.done[cur.id] || 0) + 1; }
     S.jobsDone++;
+    // what a painting job leaves behind stays in the place's picture
+    if (cur.part && ENGINE.scene && ENGINE.scene.keep) S.painted[cur.part] = ENGINE.scene.keep();
     save();
     if (first) freshPart = cur.part;
     sitting.jobs++; sitting.coins += earnedThis + bonus; if (foundThis) sitting.finds++;
@@ -1259,7 +1271,7 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startStables: (i) => startChore(DATA.STABLE_CHORES[i], false), startLoft: (i) => startChore(DATA.LOFT_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
     render: () => renderHome(), save, openFinds, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
     setHour(h) { fakeHour = h; }, renderTitle, nextChore, nextPlaceWithJobs, resting, stopNow, oneJob,
   };

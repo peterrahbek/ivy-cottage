@@ -111,3 +111,16 @@ const U = (() => {
   if (typeof Path2D !== 'undefined' && !Path2D.prototype.roundRect) Path2D.prototype.roundRect = roundRect;
   U.roundRectFallback = roundRect;
 })();
+
+// A little cat for a place with nothing to do this season: it sits there and
+// now and then has a long, slow stretch. SVG for the place pictures; its
+// feet stand on x, y.
+U.restCat = (x, y, fur = '#8d8a86', flip = false) => {
+  const dk = U.shade(fur, -0.22), lt = U.shade(fur, 0.3);
+  return `<g class="rest" transform="translate(${x} ${y}) scale(${flip ? -1 : 1} 1)"><ellipse cx="0" cy="0.6" rx="14" ry="2.4" fill="#00000022"/><g class="rest-stretch">
+    <path d="M-11 -4 q-8 -1 -8 -9" stroke="${fur}" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-2" cy="-6.6" rx="10" ry="6.4" fill="${fur}"/><ellipse cx="-2" cy="-9.4" rx="7" ry="2.2" fill="${lt}" opacity="0.5"/>
+    <rect x="-9" y="-3.4" width="3.4" height="3.8" rx="1.4" fill="${dk}"/><rect x="4" y="-4" width="3.4" height="4.4" rx="1.4" fill="${fur}"/>
+    <circle cx="9" cy="-10.6" r="5" fill="${fur}"/><path d="M5.2 -14 l-0.4 -5 l4 3 Z M10 -15.4 l3.4 -3.4 l0.6 5 Z" fill="${fur}"/>
+    <path d="M9.6 -10.2 q1.2 1 2.4 0" stroke="${dk}" stroke-width="0.8" fill="none" stroke-linecap="round"/></g></g>`;
+};

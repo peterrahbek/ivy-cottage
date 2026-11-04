@@ -3,7 +3,7 @@
 // prints a JSON report; screenshots go to --out (default: a new temp folder).
 //
 //   node test/run.mjs puzzle js/pz-cups.js cups [--seeds 12] [--opts '{"where":"pottery"}'] [--out dir]
-//   node test/run.mjs place js/beta.js BETA cups,feed,hose,beds [--out dir]
+//   node test/run.mjs place js/beta.js BETA cups,feed,hose,beds [--opts '{"board":"make"}'] [--out dir]
 //   node test/run.mjs scene stones '{"shape":"yard"}' [--seed 5] [--out dir]
 //
 // The puzzle run checks the contract in js/puzzles.js: seed 1 is played with
@@ -135,7 +135,7 @@ async function place() {
   try {
     await b.send('Page.enable'); await b.send('Runtime.enable');
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1270, height: 1160, deviceScaleFactor: 1, mobile: false });
-    await open(b, pathToFileURL(join(root, 'test/place.html')).href + `?file=${encodeURIComponent('../' + file)}&obj=${encodeURIComponent(name)}&parts=${encodeURIComponent(parts)}`);
+    await open(b, pathToFileURL(join(root, 'test/place.html')).href + `?file=${encodeURIComponent('../' + file)}&obj=${encodeURIComponent(name)}&parts=${encodeURIComponent(parts)}` + (opt('opts', '') ? '&opts=' + encodeURIComponent(opt('opts', '')) : ''));
     await sleep(600);
     const r = await js(b, '({ errors: H.errors, parts: H.parts })');
     report.problems.push(...r.errors);

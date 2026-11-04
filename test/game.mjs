@@ -18,9 +18,14 @@
 // puzzles (beads, buttons, the locked box, the jigsaw, what's missing) played in
 // place, the new puzzles at the older places (a jigsaw at every place in autumn
 // and winter), a save from v22 meeting the new places, and the Finds shelf
-// folded by place. Prints a JSON report; pictures go to --out.
+// folded by place. Since v24 also: the stables and the painter's loft bought by
+// the opening rule and seen in every season, the canvas and the mural staying in
+// the loft's picture, the new puzzles out in the places, the two boards in the
+// puzzle room turned with a real tap, the little life of a place with nothing
+// to do, a save from v23 meeting the new places, and the opening money for both.
+// Prints a JSON report; pictures go to --out.
 //
-//   node test/game.mjs [--out dir]
+//   node test/game.mjs [--out dir] [--economy]     --economy prints the money only, in seconds
 
 import { mkdtempSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -34,6 +39,7 @@ const opt = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i
 const out = resolve(opt('out', '') || mkdtempSync(join(tmpdir(), 'ivy-game-')));
 mkdirSync(out, { recursive: true });
 
+const economyOnly = args.includes('--economy');
 const report = { out, problems: [], puzzles: [], screens: {}, regression: null };
 const problem = (s) => report.problems.push(s);
 const pic = (b, name) => shot(b, join(out, name + '.png'));
@@ -57,6 +63,7 @@ try {
   await b.send('Page.navigate', { url: pathToFileURL(join(root, 'index.html')).href });
   for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
   await js(b, `document.querySelector('#title').click()`); await sleep(800);
+  if (!economyOnly) {
   // the cottage's next-job card still gets its little picture of the mess
   const thumb = await js(b, `(document.querySelector('#nextCard .nextPic img') || {}).src || ''`);
   if (!thumb.startsWith('data:image/jpeg')) problem('no picture on the cottage next-job card');
@@ -65,6 +72,27 @@ try {
   if (!bthumb.startsWith('data:image/jpeg')) problem('no picture on the puzzle room next-job card');
   report.screens.homeBefore = await js(b, `({ brand: document.querySelector('#brandName').textContent, bar: document.querySelector('#restoredTxt').textContent, next: document.querySelector('#nextCard').innerText.replace(/\\s+/g, ' ') })`);
   await pic(b, 'home-beta-before');
+  if (!/0 of 18 puzzles solved/.test(report.screens.homeBefore.bar)) problem('puzzle room: ' + report.screens.homeBefore.bar);
+
+  // two boards, turned with a real tap on the tab with the arrow
+  {
+    const onBoard = () => js(b, `({ tab: document.querySelector('#scene [data-board]').dataset.board, parts: [...new Set([...document.querySelectorAll('#scene [data-part]')].map((e) => e.dataset.part))] })`);
+    const tapTab = async () => {
+      const q = await js(b, `(() => { const r = document.querySelector('#scene [data-board]').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2, w: r.width, h: r.height }; })()`);
+      if (q.h < 40 || q.w < 60) problem(`puzzle room: the tab is only ${q.w} by ${q.h}`);
+      await b.send('Input.synthesizeTapGesture', { x: q.x, y: q.y }); await sleep(700);
+    };
+    const think = await onBoard();
+    await tapTab();
+    const make = await onBoard();
+    await pic(b, 'home-beta-making');
+    await tapTab();
+    const again = await onBoard();
+    report.screens.boards = { think: think.parts, make: make.parts, back: again.parts.length };
+    if (think.tab !== 'make' || make.tab !== 'think') problem('puzzle room: the tab does not turn the board ' + JSON.stringify([think.tab, make.tab]));
+    if (think.parts.length + make.parts.length !== 18) problem(`puzzle room: ${think.parts.length} + ${make.parts.length} cards on the two boards`);
+    if (again.parts.join() !== think.parts.join()) problem('puzzle room: turning back did not show the first board');
+  }
 
   const chores = await js(b, 'DATA.BETA_CHORES.map((c) => ({ id: c.id, name: c.name, value: c.value }))');
   for (let i = 0; i < chores.length; i++) {
@@ -163,7 +191,7 @@ try {
   // it are done, started from the next-job card and played with real touches
   report.placed = [];
   for (const id of ['cafe-cups', 'rescue-feed', 'rescue-beds', 'gh-water', 'gh-cutting', 'canal-hold', 'books-shelves', 'pot-throw', 'pot-glaze', 'pot-firing', 'halt-lost', 'halt-parcels', 'halt-shelves',
-    'bb-necklace', 'bb-buttons', 'bb-bracelet', 'cu-box', 'cu-jigsaw', 'cu-seek']) {
+    'bb-necklace', 'bb-buttons', 'bb-bracelet', 'cu-box', 'cu-jigsaw', 'cu-seek', 'st-mane', 'st-saddles', 'lo-canvas', 'lo-mural', 'lo-mix']) {
     const c = await js(b, `(() => { const c = DATA.PLACES.flatMap((p) => p.chores).find((x) => x.id === '${id}'); return c && { place: c.place, index: c.index, value: c.value, puzzle: !!c.puzzle, family: c.family }; })()`);
     if (!c) { problem(`${id}: not in any place`); continue; }
     if (!c.puzzle || !['think', 'craft'].includes(c.family)) problem(`${id}: not a puzzle in its place`);
@@ -189,6 +217,16 @@ try {
     const part = await js(b, `(() => { const ch = DATA.PLACES.flatMap((p) => p.chores).find((x) => x.id === '${id}'); return document.querySelectorAll('#scene [data-part="' + ch.part + '"]').length; })()`);
     if (!part) problem(`${id}: no part of the picture for it`);
     report.placed.push({ id, place: c.place, card: card.text, chip: hud.chip, paid: d.coins - coins0, expected: want, find: d.find, partInPicture: part });
+  }
+
+  // what was painted stays in the loft's picture, in the colours it was painted
+  {
+    const paint = report.painted = await js(b, `(() => { const P = __ivy.S.painted || {}; __ivy.goPlace('loft');
+      const n = (part) => document.querySelectorAll('#scene [data-part="' + part + '"] polygon').length;
+      return { canvas: P.canvas, mural: P.mural, polysCanvas: n('canvas'), polysMural: n('mural') }; })()`);
+    if (!paint.canvas || !paint.mural) problem('painted: nothing kept from the canvas or the mural ' + JSON.stringify(paint));
+    if (paint.polysCanvas < 8 || paint.polysMural < 12) problem('painted: the picture does not show them ' + JSON.stringify(paint));
+    await sleep(600); await pic(b, 'loft-painted');
   }
 
   // an older save with the café restored and the year turning: the new job
@@ -239,7 +277,9 @@ try {
     ['x-cottage-seek', 'cottage'], ['x-cafe-seek', 'cafe'], ['x-books-seek', 'books'], ['x-rescue-seek', 'rescue'],
     ['x-rescue-collar', 'rescue'], ['x-cottage-buttons', 'cottage'], ['x-cottage-lock', 'cottage'], ['x-books-lock', 'books'], ['x-halt-lock', 'halt'],
     ['x-cottage-jigsaw', 'cottage'], ['x-cafe-jigsaw', 'cafe'], ['x-cove-jigsaw', 'cove'], ['x-rescue-jigsaw', 'rescue'], ['x-glass-jigsaw', 'glasshouse'],
-    ['x-canal-jigsaw', 'canal'], ['x-books-jigsaw', 'books'], ['x-pottery-jigsaw', 'pottery'], ['x-halt-jigsaw', 'halt'], ['x-beads-jigsaw', 'beads']]) {
+    ['x-canal-jigsaw', 'canal'], ['x-books-jigsaw', 'books'], ['x-pottery-jigsaw', 'pottery'], ['x-halt-jigsaw', 'halt'], ['x-beads-jigsaw', 'beads'],
+    ['x-stables-jigsaw', 'stables'], ['x-loft-jigsaw', 'loft'],
+    ['x-cottage-numbers', 'cottage'], ['x-cafe-numbers', 'cafe'], ['x-cove-stars', 'cove'], ['x-canal-stars', 'canal'], ['x-beads-stitch', 'beads'], ['x-rescue-stitch', 'rescue']]) {
     const pls = JSON.stringify(place === 'cottage' ? ['cottage', 'cove'] : ['cottage', place]);
     const j = await js(b, `(() => { for (let n = 1; n <= 24; n++) { const j = DATA.seasonJobs(n, ${pls}).find((x) => x.base === '${id}'); if (j) return { n, id: j.id, puzzle: !!j.puzzle, family: j.family, opts: j.opts }; } return null; })()`);
     if (!j) { problem(`${id}: never in a season`); continue; }
@@ -367,8 +407,10 @@ try {
     o.halt = await open('halt', 'Halfpenny Halt', 'pottery');
     o.beads = await open('beads', 'Button & Bead', 'halt');
     o.curio = await open('curio', 'Curiosities', 'beads');
-    // all four restored, in every season, by day and at night; every job part in the picture
-    for (const [pl, list] of [['pottery', 'POTTERY_CHORES'], ['halt', 'HALT_CHORES'], ['beads', 'BEAD_CHORES'], ['curio', 'CURIO_CHORES']]) {
+    o.stables = await open('stables', 'Foxglove Stables', 'curio');
+    o.loft = await open('loft', 'Loft', 'stables');
+    // all six restored, in every season, by day and at night; every job part in the picture
+    for (const [pl, list] of [['pottery', 'POTTERY_CHORES'], ['halt', 'HALT_CHORES'], ['beads', 'BEAD_CHORES'], ['curio', 'CURIO_CHORES'], ['stables', 'STABLE_CHORES'], ['loft', 'LOFT_CHORES']]) {
       const n0 = await js(b, `4 * Math.ceil((__ivy.S.seasonNo + 1) / 4)`);
       for (const [k, season] of [[1, 'summer'], [2, 'autumn'], [3, 'winter'], [4, 'spring']]) {
         await js(b, `(() => { const S = __ivy.S; S.owned.${pl} = 1; for (const c of DATA.${list}) S.done[c.id] = 1; S.seasonNo = ${n0} + ${k}; S.sdone = {}; __ivy.save(); __ivy.goPlace('${pl}'); })()`);
@@ -393,21 +435,24 @@ try {
 
   // the season budget: with every place restored no season grows past 37
   // jobs, the cottage and the newest place are always awake, the others take
-  // turns and never rest two seasons running; with seven places nothing changes
+  // turns and never rest three seasons running (two running only from thirteen
+  // places on, there is not room for less); with seven places nothing changes
   {
     const bud = report.budget = await js(b, `(() => {
       const all = DATA.PLACES.filter((p) => !p.beta).map((p) => p.id), out = { seasons: [], bad: [] };
-      const restSeasons = {};
+      const restRun = {};
       for (let n = 1; n <= 16; n++) {
         const aw = DATA.awakePlaces(n, all), jobs = DATA.seasonJobs(n, all);
         out.seasons.push(n + ': ' + jobs.length + ' jobs, resting ' + all.filter((p) => !aw.includes(p)).join(' '));
         if (jobs.length > DATA.SEASON_BUDGET) out.bad.push('season ' + n + ' has ' + jobs.length + ' jobs');
         if (!aw.includes('cottage') || !aw.includes(all[all.length - 1])) out.bad.push('season ' + n + ': the cottage or the newest place is resting');
-        for (const p of all) if (!aw.includes(p)) { if (restSeasons[p] === n - 1) out.bad.push(p + ' rests two seasons running (' + n + ')'); restSeasons[p] = n; }
+        for (const p of all) { restRun[p] = aw.includes(p) ? 0 : (restRun[p] || 0) + 1; if (restRun[p] > 2) out.bad.push(p + ' rests three seasons running (' + n + ')'); }
         for (const p of aw) if (!jobs.some((j) => j.place === p)) out.bad.push('season ' + n + ': ' + p + ' is awake with no jobs');
         const per = {}; for (const j of jobs) per[j.place] = per[j.place] || { think: 0, craft: 0 }, j.family in per[j.place] && per[j.place][j.family]++;
         for (const [p, c] of Object.entries(per)) if (c.think > 1 || c.craft > 1) out.bad.push('season ' + n + ': ' + p + ' has ' + JSON.stringify(c));
       }
+      const twelve = all.slice(0, 12), run12 = {};
+      for (let n = 1; n <= 48; n++) { const aw = DATA.awakePlaces(n, twelve); for (const p of twelve) { run12[p] = aw.includes(p) ? 0 : (run12[p] || 0) + 1; if (run12[p] > 1) out.bad.push('twelve places: ' + p + ' rests two seasons running (' + n + ')'); } }
       const seven = all.slice(0, 7);
       for (let n = 1; n <= 8; n++) if (DATA.awakePlaces(n, seven).length !== 7) out.bad.push('seven places: season ' + n + ' rests a place');
       return out;
@@ -431,6 +476,22 @@ try {
     if (dots < 2 || dots > 7) problem('budget: the places list has ' + dots + ' places with a dot');
     await pic(b, 'places-budget');
     await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+  }
+
+  // a place with nothing left to do this season has a little life of its own;
+  // with jobs waiting it has none
+  {
+    const life = report.rest = {};
+    for (const pl of ['cottage', 'canal', 'rescue', 'stables', 'loft']) {
+      await js(b, `(() => { const S = __ivy.S; S.seasonNo = 9; S.sdone = {}; __ivy.save(); __ivy.goPlace('${pl}'); })()`); await sleep(400);
+      const busy = await js(b, `__ivy.seasonJobs().some((j) => j.place === '${pl}') ? document.querySelectorAll('#scene .rest').length : null`);
+      await js(b, `(() => { const S = __ivy.S; for (const j of __ivy.seasonJobs()) if (j.place === '${pl}') S.sdone[j.id] = 1; __ivy.save(); __ivy.render(); })()`); await sleep(400);
+      const idle = await js(b, `document.querySelectorAll('#scene .rest').length`);
+      life[pl] = { busy, idle };
+      if (busy) problem(`rest: ${pl} shows its little life with jobs waiting`);
+      if (!idle) problem(`rest: ${pl} has no little life with nothing to do`);
+      await pic(b, `rest-${pl}`);
+    }
   }
 
   // the walk round the village: "jobs are waiting at" names the next place
@@ -533,7 +594,7 @@ try {
     const old = report.olderV23 = {};
     await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S));
       S.owned = { cottage: 1, beta: 1 }; S.done = {}; S.decor = {}; S.finds = {};
-      for (const p of DATA.PLACES) if (!p.beta && !['beads', 'curio'].includes(p.id)) { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; }
+      for (const p of DATA.PLACES) if (!p.beta && !['beads', 'curio', 'stables', 'loft'].includes(p.id)) { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; }
       S.seasonNo = 40; S.sdone = {}; S.coins = 105000; S.place = 'halt'; S.wips = {}; S.pauses = false;
       S.restoredAt = { cottage: 0, cafe: 1, cove: 3, rescue: 6, glasshouse: 12, canal: 18, books: 28, pottery: 32, halt: 37 }; delete S.oldWaits;
       sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
@@ -565,8 +626,41 @@ try {
     await js(b, `document.querySelector('#sheet').classList.remove('on')`);
   }
 
-  // the money: jobs a season and coins a year with 7, 9, 10 and 17 places, and
-  // whether the coins are there for the pottery and the station when their wait is over
+  // an older save meets v24: a save from v23 (the curiosity shop restored three
+  // seasons ago) keeps its numbers, waits one more season for the stables, and the
+  // loft waits a year after them; a save from before the rule waits as well
+  {
+    const old = report.olderV24 = {};
+    const plant = (more) => js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S));
+      S.owned = { cottage: 1, beta: 1 }; S.done = {}; S.decor = {}; S.finds = {};
+      for (const p of DATA.PLACES) if (!p.beta && !['stables', 'loft'].includes(p.id)) { S.owned[p.id] = 1; for (const c of p.chores) S.done[c.id] = 1; }
+      S.seasonNo = 50; S.sdone = {}; S.coins = 125000; S.place = 'curio'; S.wips = {}; S.pauses = false; delete S.board; delete S.painted;
+      S.restoredAt = { cottage: 0, cafe: 1, cove: 3, rescue: 6, glasshouse: 12, canal: 18, books: 28, pottery: 32, halt: 37, beads: 42, curio: 47 }; delete S.oldWaits; ${more}
+      sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    const land = async () => {
+      await sleep(600);
+      for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
+      await js(b, `document.querySelector('#title').click()`); await sleep(800);
+      await js(b, `__ivy.openPlaces()`); await sleep(800);
+    };
+    await plant(''); await land();
+    old.v23 = { coins: await js(b, '__ivy.S.coins'), board: await js(b, '__ivy.S.board'), painted: await js(b, '__ivy.S.painted'), stables: await card('Foxglove'), loft: await card('Loft'), jobs: await js(b, `__ivy.seasonJobs().length`) };
+    if (old.v23.coins !== 125000) problem('older save (v23): the coins changed to ' + old.v23.coins);
+    if (old.v23.board !== 'think' || !old.v23.painted) problem('older save (v23): no board or painted field ' + JSON.stringify([old.v23.board, old.v23.painted]));
+    if (!old.v23.stables || old.v23.stables.buy || !old.v23.stables.opens.some((t) => /1 season to go/.test(t))) problem('older save (v23): the stables should wait one more season ' + JSON.stringify(old.v23.stables));
+    if (!old.v23.loft || old.v23.loft.buy || !old.v23.loft.opens.some((t) => /A year after that/.test(t))) problem('older save (v23): the loft should wait a year after the stables ' + JSON.stringify(old.v23.loft));
+    await js(b, `[...document.querySelectorAll('.placeCard')].find((c) => c.textContent.includes('Foxglove')).scrollIntoView({ block: 'center' })`); await sleep(300);
+    await pic(b, 'older-save-v23');
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+    await plant('S.oldWaits = true;'); await land();
+    old.oldWaits = { stables: await card('Foxglove') };
+    if (!old.oldWaits.stables || old.oldWaits.stables.buy) problem('older save (before the rule): the stables should wait too ' + JSON.stringify(old.oldWaits));
+    await js(b, `document.querySelector('#sheet').classList.remove('on')`);
+  }
+  } // everything but the money
+
+  // the money: jobs a season and coins a year with 7, 9, 11, 13 and 17 places,
+  // and whether the coins are there for each new place when its wait is over
   {
     report.economy = await js(b, `(() => {
       const pay = (j) => j.value * (j.puzzle ? 1.25 : 1.4); // + finishing bonus, + coin stashes on tool jobs
@@ -578,14 +672,15 @@ try {
       const extra = (k) => ids.concat(Array.from({ length: Math.max(0, k - ids.length) }, (_, i) => 'place' + (ids.length + i + 1))).slice(0, k);
       const estimate = (pl) => { let coins = 0; const jobs = [], awake = [];
         for (let n = 17; n < 21; n++) { const aw = DATA.awakePlaces(n, pl); let c = 0;
-          for (const p of aw) for (let i = 0; i < (DATA.PER_SEASON[p] || 5); i++) c += DATA.seasonValue(n, i) * 1.37;
+          for (const p of aw) for (let i = 0; i < (DATA.PER_SEASON[p] || 5); i++) c += DATA.seasonValue(n, i, pl.length) * 1.37;
           coins += c; awake.push(aw.length); jobs.push(aw.reduce((a, p) => a + (DATA.PER_SEASON[p] || 5), 0)); }
         return { jobsPerSeason: jobs, awakePlaces: awake, coinsPerYear: Math.round(coins) }; };
-      out.places = Object.fromEntries([7, 9, 11, 17].map((k) => [k, estimate(extra(k))]));
+      out.places = Object.fromEntries([7, 9, 11, 13, 17].map((k) => [k, estimate(extra(k))]));
       out.places['9'].coinsPerYearPlayed = year(ids.slice(0, 9));
-      out.places['11'].coinsPerYearPlayed = year(ids);
+      out.places['11'].coinsPerYearPlayed = year(ids.slice(0, 11));
+      out.places['13'].coinsPerYearPlayed = year(ids);
       out.opening = {};
-      for (const id of ['pottery', 'halt', 'beads', 'curio']) {
+      for (const id of ['pottery', 'halt', 'beads', 'curio', 'stables', 'loft']) {
         const p = DATA.placeOf(id), prev = DATA.placeOf(p.needs), before = ids.slice(0, ids.indexOf(prev.id) + 1);
         const restore = Math.round(prev.chores.reduce((a, c) => a + pay(c), 0)), y = year(before);
         const fams = [...new Set(prev.chores.map((c) => c.family))].filter((f) => !TOOLS.FAM[f].hands);
@@ -609,19 +704,21 @@ try {
     // the music for the new places renders
     report.music = await js(b, `(async () => ({ pottery: await AUDIO.debugRender({ place: 'pottery', season: 'summer' }, 12), halt: await AUDIO.debugRender({ place: 'halt', season: 'winter', night: true }, 12),
       beads: await AUDIO.debugRender({ place: 'beads', season: 'spring' }, 12), curio: await AUDIO.debugRender({ place: 'curio', season: 'autumn' }, 12),
-      curioIntro: await AUDIO.debugRender({ place: 'curio', season: 'winter', cycle: 0 }, 8) }))()`);
+      curioIntro: await AUDIO.debugRender({ place: 'curio', season: 'winter', cycle: 0 }, 8),
+      stables: await AUDIO.debugRender({ place: 'stables', season: 'summer' }, 12), stablesIntro: await AUDIO.debugRender({ place: 'stables', season: 'autumn', cycle: 0 }, 8),
+      loft: await AUDIO.debugRender({ place: 'loft', season: 'spring' }, 12), loftNight: await AUDIO.debugRender({ place: 'loft', season: 'winter', night: true }, 12) }))()`);
     for (const [k, v] of Object.entries(report.music)) if (!(v.peak > 0.005)) problem(`music: ${k} is silent (${JSON.stringify(v)})`);
   }
 
   // every other job, straight through
-  report.regression = await js(b, `(async () => {
+  if (!economyOnly) report.regression = await js(b, `(async () => {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES, ...DATA.GLASS_CHORES, ...DATA.CANAL_CHORES, ...DATA.BOOK_CHORES, ...DATA.POTTERY_CHORES, ...DATA.HALT_CHORES, ...DATA.BEAD_CHORES, ...DATA.CURIO_CHORES];
+    const jobs = [...DATA.CHORES, ...DATA.CAFE_CHORES, ...DATA.COVE_CHORES, ...DATA.RESCUE_CHORES, ...DATA.GLASS_CHORES, ...DATA.CANAL_CHORES, ...DATA.BOOK_CHORES, ...DATA.POTTERY_CHORES, ...DATA.HALT_CHORES, ...DATA.BEAD_CHORES, ...DATA.CURIO_CHORES, ...DATA.STABLE_CHORES, ...DATA.LOFT_CHORES];
     for (let n = 1; n <= 8; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue', 'glasshouse', 'canal', 'books']));
     for (let n = 1; n <= 12; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', 'cafe', 'cove', 'rescue', 'glasshouse', 'canal', 'books', 'pottery', 'halt']));
     for (let n = 1; n <= 12; n++) jobs.push(...DATA.seasonJobs(n, DATA.PLACES.filter((p) => !p.beta).map((p) => p.id)));
-    // every seasonal job of the four newest places at least once
-    for (const pl of ['pottery', 'halt', 'beads', 'curio']) for (let n = 1; n <= 16; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', pl]).filter((j) => j.place === pl));
+    // every seasonal job of the six newest places at least once
+    for (const pl of ['pottery', 'halt', 'beads', 'curio', 'stables', 'loft']) for (let n = 1; n <= 16; n++) jobs.push(...DATA.seasonJobs(n, ['cottage', pl]).filter((j) => j.place === pl));
     const bad = [];
     for (const j of jobs) {
       try {
@@ -634,8 +731,8 @@ try {
       } catch (e) { bad.push(j.id + ': ' + e.message); }
     }
     return { jobs: jobs.length, bad };
-  })()`);
-  for (const s of report.regression.bad) problem('regression: ' + s);
+  })()`, 30 * 60000);
+  for (const s of (report.regression || { bad: [] }).bad) problem('regression: ' + s);
   const errs = await js(b, 'window.__errs');
   for (const e of errs) problem('page error: ' + e);
 } catch (e) { problem('game test: ' + e.message); }

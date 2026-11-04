@@ -7,7 +7,8 @@
 // (only that place takes one, so there is never a gap): the right bead clicks
 // on with a little bounce, any other glides back to the box.
 // opts.what: undefined (a necklace on a velvet tray), 'bracelet' (twelve
-// places round a little cushion) or 'collar' (a cat's collar with a buckle).
+// places round a little cushion), 'collar' (a cat's collar with a buckle) or
+// 'mane' (ribbons along the plait in a pony's mane, out of a wooden saddle box).
 //   node test/run.mjs puzzle js/pz-beads.js beads --seeds 30 [--opts '{"what":"bracelet"}']
 
 (() => {
@@ -52,8 +53,36 @@
       }
     } else c.ellipse(0, 0, r * 0.46, r * 1.02, 0, 0, 7); // a disc: flat, across the thread
   }
+  // a ribbon tied in a bow: two tails, two loops and a knot in the middle in
+  // the bead's own shape, so the shape tells the kinds apart as well as the colour
+  function ribbon(c, kd, x, y, s, a) {
+    const r = s / 2, col = kd.col, deep = U.shade(col, -0.24), pale = U.shade(col, 0.34);
+    c.save(); c.translate(x, y); c.rotate(a);
+    c.lineJoin = 'round'; c.lineWidth = Math.max(0.8, s * 0.035); c.strokeStyle = EDGE;
+    for (const sd of [-1, 1]) {
+      c.fillStyle = deep;
+      c.beginPath(); c.moveTo(sd * r * 0.12, r * 0.08);
+      c.quadraticCurveTo(sd * r * 0.62, r * 0.62, sd * r * 0.8, r * 1.3);
+      c.lineTo(sd * r * 0.42, r * 1.08); c.lineTo(sd * r * 0.22, r * 1.36);
+      c.quadraticCurveTo(sd * r * 0.2, r * 0.7, -sd * r * 0.08, r * 0.1);
+      c.closePath(); c.fill(); c.stroke();
+    }
+    for (const sd of [-1, 1]) {
+      const g = c.createLinearGradient(0, -r, 0, r);
+      g.addColorStop(0, pale); g.addColorStop(0.55, col); g.addColorStop(1, deep);
+      c.fillStyle = g;
+      c.beginPath(); c.moveTo(0, -r * 0.14);
+      c.bezierCurveTo(sd * r * 0.5, -r * 0.98, sd * r * 1.26, -r * 0.86, sd * r * 1.24, -r * 0.04);
+      c.bezierCurveTo(sd * r * 1.24, r * 0.66, sd * r * 0.56, r * 0.62, 0, r * 0.14);
+      c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = 'rgba(52,36,28,0.28)'; c.beginPath(); c.moveTo(sd * r * 0.3, 0); c.quadraticCurveTo(sd * r * 0.62, -r * 0.2, sd * r * 0.88, -r * 0.16); c.moveTo(sd * r * 0.3, r * 0.08); c.quadraticCurveTo(sd * r * 0.6, r * 0.3, sd * r * 0.84, r * 0.26); c.stroke();
+      c.strokeStyle = EDGE;
+    }
+    c.restore();
+  }
   // one bead, s units across at x, y; a = the direction of the thread there
   function bead(c, kd, x, y, s, a = 0, hole = false) {
+    if (kd.ribbon) { ribbon(c, kd, x, y, s, a); kd = kd.knot; s *= 0.64; hole = false; }
     const r = s / 2, col = kd.col, rot = TURNS[kd.shape] ? a : 0;
     c.save(); c.translate(x, y); c.rotate(rot);
     // the light comes from the top left however the bead is turned
@@ -116,6 +145,9 @@
   const RING = { x: 180, y: 226, r: 108 };
   const COLLAR = { x: 180, y: 106.3, r: 169.7, from: 165.1, to: 14.9 };
   const collarAt = (u) => { const th = ((COLLAR.from + (COLLAR.to - COLLAR.from) * u) * Math.PI) / 180; return [COLLAR.x + COLLAR.r * Math.cos(th), COLLAR.y + COLLAR.r * Math.sin(th)]; };
+  // the plait down a pony's neck, from behind the ears to the shoulder
+  const maneAt = (u) => { const v = 1 - u; return [v * v * 100 + 2 * v * u * 250 + u * u * 342, v * v * 104 + 2 * v * u * 98 + u * u * 358]; };
+  const PONIES = [['#b98354', '#4a3226'], ['#a9693f', '#3b2a22'], ['#a7a29a', '#4f4a44'], ['#c9a066', '#6b4a32']];
   const STRINGS = {
     necklace: {
       size: 34, inside: [180, 150], crop: { x: 0, y: 40, w: 360, h: 360 },
@@ -134,6 +166,10 @@
     collar: {
       size: 26, inside: [COLLAR.x, COLLAR.y], crop: { x: 0, y: 60, w: 360, h: 360 },
       make: () => along(collarAt, 0.13, 0.9, N),
+    },
+    mane: {
+      size: 27, inside: [620, 220], crop: { x: 0, y: 44, w: 360, h: 360 },
+      make: () => along(maneAt, 0.03, 0.985, N),
     },
   };
 
@@ -160,6 +196,8 @@
     const r = S.r, what = STRINGS[S.opts && S.opts.what] ? S.opts.what : 'necklace', V = STRINGS[what];
     const shapes = PZ.shuffle(r, SHAPES.slice()).slice(0, 6), cols = PZ.shuffle(r, COLOURS.slice()).slice(0, 6);
     const kinds = shapes.map((shape, i) => ({ shape, col: cols[i] }));
+    // in a mane every kind is a ribbon, and the kind's shape is the knot in it
+    if (what === 'mane') for (const kd of kinds) { kd.ribbon = true; kd.knot = { shape: kd.shape, col: U.shade(kd.col, 0.2) }; }
     const kindIn = PZ.shuffle(r, [0, 1, 2, 3, 4, 5]);           // kindIn[compartment] = kind
     const cellOf = kindIn.map((_, k) => kindIn.indexOf(k));   // cellOf[kind] = compartment
     const { motif, filled } = makePattern(r);
@@ -167,6 +205,7 @@
     const { pts, places: P } = V.make();
     const s = V.size, steps = N - filled;
     const velvet = U.pick(r, ['#34575a', '#4a3a52', '#2f4a3c']);
+    const pony = what === 'mane' ? U.pick(r, PONIES) : null;
     // a little heap in every compartment, the clearest one in front
     const heaps = CELLS.map(() => {
       const out = [];
@@ -191,7 +230,11 @@
     });
     function wall(c) {
       const { x0, y0, x1 } = S.bleed;
-      if (what === 'collar') {
+      if (what === 'mane') {
+        // the stable block: whitewashed boards above the stall
+        c.fillStyle = '#efe6d4'; c.fillRect(x0, y0, x1 - x0, 46 - y0);
+        c.fillStyle = 'rgba(120,95,65,0.14)'; for (let x = Math.floor(x0 / 30) * 30; x < x1; x += 30) c.fillRect(x, y0, 1.4, 46 - y0);
+      } else if (what === 'collar') {
         // the farmhouse kitchen: painted boards
         c.fillStyle = '#b9cdb0'; c.fillRect(x0, y0, x1 - x0, 46 - y0);
         c.fillStyle = 'rgba(60,80,50,0.2)'; for (let x = Math.floor(x0 / 26) * 26; x < x1; x += 26) c.fillRect(x, y0, 1.4, 46 - y0);
@@ -200,10 +243,18 @@
         c.fillStyle = '#f0d6d0'; c.fillRect(x0, y0, x1 - x0, 46 - y0);
         c.fillStyle = 'rgba(205,140,140,0.2)'; for (let x = Math.floor(x0 / 18) * 18; x < x1; x += 18) c.fillRect(x, y0, 7, 46 - y0);
       }
-      PZ.text(c, 'Carry on the pattern, bead by bead', W / 2, 22, { size: 13, color: INK2, maxW: 340 });
+      PZ.text(c, what === 'mane' ? 'Carry on the pattern, ribbon by ribbon' : 'Carry on the pattern, bead by bead', W / 2, 22, { size: 13, color: INK2, maxW: 340 });
     }
     function table(c) {
       const { x0, x1, y1 } = S.bleed, rr = U.rng(4517);
+      if (what === 'mane') {
+        // the stable floor, swept, with a little straw about
+        c.fillStyle = '#b89c70'; c.fillRect(x0, 40, x1 - x0, y1 - 40);
+        c.fillStyle = 'rgba(90,60,30,0.14)'; for (let y = 430; y < y1; y += 26) c.fillRect(x0, y, x1 - x0, 1.4);
+        c.lineCap = 'round'; c.lineWidth = 1.3;
+        for (let i = 0; i < 90; i++) { const x = x0 + rr() * (x1 - x0), y = 412 + rr() * (y1 - 412), a = rr() * 3.14; c.strokeStyle = `rgba(${rr() < 0.5 ? '233,201,120' : '206,168,92'},0.75)`; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * (6 + rr() * 9), y + Math.sin(a) * 3); c.stroke(); }
+        return;
+      }
       if (what === 'collar') {
         // a blue gingham cloth on the kitchen table
         c.fillStyle = '#f7f2e8'; c.fillRect(x0, 40, x1 - x0, y1 - 40);
@@ -281,6 +332,120 @@
       c.strokeStyle = '#a77d1e'; c.lineWidth = 1; c.stroke();
       c.fillStyle = '#f6d77a'; c.fillRect(x - 4, y - RING.r - 3, 8, 2);
     }
+    // the plait itself: a rope of hair with strands crossing it, tied off with a tuft
+    function plait(c, ps, hair) {
+      const pale = U.shade(hair, 0.36), step = 11;
+      c.lineCap = 'round'; c.lineJoin = 'round';
+      c.strokeStyle = 'rgba(40,25,15,0.3)'; c.lineWidth = 16; poly(c, ps, 1.6, 3); c.stroke();
+      c.strokeStyle = U.shade(hair, -0.2); c.lineWidth = 12; poly(c, ps); c.stroke();
+      for (let i = 0, k = 0; i + 4 < ps.length; i += step, k++) {
+        const [x, y] = ps[i], [ax, ay] = ps[i + 4], a = Math.atan2(ay - y, ax - x) + (k % 2 ? 0.74 : -0.74);
+        c.fillStyle = k % 2 ? pale : hair; c.strokeStyle = 'rgba(25,15,10,0.5)'; c.lineWidth = 1;
+        c.beginPath(); c.ellipse(x, y, 11, 5, a, 0, 7); c.fill(); c.stroke();
+      }
+    }
+    // a pony in its stall, looking out over the half-door, quite content
+    function maneBase(c) {
+      const { x0, x1 } = S.bleed, rr = U.rng(3307), [coat, hair] = pony;
+      const deep = U.shade(coat, -0.2), soft = U.shade(coat, 0.18), muzzle = U.shade(coat, -0.38);
+      // the boards at the back of the stall, and the beam over it
+      c.fillStyle = '#7a5a40'; c.fillRect(x0, 40, x1 - x0, 376);
+      for (let x = Math.floor(x0 / 36) * 36; x < x1; x += 36) {
+        c.fillStyle = `rgba(${rr() < 0.5 ? '255,225,180' : '40,25,15'},${(0.03 + rr() * 0.06).toFixed(3)})`; c.fillRect(x, 40, 36, 376);
+        c.fillStyle = 'rgba(40,25,15,0.3)'; c.fillRect(x, 40, 1.6, 376);
+      }
+      c.fillStyle = '#5e4330'; c.fillRect(x0, 40, x1 - x0, 12);
+      c.fillStyle = 'rgba(255,225,180,0.2)'; c.fillRect(x0, 40, x1 - x0, 1.6);
+      c.fillStyle = 'rgba(30,20,10,0.25)'; c.fillRect(x0, 52, x1 - x0, 5);
+      // a rack of hay on the far wall
+      c.strokeStyle = 'rgba(40,25,15,0.3)'; c.lineWidth = 7; c.beginPath(); c.moveTo(258, 116); c.lineTo(346, 116); c.stroke();
+      for (let i = 0; i < 60; i++) { const x = 256 + rr() * 92, y = 76 + rr() * 42, a = -1.57 + (rr() - 0.5) * 1.5; c.strokeStyle = rr() < 0.5 ? '#e4c777' : '#cdaa58'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, y); c.lineTo(x + Math.cos(a) * 16, y + Math.sin(a) * 16); c.stroke(); }
+      c.strokeStyle = '#8a6a4a'; c.lineWidth = 3.4; for (let x = 262; x <= 346; x += 14) { c.beginPath(); c.moveTo(x, 70); c.lineTo(x + 3, 116); c.stroke(); }
+      c.strokeStyle = '#6b4a32'; c.lineWidth = 6; c.beginPath(); c.moveTo(252, 70); c.lineTo(352, 70); c.moveTo(254, 116); c.lineTo(352, 116); c.stroke();
+      // an old horseshoe on a nail, for luck
+      c.strokeStyle = '#a9a39a'; c.lineWidth = 6; c.lineCap = 'round'; c.beginPath(); c.arc(38, 84, 13, Math.PI * 0.85, Math.PI * 2.15); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,0.3)'; c.lineWidth = 1.4; c.beginPath(); c.arc(38, 84, 14.6, Math.PI * 1.1, Math.PI * 1.6); c.stroke();
+      c.fillStyle = '#3a2a22'; c.beginPath(); c.arc(38, 70, 2, 0, 7); c.fill();
+      // the neck and the shoulder, running down behind the half-door
+      const g = c.createLinearGradient(120, 280, 250, 150);
+      g.addColorStop(0, deep); g.addColorStop(1, soft);
+      c.fillStyle = 'rgba(30,20,10,0.25)';
+      neck(c, 5, 6); c.fill();
+      c.fillStyle = g; neck(c, 0, 0); c.fill();
+      c.strokeStyle = 'rgba(70,45,25,0.25)'; c.lineWidth = 1.4; neck(c, 0, 0); c.stroke();
+      // far ear, then the head
+      ear(c, 87, 78, -0.2, deep, muzzle);
+      c.fillStyle = 'rgba(30,20,10,0.18)'; head(c, 4, 5); c.fill();
+      const hg = c.createLinearGradient(40, 220, 130, 110);
+      hg.addColorStop(0, deep); hg.addColorStop(0.5, coat); hg.addColorStop(1, soft);
+      c.fillStyle = hg; head(c, 0, 0); c.fill();
+      c.strokeStyle = 'rgba(70,45,25,0.3)'; c.lineWidth = 1.4; head(c, 0, 0); c.stroke();
+      // the soft muzzle, a smile and a nostril
+      c.save(); head(c, 0, 0); c.clip();
+      c.fillStyle = muzzle; c.globalAlpha = 0.55; c.beginPath(); c.ellipse(36, 226, 30, 25, -0.6, 0, 7); c.fill(); c.globalAlpha = 1;
+      c.restore();
+      c.fillStyle = 'rgba(30,20,15,0.7)'; c.beginPath(); c.ellipse(36, 208, 5, 3.4, -0.9, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(30,20,15,0.65)'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(30, 232); c.quadraticCurveTo(46, 238, 62, 224); c.stroke();
+      // a little white star between the eyes
+      c.fillStyle = '#fbf6ec'; c.beginPath();
+      for (let i = 0; i < 10; i++) { const a = -1.2 + (i * Math.PI) / 5, d = i % 2 ? 3.6 : 7.6; const x = 73 + Math.cos(a) * d, y = 151 + Math.sin(a) * d; if (i) c.lineTo(x, y); else c.moveTo(x, y); }
+      c.closePath(); c.fill();
+      // the eye
+      c.fillStyle = '#3a2a22'; c.beginPath(); c.ellipse(EYE.x, EYE.y, 7.5, 8.5, -0.3, 0, 7); c.fill();
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(EYE.x - 2.4, EYE.y - 3, 2.4, 0, 7); c.fill();
+      c.beginPath(); c.arc(EYE.x + 2.4, EYE.y + 2.6, 1.1, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(40,25,15,0.55)'; c.lineWidth = 1.6; c.beginPath(); c.arc(EYE.x, EYE.y, 11, -2.6, -0.5); c.stroke();
+      // near ear and forelock
+      ear(c, 112, 78, 0.16, coat, muzzle);
+      c.fillStyle = hair; c.beginPath(); c.moveTo(114, 82); c.bezierCurveTo(96, 80, 82, 92, 74, 118); c.bezierCurveTo(84, 110, 88, 112, 92, 122); c.bezierCurveTo(96, 110, 102, 106, 108, 112); c.bezierCurveTo(112, 104, 118, 98, 124, 96); c.closePath(); c.fill();
+      c.strokeStyle = U.shade(hair, 0.28); c.lineWidth = 1.6; c.beginPath(); c.moveTo(108, 88); c.quadraticCurveTo(92, 92, 82, 108); c.moveTo(112, 92); c.quadraticCurveTo(102, 96, 96, 110); c.stroke();
+      // the short mane along the top of the neck, tufts leaning back
+      const crest = offset(pts, -9);
+      for (let i = 6; i < crest.length - 8; i += 8) {
+        const [x, y] = crest[i], [ax, ay] = crest[i + 3];
+        c.fillStyle = i % 16 ? hair : U.shade(hair, 0.14);
+        c.beginPath(); c.ellipse(x, y, 8, 3.6, Math.atan2(ay - y, ax - x) - 0.9, 0, 7); c.fill();
+      }
+      plait(c, pts, hair);
+      // the half-door across the front, in green planks with an oak rail
+      c.fillStyle = 'rgba(30,20,10,0.3)'; c.fillRect(x0, 346, x1 - x0, 8);
+      c.fillStyle = '#4e7b5b'; c.fillRect(x0, 352, x1 - x0, 62);
+      for (let x = Math.floor(x0 / 40) * 40; x < x1; x += 40) {
+        c.fillStyle = `rgba(${rr() < 0.5 ? '255,250,230' : '20,40,25'},${(0.04 + rr() * 0.06).toFixed(3)})`; c.fillRect(x, 352, 40, 62);
+        c.fillStyle = 'rgba(20,40,25,0.32)'; c.fillRect(x, 352, 1.6, 62);
+      }
+      c.strokeStyle = 'rgba(20,40,25,0.35)'; c.lineWidth = 9; c.lineCap = 'butt'; c.beginPath(); c.moveTo(x0, 412); c.lineTo(x1, 362); c.stroke();
+      c.strokeStyle = '#5f8a6a'; c.lineWidth = 7; c.beginPath(); c.moveTo(x0, 412); c.lineTo(x1, 362); c.stroke();
+      c.fillStyle = '#6b4a32'; c.fillRect(x0, 348, x1 - x0, 10);
+      c.fillStyle = 'rgba(255,225,180,0.3)'; c.fillRect(x0, 348, x1 - x0, 1.6);
+      c.fillStyle = 'rgba(30,20,10,0.3)'; c.fillRect(x0, 412, x1 - x0, 6);
+    }
+    const EYE = { x: 86, y: 132 };
+    function neck(c, dx, dy) {
+      const { x1 } = S.bleed;
+      c.beginPath(); c.moveTo(88 + dx, 92 + dy);
+      c.quadraticCurveTo(252 + dx, 80 + dy, 352 + dx, 340 + dy);
+      c.lineTo(x1 + 8 + dx, 350 + dy); c.lineTo(x1 + 8 + dx, 416 + dy); c.lineTo(112 + dx, 416 + dy);
+      c.quadraticCurveTo(136 + dx, 290 + dy, 118 + dx, 196 + dy);
+      c.closePath();
+    }
+    function head(c, dx, dy) {
+      c.beginPath(); c.moveTo(104 + dx, 84 + dy);
+      c.bezierCurveTo(84 + dx, 92 + dy, 66 + dx, 124 + dy, 52 + dx, 156 + dy);
+      c.bezierCurveTo(42 + dx, 178 + dy, 22 + dx, 196 + dy, 22 + dx, 218 + dy);
+      c.bezierCurveTo(22 + dx, 240 + dy, 46 + dx, 248 + dy, 62 + dx, 238 + dy);
+      c.bezierCurveTo(78 + dx, 228 + dy, 92 + dx, 210 + dy, 112 + dx, 200 + dy);
+      c.bezierCurveTo(142 + dx, 186 + dy, 154 + dx, 150 + dy, 140 + dx, 116 + dy);
+      c.bezierCurveTo(134 + dx, 98 + dy, 122 + dx, 84 + dy, 104 + dx, 84 + dy);
+      c.closePath();
+    }
+    function ear(c, x, y, rot, col, inner) {
+      c.save(); c.translate(x, y); c.rotate(rot);
+      c.fillStyle = col; c.beginPath(); c.moveTo(-10, 12); c.bezierCurveTo(-13, -8, -5, -24, 2, -32); c.bezierCurveTo(10, -22, 14, -6, 11, 12); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(70,45,25,0.3)'; c.lineWidth = 1.2; c.stroke();
+      c.fillStyle = inner; c.globalAlpha = 0.55; c.beginPath(); c.moveTo(-4, 10); c.bezierCurveTo(-6, -6, -2, -16, 2, -22); c.bezierCurveTo(6, -14, 8, -4, 6, 10); c.closePath(); c.fill(); c.globalAlpha = 1;
+      c.restore();
+    }
     function collarBase(c) {
       // a ball of wool, and the cat asleep in a basket, waiting for nothing at all
       const wx = 70, wy = 352;
@@ -347,13 +512,20 @@
     function dot(c, x, y, rad, col) { c.fillStyle = col; c.beginPath(); c.arc(x, y, rad, 0, 7); c.fill(); }
     // the bead box (a biscuit tin at the farmhouse), a little heap in each compartment
     function box(c) {
-      const { x, y, w, h } = TRAY, tin = what === 'collar';
+      const { x, y, w, h } = TRAY, tin = what === 'collar', tack = what === 'mane';
       c.fillStyle = 'rgba(60,40,20,0.26)'; PZ.rr(c, x + 3, y + 5, w, h, 12); c.fill();
-      c.fillStyle = tin ? '#6f93b8' : '#9c6b43'; PZ.rr(c, x, y, w, h, 12); c.fill();
+      c.fillStyle = tin ? '#6f93b8' : tack ? '#7b5232' : '#9c6b43'; PZ.rr(c, x, y, w, h, tack ? 7 : 12); c.fill();
       c.fillStyle = tin ? 'rgba(255,255,255,0.3)' : 'rgba(255,225,180,0.22)'; PZ.rr(c, x + 8, y + 2, w - 16, 3, 2); c.fill();
       if (tin) { c.strokeStyle = 'rgba(246,239,227,0.6)'; c.lineWidth = 1.4; c.setLineDash([2, 4]); PZ.rr(c, x + 3.5, y + 3.5, w - 7, h - 7, 10); c.stroke(); c.setLineDash([]); }
+      // a saddle box: dark oak, brass corners and a leather strap
+      if (tack) {
+        for (const [px, py, sx, sy] of [[x, y, 1, 1], [x + w, y, -1, 1], [x, y + h, 1, -1], [x + w, y + h, -1, -1]]) {
+          c.fillStyle = '#c99a2e'; c.beginPath(); c.moveTo(px, py); c.lineTo(px + sx * 15, py); c.lineTo(px, py + sy * 15); c.closePath(); c.fill();
+          c.fillStyle = '#f6d77a'; c.beginPath(); c.arc(px + sx * 4.4, py + sy * 4.4, 1.3, 0, 7); c.fill();
+        }
+      }
       for (const q of CELLS) {
-        c.fillStyle = tin ? '#f4eee2' : '#f1e6d2'; PZ.rr(c, q.x, q.y, q.w, q.h, 7); c.fill();
+        c.fillStyle = tin ? '#f4eee2' : tack ? '#ecdcbc' : '#f1e6d2'; PZ.rr(c, q.x, q.y, q.w, q.h, 7); c.fill();
         const g = c.createLinearGradient(0, q.y, 0, q.y + 14); g.addColorStop(0, 'rgba(60,40,20,0.22)'); g.addColorStop(1, 'rgba(60,40,20,0)');
         c.fillStyle = g; PZ.rr(c, q.x, q.y, q.w, 14, 7); c.fill();
       }
@@ -362,11 +534,11 @@
 
     // a bead that has just gone on: from where it was let go, with a bounce
     function drawPlaced(c, i, still) {
-      const p = P[i], k = still ? 1 : pop[i], kd = kinds[need(i)];
-      if (k >= 1 || !from[i]) { bead(c, kd, p.x, p.y, s, p.a); return; }
+      const p = P[i], k = still ? 1 : pop[i], kd = kinds[need(i)], turn = what === 'mane' ? 0 : p.a;
+      if (k >= 1 || !from[i]) { bead(c, kd, p.x, p.y, s, turn); return; }
       const e = U.easeOut(Math.min(1, k * 1.5)), f = from[i];
       const size = U.lerp(HELD * 0.8, s, e) * (1 + 0.24 * Math.sin(k * Math.PI));
-      bead(c, kd, U.lerp(f.x, p.x, e), U.lerp(f.y, p.y, e), size, p.a);
+      bead(c, kd, U.lerp(f.x, p.x, e), U.lerp(f.y, p.y, e), size, turn);
     }
     // the next place: a dashed ring that breathes, and a little arrow from outside
     function marker(c, t, still) {
@@ -390,11 +562,13 @@
       decor(c) {
         wall(c);
         table(c);
-        if (what === 'bracelet') braceletBase(c); else if (what === 'collar') collarBase(c); else necklaceBase(c);
+        if (what === 'bracelet') braceletBase(c); else if (what === 'collar') collarBase(c); else if (what === 'mane') maneBase(c); else necklaceBase(c);
         box(c);
       },
       draw(c, t, still) {
         const i0 = next();
+        // the pony blinks now and then, and that is all it needs
+        if (pony && !still && t % 5.3 < 0.16) { c.fillStyle = pony[0]; c.beginPath(); c.ellipse(EYE.x, EYE.y, 9, 10, -0.3, 0, 7); c.fill(); c.strokeStyle = 'rgba(40,25,15,0.6)'; c.lineWidth = 1.8; c.lineCap = 'round'; c.beginPath(); c.moveTo(EYE.x - 8, EYE.y + 1); c.quadraticCurveTo(EYE.x, EYE.y + 5, EYE.x + 8, EYE.y); c.stroke(); }
         // the places still to fill: faint rings, and the next one marked
         for (let i = i0 + 1; i < N; i++) {
           c.strokeStyle = 'rgba(255,248,232,0.4)'; c.lineWidth = 1.4;
@@ -445,7 +619,7 @@
         if (i < N && PZ.dist(dx, dy, P[i].x, P[i].y) <= NEAR) {
           if (h.k === need(i)) {
             placed++; pop[i] = 0; from[i] = { x: h.x, y: h.y }; hintT = 0;
-            fx.sound('clink'); fx.good(P[i].x, P[i].y);
+            fx.sound(what === 'mane' ? 'drop' : 'clink'); fx.good(P[i].x, P[i].y);
             return;
           }
           nudge = 0.45; // not this one: the place gives a little shake

@@ -531,7 +531,7 @@ const ENGINE = (() => {
     c.translate(tool.x + jig, tool.y + jig - lift);
     c.rotate(tool.a);
     c.globalAlpha = tool.down ? 1 : 0.92;
-    TOOLS.drawSprite(c, tier, paint);
+    if (scene.toolSprite) scene.toolSprite(c, tier, paint); else TOOLS.drawSprite(c, tier, paint);
     c.restore();
   }
 

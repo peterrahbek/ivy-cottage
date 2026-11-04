@@ -4,10 +4,12 @@
 // with one pinned card per puzzle, a window onto the season, and a work table
 // with a lamp, a mug, pencils, wool and a sleeping cat. An unsolved card is a
 // pencil sketch on cream paper, a little askew; a solved one is the same
-// picture in soft colour with a gold star. The nine newest kinds hang as a
-// three by three grid; the older ones are small tickets pinned in rows along
-// the top, and the grid makes room for them. Every id carries a 'b' prefix
-// (plus opts.uid when given) so this picture can share a page with the others.
+// picture in soft colour with a gold star. There are two boards, Thinking and
+// Making, and a tab with an arrow turns from one to the other. On a board the
+// nine newest kinds hang as a three by three grid; older ones are small tickets
+// pinned in rows along the top, and the grid makes room for them. Every id
+// carries a 'b' prefix (plus opts.uid when given) so this picture can share a
+// page with the others.
 
 const BETA = (() => {
   const VB = { w: 400, h: 540 };
@@ -46,32 +48,42 @@ const BETA = (() => {
   const HILL = { spring: ['#a9cf8f', '#8fbd78'], summer: ['#86b971', '#6f9a5c'], autumn: ['#d4b06c', '#b98f5a'], winter: ['#eef3f7', '#dfe8f0'] };
 
   // every kind of puzzle, oldest first: its label, the tint once solved and
-  // the colour of its pin. The nine newest hang as a three by three grid of
-  // cards, oldest top left and newest bottom right; the older ones are small
-  // tickets in rows of three along the top of the board, and the grid shrinks
-  // (CARD_K of a card's full size) to make room for them
+  // the colour of its pin. Each board hangs its nine newest kinds as a grid of
+  // cards, oldest top left and newest bottom right; older ones are small tickets
+  // in rows along the top, and the grid shrinks (k of a card's full size) to
+  // make room for them
   const ORDER = [
     ['cups', 'Cups', '#a6d3d4', '#efb4ae'], ['feed', 'Feeding', '#f2d88a', '#8fbfe6'], ['hose', 'Watering', '#8fbfe6', '#6f9a6a'],
     ['beds', 'Bedtime', '#bba9df', '#d98b63'], ['plan', 'Planting', '#c6dcb4', '#efb4ae'], ['books', 'Shelves', '#efb4ae', '#8fbfe6'],
     ['pack', 'Packing', '#d6b07e', '#6f9a6a'], ['wheel', 'Pottery', '#f2d88a', '#bba9df'], ['owners', 'Lost property', '#a6d3d4', '#efb4ae'],
     ['post', 'Parcels', '#bba9df', '#f2d88a'], ['seek', 'Finding', '#c6dcb4', '#8fbfe6'], ['beads', 'Beads', '#efb4ae', '#a6d3d4'],
     ['buttons', 'Buttons', '#f2d88a', '#efb4ae'], ['lock', 'Locked box', '#d6b07e', '#bba9df'], ['jigsaw', 'Jigsaw', '#a6d3d4', '#f2d88a'],
+    ['numbers', 'Painting', '#efb4ae', '#8fbfe6'], ['stars', 'Stars', '#bba9df', '#f2d88a'], ['mix', 'Mixing', '#f2d88a', '#6f9a6a'],
   ];
+  const MAKING = new Set(['wheel', 'beads', 'buttons', 'numbers', 'mix']);
+  const BOARDS = { think: { name: 'Thinking', other: 'make' }, make: { name: 'Making', other: 'think' } };
+  const boardOf = (part) => (MAKING.has(part) ? 'make' : 'think');
   const TILTS = [-4, 3, -3, 3.5, -3, 4, -3.5, 3, -4];
   const NCARDS = 9, TK = 0.92, TY = 56, TROW = 34;
-  const nTickets = Math.max(0, ORDER.length - NCARDS), tRows = Math.ceil(nTickets / 3);
-  const GTOP = tRows ? TY + (tRows - 1) * TROW + 24 : 58, GPITCH = (312 - GTOP) / 3;
-  const CARD_K = Math.min(0.55, (GPITCH - 8) / 116);
-  const CARDS = {}, TICKETS = {};
-  ORDER.forEach(([k, label, tint, pin], i) => {
-    if (i < nTickets) {
-      const row = Math.floor(i / 3), col = i % 3, n = Math.min(3, nTickets - row * 3);
-      TICKETS[k] = { x: 261 + (col - (n - 1) / 2) * 74, y: TY + row * TROW, tilt: (col - 1) * 2.4 + (row % 2 ? 1.6 : -1.6), label, tint, pin };
-    } else {
-      const j = i - nTickets, row = Math.floor(j / 3);
-      CARDS[k] = { x: 189 + (j % 3) * 72, y: GTOP + GPITCH * (row + 0.5), tilt: TILTS[j % 9], label, tint, pin };
-    }
-  });
+  function layout(list) {
+    const nTickets = Math.max(0, list.length - NCARDS), perRow = nTickets === 4 ? 2 : 3, tRows = Math.ceil(nTickets / perRow);
+    const nCards = list.length - nTickets, rows = Math.ceil(nCards / 3), roomy = rows < 3;
+    const top = tRows ? TY + (tRows - 1) * TROW + 24 : 58, pitch = (312 - top) / rows, across = roomy ? 75 : 72;
+    const out = { k: Math.min(roomy ? 0.68 : 0.55, (pitch - 8) / 116), cards: {}, tickets: {} };
+    list.forEach(([k, label, tint, pin], i) => {
+      if (i < nTickets) {
+        const row = Math.floor(i / perRow), col = i % perRow, n = Math.min(perRow, nTickets - row * perRow);
+        out.tickets[k] = { x: 261 + (col - (n - 1) / 2) * 74, y: TY + row * TROW, tilt: (col - 1) * 2.4 + (row % 2 ? 1.6 : -1.6), label, tint, pin };
+      } else {
+        const j = i - nTickets, row = Math.floor(j / 3), n = Math.min(3, nCards - row * 3);
+        out.cards[k] = { x: 261 + ((j % 3) - (n - 1) / 2) * across, y: top + pitch * (row + 0.5), tilt: TILTS[j % 9], label, tint, pin };
+      }
+    });
+    return out;
+  }
+  const LAYOUT = { think: layout(ORDER.filter(([k]) => !MAKING.has(k))), make: layout(ORDER.filter(([k]) => MAKING.has(k))) };
+  // set at the start of every render: the board on the wall
+  let LAY = LAYOUT.think;
 
   // a sleeping cat breathes, the mug steams, petals and snow drift past the window
   function style() {
@@ -191,11 +203,21 @@ const BETA = (() => {
   }
 
   // ------------------------------------------------------------ the board
-  function board() {
+  function boardFrame() {
     return `<rect x="141" y="33" width="246" height="290" rx="4" fill="#3b2a1a" opacity="0.14"/>
       <rect x="138" y="30" width="246" height="290" rx="4" fill="#b98f5a"/><rect x="138" y="30" width="246" height="3" rx="1.5" fill="#d2ab78"/>
       <rect x="146" y="38" width="230" height="274" fill="${url('Cork')}"/><rect x="146" y="38" width="230" height="5" fill="#3b2a1a" opacity="0.12"/>
       <rect x="146" y="38" width="4" height="274" fill="#3b2a1a" opacity="0.08"/>`;
+  }
+  // the name of this board, and a tab with an arrow that turns to the other one
+  function tabs(board) {
+    const B = BOARDS[board], O = BOARDS[B.other], next = board === 'think';
+    const x = next ? 314 : 138, w = 70, label = next ? `${O.name} →` : `← ${O.name}`;
+    return `<g><rect x="214" y="16" width="94" height="20" rx="3" fill="#fffaf1" stroke="#d9c9ac" stroke-width="1"/>
+        <text x="261" y="30.5" text-anchor="middle" font-family="${FONT}" font-size="13" font-weight="900" letter-spacing="0.6" fill="#6b6157">${B.name}</text></g>
+      <g data-board="${B.other}" style="cursor:pointer"><rect x="${x - 4}" y="-6" width="${w + 8}" height="44" fill="#000" fill-opacity="0"/>
+        <rect x="${x}" y="14" width="${w}" height="22" rx="4" fill="#e6c597" stroke="#b98f5a" stroke-width="1"/>
+        <text x="${x + w / 2}" y="29.5" text-anchor="middle" font-family="${FONT}" font-size="11.5" font-weight="900" fill="#5a4630">${label}</text></g>`;
   }
   // the BETA tape label across the bottom of the frame
   function tape() {
@@ -363,6 +385,34 @@ const BETA = (() => {
       const digit = (x, d) => `<text x="${x}" y="84" text-anchor="middle" font-family="${FONT}" font-size="14" font-weight="900" fill="${COL ? '#3b352e' : PEN}">${d}</text>`;
       return s + digit(28, 3) + digit(50, 7) + digit(72, 4) + L('M24 23 l-4 -6 M50 21 v-7 M76 23 l4 -6', '#e9bf4f', 1.3);
     },
+    // paint by numbers: a boat in numbered patches, one patch still to paint
+    numbers() {
+      const num = (x, y, d) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="${FONT}" font-size="10" font-weight="900" fill="${COL ? '#3b352e' : PEN}">${d}</text>`;
+      let s = P('M10 14 H90 V90 H10Z', '#fffaf1') + P('M14 18 H86 V62 H14Z', '#bfe2ef');
+      s += P('M14 62 Q32 56 50 62 T86 62 V86 H14Z', '#8fbfe6', true);
+      s += P('M52 24 L52 58 L76 58Z', '#efb4ae') + P('M48 30 L48 58 L28 58Z', '#fffaf1');
+      s += P('M26 60 H78 L70 72 H34Z', '#d98b63', true);
+      s += num(26, 34, 1) + num(61, 52, 2) + num(41, 54, 3) + num(52, 69, 4) + num(26, 81, 5);
+      return s + L('M92 26 q4 8 0 16', '#8fbfe6', 1.1);
+    },
+    // join the stars: a kite in the night sky, the last star still to reach
+    stars() {
+      const pts = [[50, 20], [76, 46], [50, 74], [24, 46], [50, 20]], tail = [[50, 74], [60, 82], [48, 88]];
+      let s = P('M10 14 H90 V92 H10Z', '#2b3563', true);
+      s += L(`M${pts.map((q) => q.join(' ')).join(' L')}`, '#f2d88a', 1.5) + L('M24 46 H76 M50 20 V74', '#f2d88a', 0.9);
+      s += L(`M${tail[0].join(' ')} L${tail[1].join(' ')}`, '#f2d88a', 1.5);
+      for (const [x, y] of pts.slice(0, 4).concat(tail.slice(1))) s += P(star(x, y, 5.4, 2.3), '#f2d88a');
+      const [ex, ey] = tail[2];
+      return s + `<circle cx="${ex}" cy="${ey}" r="5" fill="none" stroke="${COL ? '#f2d88a' : PEN}" stroke-width="1" stroke-dasharray="2 2"/>`;
+    },
+    // mixing colours: red and yellow into the bowl, orange coming
+    mix() {
+      const jar = (x, y, rot, c) => `<g transform="rotate(${rot} ${x} ${y})">${P(`M${x - 13} ${y - 15} h26 v30 q0 3 -3 3 h-20 q-3 0 -3 -3Z`, c, c === '#f2d88a')}${P(`M${x - 15} ${y - 20} h30 v5 h-30Z`, '#b98f5a')}</g>`;
+      let s = jar(26, 36, 24, '#e2574c') + jar(74, 36, -24, '#f2d88a');
+      s += L('M38 52 q4 8 6 14', '#e2574c', 2.4) + L('M62 52 q-4 8 -6 14', '#e9bf4f', 2.4);
+      s += P('M14 72 H86 Q84 94 50 94 Q16 94 14 72Z', '#d6b07e', true) + E(50, 72, 36, 7, '#ef9a4c');
+      return s + L('M34 72 q16 6 32 0', '#f6c48a', 1.4);
+    },
     // the jigsaw: a little picture of a cottage, one piece still to go in
     jigsaw() {
       let s = P('M10 16 H90 V86 H10Z', '#b98f5a', true) + P('M14 20 H86 V82 H14Z', '#bfe2ef');
@@ -392,10 +442,10 @@ const BETA = (() => {
 
   // one pinned card, unsolved (pencil, askew) or solved (colour, gold star)
   function card(part, done) {
-    const c = CARDS[part];
+    const c = LAY.cards[part];
     COL = done;
     const tilt = done ? c.tilt * 0.2 : c.tilt;
-    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) scale(${CARD_K}) translate(-50 -58)">
+    let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) scale(${LAY.k}) translate(-50 -58)">
       <rect x="-6" y="-8" width="112" height="132" fill="#000" fill-opacity="0"/>
       <rect x="2" y="3.4" width="100" height="116" rx="2" fill="#3b2a1a" opacity="0.2"/>
       <rect width="100" height="116" rx="2" fill="${done ? '#fffaf1' : '#f3e9d4'}"/>`;
@@ -430,7 +480,7 @@ const BETA = (() => {
   // one of the oldest kinds, as a small ticket: the picture small on the left,
   // a dotted tear line, the name, and a little gold star once solved
   function ticket(part, done) {
-    const c = TICKETS[part];
+    const c = LAY.tickets[part];
     COL = done;
     const tilt = done ? c.tilt * 0.3 : c.tilt;
     let s = `<g data-part="${part}" transform="translate(${c.x} ${c.y}) rotate(${tilt}) scale(${TK})">
@@ -515,7 +565,7 @@ const BETA = (() => {
       <g transform="translate(0 ${DY})">${glow(110, 320, 190, 130)}${glow(130, 356, 120, 16)}<path d="M80 290 L64 352 H180 L108 284Z" fill="#ffe9b0" opacity="0.12"/></g></g>`;
   }
 
-  const SPOTS = Object.fromEntries(Object.entries(Object.assign({}, TICKETS, CARDS)).map(([k, c]) => [k, [c.x, c.y + DY]]));
+  const SPOTS = Object.fromEntries(Object.entries(Object.assign({}, LAYOUT.think.tickets, LAYOUT.think.cards, LAYOUT.make.tickets, LAYOUT.make.cards)).map(([k, c]) => [k, [c.x, c.y + DY]]));
   function sparkles(part) {
     if (!part) return '';
     const spot = SPOTS[part] || [260, 175];
@@ -530,14 +580,17 @@ const BETA = (() => {
 
   // st: map of solved puzzle -> true; cols is not used; opts as for
   // RESCUE.render (season, night, fresh, uid; pct, pending and decor unused)
+  // plus board: 'think' | 'make' (the board with opts.fresh when not given)
   function render(st = {}, cols = {}, opts = {}) {
     SEASON = SKY[opts.season] ? opts.season : 'spring'; UID = opts.uid ? String(opts.uid).replace(/[^\w-]/g, '') : ''; NIGHT = !!opts.night;
-    const cards = Object.keys(TICKETS).map((p) => ticket(p, !!st[p])).join('') + Object.keys(CARDS).map((p) => card(p, !!st[p])).join('');
+    const board = LAYOUT[opts.board] ? opts.board : opts.fresh ? boardOf(opts.fresh) : 'think';
+    LAY = LAYOUT[board];
+    const cards = Object.keys(LAY.tickets).map((p) => ticket(p, !!st[p])).join('') + Object.keys(LAY.cards).map((p) => card(p, !!st[p])).join('');
     return `<svg viewBox="0 0 ${VB.w} ${VB.h}" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" class="house beta">
-      ${style()}${defs()}${room()}<g transform="translate(0 ${DY})">${windowView()}${board()}${cards}${tape()}${table(st)}</g>
+      ${style()}${defs()}${room()}<g transform="translate(0 ${DY})">${windowView()}${boardFrame()}${tabs(board)}${cards}${tape()}${table(st)}</g>
       ${NIGHT ? night() : ''}${lights()}${sparkles(opts.fresh)}
     </svg>`;
   }
 
-  return { render, PARTS: Object.keys(SPOTS) };
+  return { render, boardOf, PARTS: Object.keys(SPOTS) };
 })();

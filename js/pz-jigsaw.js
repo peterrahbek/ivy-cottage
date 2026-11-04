@@ -5,9 +5,9 @@
 // place and it clicks in, anywhere else it glides back to the lid. Nothing
 // to turn and no timer. The postcard shows one of the places, drawn here
 // in canvas: opts.where 'curio', 'cottage', 'cafe', 'cove', 'rescue',
-// 'glasshouse', 'canal', 'books', 'pottery', 'halt' or 'beads' (without it
-// one is picked), and opts.season 'autumn' or 'winter' turns its trees and
-// roofs to the season.
+// 'glasshouse', 'canal', 'books', 'pottery', 'halt', 'beads', 'stables' or
+// 'loft' (without it one is picked), and opts.season 'autumn' or 'winter'
+// turns its trees and roofs to the season.
 //   node test/run.mjs puzzle js/pz-jigsaw.js jigsaw --seeds 30 [--opts '{"where":"cove","season":"winter"}']
 
 (() => {
@@ -182,6 +182,32 @@
     rrect(c, x + 1, y + 2, w, 19, 9.5, 'rgba(40,30,20,0.22)');
     rrect(c, x, y, w, 19, 9.5, PAPER);
     word(c, text, PW / 2, y + 10, 13, INK);
+  }
+  // a pony side on, facing left, standing on y; a green rug in winter
+  function pony(c, x, y, k, coat, mane, rug) {
+    const dk = U.shade(coat, -0.2), u = (n) => n * k;
+    line(c, dk, u(3.4), [[x + u(13), y - u(22)], [x + u(14), y - 1]]);
+    line(c, dk, u(3.4), [[x - u(12), y - u(22)], [x - u(11), y - 1]]);
+    line(c, mane, u(3.6), [[x + u(20), y - u(35)], [x + u(29), y - u(26)], [x + u(27), y - u(11)]]);
+    line(c, coat, u(4), [[x + u(8), y - u(22)], [x + u(9), y - 1]]);
+    line(c, coat, u(4), [[x - u(16), y - u(22)], [x - u(16), y - 1]]);
+    for (const hx of [14, -11, 9, -16]) rect(c, x + u(hx) - u(2.2), y - u(2.4), u(4.4), u(2.8), '#4b3a2c');
+    oval(c, x, y - u(30), u(22), u(12), coat);
+    poly(c, [[x - u(8), y - u(39)], [x - u(20), y - u(50)], [x - u(12), y - u(56)], [x - u(3), y - u(45)], [x + u(4), y - u(38)], [x - u(14), y - u(24)]], coat);
+    if (rug) {
+      c.beginPath(); c.ellipse(x + u(3), y - u(31), u(19), u(11.4), 0, Math.PI * 0.98, Math.PI * 2.02); c.lineTo(x + u(19), y - u(24)); c.quadraticCurveTo(x + u(3), y - u(19), x - u(13), y - u(24)); c.closePath(); fill(c, rug);
+      rect(c, x - u(13), y - u(27), u(32), u(1.6), U.shade(rug, 0.4));
+    }
+    // the head, the ear, the eye and the muzzle
+    c.save(); c.translate(x - u(23), y - u(50)); c.rotate(-0.72);
+    rrect(c, u(-7), u(-5.8), u(21), u(11.6), u(5.4), coat);
+    rrect(c, u(-7.4), u(-4.8), u(8), u(9.6), u(4.2), U.shade(coat, 0.28));
+    dot(c, u(-4), u(1.6), u(0.8), '#3b2a20');
+    poly(c, [[u(11), u(-5)], [u(17), u(-8)], [u(14), u(-1.6)]], dk);
+    dot(c, u(5.4), u(-1.6), u(1.3), '#2f241c');
+    c.restore();
+    line(c, mane, u(4.6), [[x - u(12), y - u(57)], [x - u(4), y - u(47)], [x + u(5), y - u(39)]]);
+    line(c, mane, u(2.8), [[x - u(14), y - u(58)], [x - u(20), y - u(57)]]);
   }
   function seagull(c, x, y) { line(c, '#5d6470', 1.3, [[x - 5, y], [x - 2, y - 2.4], [x, y]]); line(c, '#5d6470', 1.3, [[x, y], [x + 2, y - 2.4], [x + 5, y]]); }
 
@@ -529,6 +555,123 @@
       dot(c, 278, 80, 7, '#e9bf4f'); dot(c, 278, 80, 3.4, '#ddd0b8'); rect(c, 276.5, 86, 3, 18, '#e9bf4f'); rect(c, 279, 96, 5, 3, '#e9bf4f'); rect(c, 279, 100, 4, 3, '#e9bf4f');
       cobbles(c, pal, 182, r, '#bdb3a2');
       rect(c, 0, 182, PW, 5, pal.snow ? '#f2f5f8' : '#d6cdbd');
+    } },
+
+    stables: { name: 'Foxglove Stables', of: 'Foxglove Stables', draw(c, pal, r) {
+      sky(c, pal, r, { sunX: 44, clouds: [[150, 24, 0.9], [244, 38, 0.7]] });
+      rect(c, 0, 142, PW, PH - 142, pal.grass);
+      tree(c, pal, 274, 148, 112, r);
+      // the stable block: oak boards under a long tiled roof, with a little cupola
+      rect(c, 26, 84, 212, 66, '#b98d5e');
+      c.fillStyle = 'rgba(80,50,25,0.28)'; for (let x = 34; x < 238; x += 8) c.fillRect(x, 84, 0.9, 66);
+      rect(c, 26, 146, 212, 4, '#8a6a4a');
+      roof(c, pal, [[12, 90], [52, 46], [212, 46], [252, 90]], '#9a5a44', '#7a4434');
+      rect(c, 120, 26, 24, 22, '#f6efe3'); rect(c, 126, 31, 12, 13, '#4e7b5b');
+      roof(c, pal, [[115, 28], [132, 13], [149, 28]], '#4e7b5b', '#3b6248');
+      line(c, '#4b4a52', 1.2, [[132, 13], [132, 4]]); line(c, '#4b4a52', 1.4, [[125, 7], [139, 7]]);
+      poly(c, [[139, 7], [135, 4.4], [135, 9.6]], '#4b4a52');
+      // three half-doors, the top halves open, and a pony looking out of each end
+      const inside = '#3a2a20';
+      [[44, 0], [112, 1], [180, 2]].forEach(([x, k]) => {
+        rect(c, x - 3, 96, 46, 54, '#f6efe3');
+        rect(c, x, 99, 40, 24, inside);
+        rect(c, x, 123, 40, 27, '#4e7b5b');
+        rect(c, x - 1, 121, 42, 3.4, '#f6efe3');
+        c.strokeStyle = '#f6efe3'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(x + 1, 126); c.lineTo(x + 39, 148); c.moveTo(x + 39, 126); c.lineTo(x + 1, 148); c.stroke();
+        c.strokeStyle = 'rgba(30,50,35,0.35)'; c.lineWidth = 0.8; c.beginPath(); for (let bx = x + 8; bx < x + 40; bx += 8) { c.moveTo(bx, 124); c.lineTo(bx, 150); } c.stroke();
+        if (k !== 1) {
+          const coat = k ? '#8a5a3a' : '#d9c4a4', mane = k ? '#3f2a1e' : '#f6efe3', hx = x + 20;
+          rrect(c, hx - 9, 104, 18, 22, 8, coat);
+          poly(c, [[hx - 8, 108], [hx - 7, 99], [hx - 2, 105]], coat); poly(c, [[hx + 8, 108], [hx + 7, 99], [hx + 2, 105]], coat);
+          rrect(c, hx - 6.5, 113, 13, 13, 5.5, U.shade(coat, 0.26));
+          dot(c, hx - 5.2, 110, 1.3, '#2f241c'); dot(c, hx + 5.2, 110, 1.3, '#2f241c'); dot(c, hx - 2.4, 121, 0.8, '#5a4030'); dot(c, hx + 2.4, 121, 0.8, '#5a4030');
+          line(c, mane, 3.4, [[hx - 3, 100], [hx, 106], [hx + 3, 100]]);
+        }
+      });
+      board(c, 72, 84, 28, 9, '#f6efe3', '#4e7b5b', 'NO.1', 5.6);
+      board(c, 196, 84, 28, 9, '#f6efe3', '#4e7b5b', 'NO.3', 5.6);
+      // foxgloves up the end wall
+      if (pal.snow) oval(c, 18, 149, 20, 4, SNOW);
+      else for (const [x, h] of [[8, 40], [17, 52], [25, 34]]) {
+        line(c, '#5f8f4c', 1.6, [[x, 152], [x, 152 - h]]);
+        oval(c, x - 3, 150, 5, 2.4, '#5f8f4c'); oval(c, x + 3, 148, 5, 2.4, '#6f9f58');
+        for (let k = 0; k < Math.floor(h / 5); k++) {
+          const yy = 150 - h + k * 5 + 2, s = 1.5 + k * 0.28;
+          oval(c, x + (k % 2 ? 2 : -2) * (1 + s * 0.3), yy, s * 1.1, s * 0.86, pal.leaves ? '#b98a5a' : ['#d97fb0', '#c565a0', '#e6a0c8'][k % 3]);
+        }
+      }
+      // the yard, the paddock rails and a jump of striped poles
+      rect(c, 0, 150, PW, 16, pal.snow ? '#eef2f5' : '#c7b593');
+      if (!pal.snow) for (let k = 0; k < 22; k++) oval(c, r() * PW, 152 + r() * 12, 4 + r() * 8, 1.2 + r() * 1.4, 'rgba(120,95,65,0.3)');
+      rect(c, 0, 166, PW, PH - 166, pal.grass);
+      const rail = pal.snow ? '#e6e0d4' : '#f6efe3';
+      for (const y of [172, 182]) { rect(c, 0, y, PW, 3, rail); ledge(c, pal, 0, y, PW); }
+      for (let x = 6; x < PW; x += 42) { rect(c, x, 167, 5, 30, rail); rect(c, x + 3.6, 167, 1.4, 30, 'rgba(120,100,70,0.3)'); }
+      flowers(c, pal, 0, PW, 198, r, pal.snow ? null : ['#ffffff', '#f7c548']);
+      // the jump
+      for (const x of [34, 112]) { rect(c, x, 182, 4, 28, '#f6efe3'); rect(c, x - 5, 208, 14, 3, '#d9cdb8'); }
+      for (const [y0, a] of [[188, '#c9474f'], [199, '#3d5a86']]) for (let k = 0; k < 9; k++) rect(c, 28 + k * 10, y0, 10.2, 3.4, k % 2 ? '#f6efe3' : a);
+      pony(c, 232, 212, 0.92, pal.snow ? '#a8744e' : '#a8744e', '#4a3226', pal.snow ? '#4e7b5b' : null);
+    } },
+
+    loft: { name: 'The Painter\'s Loft', of: 'The Painter\'s Loft', draw(c, pal, r) {
+      sky(c, pal, r, { sunX: 268, clouds: [[60, 26, 0.9], [176, 18, 0.7]] });
+      tree(c, pal, 276, 132, 96, r);
+      // the old hay loft: white walls, a slate roof and two skylights
+      rect(c, 24, 92, 190, 88, '#f3eee3');
+      for (let y = 102; y < 176; y += 12) rect(c, 24, y, 190, 0.8, 'rgba(150,130,100,0.2)');
+      roof(c, pal, [[8, 98], [48, 36], [190, 36], [230, 98]], '#6d7686', '#596172');
+      for (const [x0, cap] of [[62, 1], [126, 1]]) {
+        const a = [x0 + 8, 50], b = [x0 + 44, 50], d = [x0 - 6, 84], e = [x0 + 34, 84];
+        poly(c, [a, b, e, d], '#fbf7ee');
+        poly(c, [[a[0] + 3, 53], [b[0] - 3, 53], [e[0] - 3, 81], [d[0] + 4, 81]], pal.snow ? '#d7e5ef' : '#a9d9ee');
+        line(c, '#fbf7ee', 1.8, [[(a[0] + b[0]) / 2, 53], [(d[0] + e[0]) / 2, 81]]);
+        line(c, 'rgba(255,255,255,0.6)', 3, [[a[0] + 12, 56], [d[0] + 12, 78]]);
+        if (pal.snow && cap) rrect(c, a[0] - 2, 47, b[0] - a[0] + 4, 4, 2, SNOW);
+      }
+      // the loft window, the hoist beam and the studio door below
+      rect(c, 38, 100, 34, 28, '#3f5fa8');
+      windowAt(c, 42, 104, 26, 20, '#fbf7ee', '#a9d3e0', 2, 2);
+      // the old hoist from the hay days, now for hauling up paint
+      dot(c, 112, 101, 4, '#7a5a3e'); dot(c, 112, 101, 1.6, '#d9c4a4');
+      line(c, '#8a7a62', 1.1, [[112, 101], [112, 124]]);
+      rrect(c, 106.5, 124, 11, 9, 1.4, '#d9a441'); line(c, '#6b5a3e', 0.9, [[106.5, 124], [112, 119.5], [117.5, 124]]);
+      doorAt(c, 40, 138, 26, 42, '#3f5fa8', false, '#cfe7ea');
+      board(c, 74, 142, 58, 14, '#d9a441', '#3b352e', 'THE LOFT', 8);
+      ledge(c, pal, 74, 142, 58);
+      // the outside stairs, up to the door under the eaves
+      doorAt(c, 136, 106, 22, 32, '#d9a441', false);
+      rect(c, 128, 138, 42, 3.6, '#8a6a4a');
+      for (let k = 0; k <= 7; k++) { const x = 170 + k * 6, y = 138 + k * 6; rect(c, x, y, 7, 2.8, '#a8835e'); }
+      line(c, '#7a5a3e', 2.2, [[170, 141], [214, 186]]);
+      line(c, '#3f5fa8', 1.8, [[130, 122], [170, 122], [212, 166]]);
+      for (const [x, y] of [[130, 122], [150, 122], [170, 122], [186, 139], [202, 155]]) line(c, '#3f5fa8', 1.4, [[x, y], [x, y + 17]]);
+      ledge(c, pal, 128, 137, 42);
+      // the yard wall with a painted sunrise on it
+      bricks(c, 216, 124, 84, 56, '#c9a58a');
+      rect(c, 222, 130, 78, 44, '#fbf3e0');
+      c.save(); c.beginPath(); c.rect(224, 132, 76, 40); c.clip();
+      rect(c, 224, 132, 76, 40, '#8fc3e8');
+      const rays = ['#f2c84b', '#ee8b2e'];
+      for (let k = 0; k < 9; k++) { const a0 = Math.PI + (k / 9) * Math.PI, a1 = a0 + Math.PI / 9; poly(c, [[262, 164], [262 + Math.cos(a0) * 80, 164 + Math.sin(a0) * 80], [262 + Math.cos(a1) * 80, 164 + Math.sin(a1) * 80]], rays[k % 2]); }
+      dot(c, 262, 164, 15, '#fbe08f'); dot(c, 262, 164, 10, '#f6c745');
+      c.beginPath(); c.moveTo(224, 172); c.quadraticCurveTo(248, 150, 276, 160); c.quadraticCurveTo(290, 164, 300, 158); c.lineTo(300, 172); c.closePath(); fill(c, '#5aa64f');
+      c.beginPath(); c.moveTo(224, 166); c.quadraticCurveTo(236, 158, 256, 172); c.closePath(); fill(c, '#3f5fa8');
+      c.restore();
+      rect(c, 216, 122, 84, 3.6, '#a98a72'); ledge(c, pal, 216, 122, 84);
+      // the cobbled yard, an easel and poppies along the wall
+      cobbles(c, pal, 180, r, '#cdbfa6');
+      rect(c, 0, 180, PW, 4, pal.snow ? '#f2f5f8' : '#ded3bf');
+      flowers(c, pal, 216, 300, 184, r, ['#e2574c', '#d9432f', '#e2574c', '#f2b63a']);
+      line(c, '#8a6a4a', 2, [[92, 208], [100, 160]]); line(c, '#8a6a4a', 2, [[112, 208], [104, 160]]); line(c, '#7a5a3e', 2, [[102, 158], [102, 206]]);
+      rect(c, 86, 196, 30, 2.6, '#8a6a4a');
+      rect(c, 86, 164, 30, 32, '#fbf7ee'); rect(c, 88, 166, 26, 28, '#bfe2ef');
+      dot(c, 106, 174, 4, '#f2c84b');
+      c.beginPath(); c.moveTo(88, 194); c.quadraticCurveTo(100, 178, 114, 186); c.lineTo(114, 194); c.closePath(); fill(c, '#6f9a6a');
+      c.strokeStyle = '#3f5fa8'; c.lineWidth = 1; c.strokeRect(86, 164, 30, 32);
+      // a paint pot and a brush by the easel
+      rrect(c, 124, 198, 12, 11, 1.6, '#3f5fa8'); oval(c, 130, 198, 6, 1.8, '#d9a441');
+      line(c, '#c98f55', 1.6, [[130, 198], [139, 184]]);
     } },
   };
   const WHERE = Object.keys(MOTIFS);

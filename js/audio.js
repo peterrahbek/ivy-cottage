@@ -334,6 +334,28 @@ const AUDIO = (() => {
         [[0, 6, 1], [1, 8, 1], [2, 6, 1], [3, 4, 1]], [[0, 5, 2], [2, 7, 2]], [[0, 8, 3], [3, 5, 1]], [[0, 8, 4]],
       ],
     },
+    // the stables: a gentle folk tune on the box, a pony trotting softly somewhere behind it
+    stables: {
+      bpm: 70, trot: true,
+      chords: [[1], [4], [1], [5], [1], [4], [5], [1], [6], [4], [1], [5], [1], [4], [5, 1], [1]],
+      melody: [
+        [[0, 5, 1.5], [1.5, 6, 0.5], [2, 8, 1], [3, 6, 1]], [[0, 6, 2], [2, 8, 1], [3, 10, 1]], [[0, 8, 1.5], [1.5, 9, 0.5], [2, 10, 2]], [[0, 9, 3], [3, 7, 1]],
+        [[0, 8, 1.5], [1.5, 6, 0.5], [2, 5, 1], [3, 6, 1]], [[0, 8, 2], [2, 6, 2]], [[0, 7, 1], [1, 9, 1], [2, 11, 2]], [[0, 8, 4]],
+        [[0, 10, 1.5], [1.5, 9, 0.5], [2, 8, 1], [3, 10, 1]], [[0, 8, 2], [2, 6, 2]], [[0, 5, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 3], [3, 7, 1]],
+        [[0, 8, 1.5], [1.5, 10, 0.5], [2, 12, 2]], [[0, 11, 1], [1, 10, 1], [2, 8, 2]], [[0, 9, 1], [1, 7, 1], [2, 5, 2]], [[0, 8, 4]],
+      ],
+    },
+    // the painter's loft: light and slow, plucked like a ukulele with a soft strum between
+    loft: {
+      bpm: 66, lead: 'uke', strum: true,
+      chords: [[1], [6], [2], [5], [1], [3], [4], [5], [1], [6], [4], [1], [2], [5], [1], [1]],
+      melody: [
+        [[0, 3, 1], [1, 5, 1], [2, 8, 2]], [[0, 8, 1], [1, 6, 1], [2, 8, 2]], [[0, 6, 1], [1, 4, 1], [2, 6, 2]], [[0, 7, 1], [1, 5, 1], [2, 7, 2]],
+        [[0, 8, 1.5], [1.5, 10, 0.5], [2, 12, 2]], [[0, 10, 2], [2, 7, 2]], [[0, 8, 1], [1, 6, 1], [2, 4, 2]], [[0, 5, 4]],
+        [[0, 5, 1], [1, 8, 1], [2, 10, 2]], [[0, 10, 1.5], [1.5, 8, 0.5], [2, 6, 2]], [[0, 6, 1], [1, 8, 1], [2, 11, 2]], [[0, 10, 3], [3, 8, 1]],
+        [[0, 9, 1], [1, 8, 1], [2, 6, 2]], [[0, 7, 1.5], [1.5, 5, 0.5], [2, 9, 2]], [[0, 8, 3], [3, 5, 1]], [[0, 8, 4]],
+      ],
+    },
   };
   const KEY = { spring: 65, summer: 60, autumn: 62, winter: 67 };
   let theme = { place: 'cottage', season: 'spring', night: false }, nextTheme = null;
@@ -398,6 +420,18 @@ const AUDIO = (() => {
     tone(f, t, 0.06, 'sine', vol, music, 0.2, 0.001);
     tone(f * 2.76, t, 0.025, 'sine', vol * 0.35, music, 0.1, 0.001);
   }
+  // a soft hoof on turf, the second of each pair a little lower
+  function clop(t, vol, low) {
+    const f = low ? 330 : 420;
+    tone(f, t, 0.07, 'sine', vol, music, 0.2, 0.002);
+    tone(f * 0.5, t, 0.09, 'triangle', vol * 0.6, music, 0.15, 0.002);
+  }
+  // a plucked nylon string: warm, short, with a little brightness at the start
+  function uke(f, t, vol) {
+    tone(f, t, 0.9, 'triangle', vol, music, 0.4, 0.004);
+    tone(f * 2, t, 0.4, 'sine', vol * 0.25, music, 0.35, 0.003);
+    tone(f * 3, t, 0.16, 'sine', vol * 0.08, music, 0.3, 0.002);
+  }
   function bass(f, t, dur, vol) {
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = 'sine'; o.frequency.value = f;
@@ -438,13 +472,17 @@ const AUDIO = (() => {
     if (tune.brush && pass !== 0) for (const b of [0, 0.5, 2, 2.5]) brushTap(t + b * beat, (quiet ? 0.006 : 0.011) * (b % 1 ? 0.7 : 1));
     // the clock in the curiosity shop ticks on every beat, from the very first bar
     if (tune.tick) for (let b = 0; b < beats; b++) tickTock(t + b * beat, quiet ? 0.007 : 0.011, b % 2 === 1);
+    // the pony trots from the very first bar, softer on quiet passes
+    if (tune.trot) for (let b = 0; b < beats; b++) clop(t + b * beat, quiet ? 0.012 : 0.02, b % 2 === 1);
+    // a soft strum on two and four
+    if (tune.strum && pass !== 0 && !quiet) for (const b of [1, 3]) tones.slice(0, 3).forEach((m, j) => uke(midi(m + 12), t + b * beat + j * 0.03, 0.012));
     // the tune itself, missing on the intro pass and only every other bar when breathing
     if (pass !== 0 && !(pass === 3 && i % 2)) {
       const up = pass === 2 ? 12 : 0;
       for (const [at, d, len] of tune.melody[i]) {
         if (theme.night && r() < 0.25) continue;
         const f = midi(note(tonic + 12 + up, d)), v = 0.07 * (len >= 2 ? 1 : 0.85);
-        if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else box(f, t + at * beat, v);
+        if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else if (tune.lead === 'uke') uke(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
       }
     }
   }

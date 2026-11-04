@@ -975,7 +975,7 @@ const RESCUE = (() => {
       ${style()}${defs()}${sky()}${opts.night ? '' : farDecor(decor)}${hills(st)}${ground()}${meadow(st)}${yard(st)}
       ${barn(st)}${beds(st)}${farmhouse(st, C)}${feed(st)}${kennels(st)}${bowls(st)}${trough(st)}${cat(st)}${hutch(st)}${veg(st)}${clutter()}
       ${seal(st)}${toys(st)}${tub(st)}${donkey(62, 432, 0.95)}${hooves(st, 62, 432, 0.95)}${pond(st)}${saleSign()}
-      ${fence(st, C)}${sign(st, C)}${decorations(decor)}${life(st)}${weather()}${opts.night ? night(st, decor) : ''}${sparkles(opts.fresh)}
+      ${fence(st, C)}${sign(st, C)}${decorations(decor)}${life(st)}${opts.resting ? U.restCat(334, 414, '#e39a52', true) : ''}${weather()}${opts.night ? night(st, decor) : ''}${sparkles(opts.fresh)}
     </svg>`;
   }
 

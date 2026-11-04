@@ -29,6 +29,9 @@
 //   solveAll()                   test hook: put everything right at once (no fx calls needed)
 //   debugPlan()                  test hook: gestures that solve it from the current state,
 //                                [{ drag: [x0, y0, x1, y1] } | { tap: [x, y] }, ...]
+//   keep()                       optional: a small JSON-able object saved under the job's part
+//                                when it is finished, so the place's picture can show what was
+//                                made (the canvas and the mural in the loft)
 //   fx                           set by the engine right after building:
 //     fx.good(x, y)              a right move at x, y: pays 1/steps, coins fly, sparkles
 //     fx.sound(kind)             'pick' | 'drop' | 'nope' | 'clink' | 'pour' | 'turn' | 'happy' | 'chime'

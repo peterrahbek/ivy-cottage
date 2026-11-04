@@ -12,10 +12,11 @@ figcaption{padding:5px 2px}
 </head>
 <body>
 <script src="../js/util.js"></script>
+<script src="../js/paintings.js"></script>
 <script>
 'use strict';
 // A test bench for a place picture: the same render in six states.
-//   place.html?file=../js/beta.js&obj=BETA&parts=cups,feed,hose,beds
+//   place.html?file=../js/beta.js&obj=BETA&parts=cups,feed,hose,beds[&opts={json}]
 (() => {
   const q = new URLSearchParams(location.search);
   const H = window.H = { ready: false, errors: [] };
@@ -28,6 +29,8 @@ figcaption{padding:5px 2px}
   function go() {
     const obj = window[q.get('obj')] || (0, eval)(q.get('obj'));
     const parts = (q.get('parts') || '').split(',').filter(Boolean);
+    let extra = {};
+    try { if (q.get('opts')) extra = JSON.parse(q.get('opts')); } catch (e) { H.errors.push('opts: ' + e.message); }
     const all = Object.fromEntries(parts.map((p) => [p, true]));
     const some = Object.fromEntries(parts.slice(0, 2).map((p) => [p, true]));
     const states = [
@@ -41,7 +44,7 @@ figcaption{padding:5px 2px}
     for (const [label, st, opts] of states) {
       const f = document.createElement('figure');
       try {
-        f.innerHTML = obj.render(st, {}, Object.assign({ pending: {}, decor: {} }, opts)).replace('<svg ', '<svg width="400" height="540" ') + `<figcaption>${label}</figcaption>`;
+        f.innerHTML = obj.render(st, {}, Object.assign({ pending: {}, decor: {} }, opts, extra)).replace('<svg ', '<svg width="400" height="540" ') + `<figcaption>${label}</figcaption>`;
       } catch (e) { H.errors.push(label + ': ' + e.message); }
       document.body.appendChild(f);
     }

@@ -590,10 +590,11 @@
   }
   function lights(S) {
     const { r, nz, opts, bleed } = S;
-    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt' || where === 'curio';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc', beads: '#e2b4ad', curio: '#2f5546' }[where] || '#f2d88a';
+    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt' || where === 'curio' || where === 'stables';
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc', beads: '#e2b4ad', curio: '#2f5546', stables: '#7d5a3e', loft: '#e4d8c2' }[where] || '#f2d88a';
     const pottery = where === 'pottery', halt = where === 'halt', beads = where === 'beads', curio = where === 'curio';
-    const boarded = where === 'cove' || where === 'rescue', boat = where === 'canal';
+    const stables = where === 'stables', loft = where === 'loft';
+    const boarded = where === 'cove' || where === 'rescue' || stables, boat = where === 'canal';
     // three strings: under the eaves, across the window, along the fence
     // (on the narrowboat: under the roof edge, along the cabin side and along the gunwale)
     const strings = boat ? [
@@ -709,6 +710,37 @@
           for (const x of [101, 140, 179, 218, 257]) c.fillRect(x, 254, 4, 170);
           for (const y of [296, 340, 382]) c.fillRect(64, y, 232, 4);
           c.fillStyle = '#e9bd55'; c.font = 'bold 28px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('CURIOSITIES', 180, 206, 300);
+        } else if (stables) {
+          // three half-doors along the block, the top of each open on a warm lamp, a pony at the middle one
+          for (const x of [24, 134, 244]) {
+            c.fillStyle = '#efe9db'; c.fillRect(x - 6, 262, 104, 188);
+            c.fillStyle = '#ffd98a'; c.fillRect(x, 268, 92, 86);
+            const gl = c.createRadialGradient(x + 46, 300, 6, x + 46, 300, 110);
+            gl.addColorStop(0, 'rgba(255,217,138,0.4)'); gl.addColorStop(1, 'rgba(255,217,138,0)');
+            c.fillStyle = gl; c.fillRect(x - 60, 200, 212, 220);
+            c.fillStyle = '#4e7b5b'; c.fillRect(x, 352, 92, 98);
+            c.fillStyle = 'rgba(0,0,0,0.16)'; for (let k = x + 15; k < x + 92; k += 16) c.fillRect(k, 352, 1.5, 98);
+            c.fillStyle = '#2f2c2a'; c.fillRect(x, 349, 92, 5);
+          }
+          c.fillStyle = 'rgba(90,50,25,0.8)';
+          c.beginPath(); c.moveTo(150, 352); c.quadraticCurveTo(152, 322, 164, 306); c.lineTo(166, 288); c.lineTo(169, 278); c.lineTo(175, 286); c.quadraticCurveTo(180, 284, 185, 286); c.lineTo(191, 278); c.lineTo(194, 288); c.lineTo(196, 306); c.quadraticCurveTo(208, 322, 210, 352); c.closePath(); c.fill();
+          c.fillStyle = 'rgba(70,38,18,0.85)'; c.beginPath(); c.moveTo(166, 298); c.quadraticCurveTo(180, 292, 194, 298); c.quadraticCurveTo(192, 330, 190, 342); c.quadraticCurveTo(180, 350, 170, 342); c.quadraticCurveTo(168, 330, 166, 298); c.closePath(); c.fill();
+        } else if (loft) {
+          // a wide studio window with an easel against the glow, the outside stairs climbing past it
+          c.fillStyle = '#ffd98a'; c.fillRect(30, 262, 156, 128);
+          const gl = c.createRadialGradient(108, 326, 10, 108, 326, 170);
+          gl.addColorStop(0, 'rgba(255,217,138,0.38)'); gl.addColorStop(1, 'rgba(255,217,138,0)');
+          c.fillStyle = gl; c.fillRect(0, 190, 280, 270);
+          c.fillStyle = 'rgba(90,50,25,0.78)';
+          c.beginPath(); c.moveTo(84, 388); c.lineTo(106, 280); c.lineTo(128, 388); c.lineTo(122, 388); c.lineTo(106, 310); c.lineTo(90, 388); c.closePath(); c.fill();
+          c.fillRect(76, 296, 60, 48); c.fillStyle = '#c9474f'; c.fillRect(81, 301, 50, 38); c.fillStyle = '#f2c84b'; c.beginPath(); c.arc(106, 322, 11, 0, 7); c.fill();
+          c.fillStyle = '#4a3a30'; c.fillRect(24, 256, 168, 7); c.fillRect(24, 390, 168, 8); c.fillRect(24, 256, 7, 140); c.fillRect(185, 256, 7, 140); c.fillRect(105, 262, 6, 128);
+          c.fillStyle = '#3d5a86'; c.fillRect(262, 176, 72, 96); c.fillStyle = 'rgba(0,0,0,0.15)'; c.fillRect(296, 176, 3, 96);
+          c.fillStyle = '#c9a24a'; c.beginPath(); c.arc(274, 228, 3.4, 0, 7); c.fill();
+          c.fillStyle = '#6b4a32'; c.fillRect(244, 272, x1 - 244, 10);
+          c.strokeStyle = '#6b4a32'; c.lineWidth = 7; c.lineCap = 'butt'; c.beginPath(); c.moveTo(250, 274); c.lineTo(198, 452); c.moveTo(286, 274); c.lineTo(234, 452); c.stroke();
+          for (let k = 0; k < 8; k++) { const sx = 236 - k * 5.4, sy = 290 + k * 22; c.fillStyle = '#7a5638'; c.fillRect(sx, sy, 40, 7); c.fillStyle = '#f4f8fc'; c.fillRect(sx, sy - 3, 40, 3.4); }
+          c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(286, 244); c.lineTo(234, 424); c.moveTo(286, 244); c.lineTo(286, 274); c.moveTo(234, 424); c.lineTo(234, 452); c.stroke();
         } else if (pottery) {
           // a wide barn window with shelves of pots against the glow
           c.fillStyle = '#ffd98a'; c.fillRect(96, 262, 168, 128);
@@ -763,6 +795,18 @@
             for (let x = 22; x < 350; x += 30) { if (Math.abs(x - 182) < 12) continue; const h = 12 + ((x * 7) % 8); c.fillStyle = '#7d4a36'; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x - 5, y - h); c.lineTo(x + 5, y - h); c.lineTo(x + 7, y); c.fill(); c.fillStyle = '#f4f8fc'; c.fillRect(x - 5, y - h - 2, 10, 2.5); }
           }
           c.fillStyle = '#6b4a32'; c.fillRect(x0, 462, x1 - x0, 8); c.fillStyle = '#f4f8fc'; c.fillRect(x0, 458, x1 - x0, 4);
+        } else if (stables) {
+          // snow in the yard and the paddock rails along the front
+          c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
+          c.fillStyle = '#8a6242';
+          for (const x of [8, 178, 346]) c.fillRect(x, 462, 10, 110);
+          for (const y of [480, 522, 562]) c.fillRect(x0, y, x1 - x0, 9);
+          c.fillStyle = '#f4f8fc'; for (const y of [477, 519, 559]) c.fillRect(x0, y, x1 - x0, 3.6);
+        } else if (loft) {
+          // snow in the yard and the low brick wall along the front, a white cap on it
+          c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
+          for (let y = 482, row = 0; y < 580; y += 13, row++) for (let x = Math.floor(x0 / 30) * 30 - (row % 2) * 15; x < x1; x += 30) { c.fillStyle = U.pick(r, ['#8e5a48', '#7f4f40', '#99634f']); c.fillRect(x + 1, y + 1, 28, 11); }
+          c.fillStyle = '#f4f8fc'; c.beginPath(); c.moveTo(x0, 482); for (let x = x0; x <= x1; x += 14) c.lineTo(x, 470 + Math.sin(x * 0.2) * 3); c.lineTo(x1, 490); for (let x = x1; x >= x0; x -= 16) c.lineTo(x, 486 + (Math.floor(x / 16) % 3 === 0 ? 6 : 2)); c.closePath(); c.fill();
         } else if (beads || curio) {
           // a snowy pavement and the black railings along the shop front
           c.fillStyle = '#e9eff4'; c.fillRect(x0, 450, x1 - x0, y1 - 450);
