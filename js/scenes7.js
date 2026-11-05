@@ -1167,9 +1167,194 @@
     };
   }
 
+  // ------------------------------------ OWL HILL: THE LANTERN BY THE DOOR
+  // A little wrought-iron lantern on the observatory's stone wall, beside the
+  // arched door, at dusk: barley-twist posts, a pointed arch of bar in the front
+  // pane, a hood pierced with stars and a stub of candle inside. Soot and old
+  // cobwebs on the glass; wash them off and the candle shows warm. lantern { where: 'observatory' }
+  function stoneLantern(S) {
+    const { r, nz, bleed } = S;
+    const cx = 150, gy0 = 200, gy1 = 424, fw = 54, sw = 36, post = 11, slant = 9;
+    const lx = cx - fw - post, rx = cx + fw + post;
+    const panes = [
+      [[lx - sw, gy0 + slant], [lx, gy0], [lx, gy1], [lx - sw, gy1 - slant]],
+      [[cx - fw, gy0], [cx + fw, gy0], [cx + fw, gy1], [cx - fw, gy1]],
+      [[rx, gy0], [rx + sw, gy0 + slant], [rx + sw, gy1 - slant], [rx, gy1]],
+    ];
+    const trace = (c, p) => { c.moveTo(p[0][0], p[0][1]); for (const q of p.slice(1)) c.lineTo(q[0], q[1]); c.closePath(); };
+    const region = new Path2D();
+    for (const p of panes) trace(region, p);
+    const IRON = '#25232a', IRON2 = '#3b3842', EDGE = 'rgba(176,186,226,0.34)', CANDLE = '#f3e7c8';
+    // a curled end of forged iron: a spiral drawn from the outside in
+    function curl(c, x, y, rad, a0, dir, w, col = IRON) {
+      c.strokeStyle = col; c.lineWidth = w; c.lineCap = 'round'; c.beginPath();
+      for (let k = 0; k <= 40; k++) { const t = k / 40, a = a0 + dir * t * 8.6, q = rad * (1 - t * 0.84), px = x + Math.cos(a) * q, py = y + Math.sin(a) * q; if (k) c.lineTo(px, py); else c.moveTo(px, py); }
+      c.stroke();
+    }
+    // a corner post twisted like barley sugar
+    function twist(c, x, y0, y1, w) {
+      c.fillStyle = IRON; c.fillRect(x - w / 2, y0, w, y1 - y0);
+      c.strokeStyle = EDGE; c.lineWidth = 2; c.lineCap = 'round';
+      for (let y = y0 + 6; y < y1 - 2; y += 10) { c.beginPath(); c.moveTo(x - w / 2 + 1.6, y + 3.4); c.lineTo(x + w / 2 - 1.6, y - 3.4); c.stroke(); }
+      c.strokeStyle = 'rgba(0,0,0,0.5)'; c.lineWidth = 1.2;
+      for (let y = y0 + 11; y < y1 - 2; y += 10) { c.beginPath(); c.moveTo(x - w / 2 + 1, y + 3.4); c.lineTo(x + w / 2 - 1, y - 3.4); c.stroke(); }
+    }
+    function star(c, x, y, q) {
+      c.beginPath();
+      for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + (k * Math.PI) / 5, d = k % 2 ? q * 0.42 : q; c.lineTo(x + Math.cos(a) * d, y + Math.sin(a) * d); }
+      c.closePath(); c.fill();
+    }
+    return {
+      family: 'wash', particle: 'suds', region,
+      tough(x, y) {
+        if (y < gy0 + 30 || y > gy1 - 14) return 1.4;
+        return Math.min(Math.abs(x - (cx - fw)), Math.abs(x - (cx + fw)), Math.abs(x - lx), Math.abs(x - rx)) < 10 ? 1.3 : 1;
+      },
+      decor(c) {
+        const { x0, y0, x1, y1 } = bleed;
+        SCENES.ashlar(c, r, nz, x0, y0, x1, 552);
+        // the arched door at the edge of the picture, in its ring of dressed stone
+        const ax = 438, ay = 164, ar = 124;
+        for (let k = 0; k < 7; k++) {
+          const a = Math.PI + 0.02 + k * 0.17, b = a + 0.155;
+          c.fillStyle = k % 2 ? '#c4baa8' : '#cdc4b2'; c.beginPath(); c.arc(ax, ay, ar + 30, a, b); c.arc(ax, ay, ar, b, a, true); c.closePath(); c.fill();
+          c.fillStyle = 'rgba(40,32,24,0.22)'; c.beginPath(); c.arc(ax, ay, ar + 2, a, b); c.arc(ax, ay, ar, b, a, true); c.closePath(); c.fill();
+        }
+        for (let y = ay + 2, k = 0; y < 548; y += 46, k++) {
+          const wd = k % 2 ? 26 : 34, xa = ax - ar - wd;
+          c.fillStyle = 'rgba(40,32,24,0.3)'; c.fillRect(xa - 2, y + 3, wd, 43);
+          c.fillStyle = k % 2 ? '#c4baa8' : '#cdc4b2'; c.beginPath(); c.roundRect(xa, y + 1, wd, 43, 2); c.fill();
+          c.fillStyle = 'rgba(255,248,232,0.3)'; c.fillRect(xa + 2, y + 1, wd - 4, 2);
+        }
+        c.save(); c.beginPath(); c.moveTo(ax - ar, 560); c.lineTo(ax - ar, ay); c.arc(ax, ay, ar, Math.PI, Math.PI * 1.5); c.lineTo(x1 + 8, ay - ar); c.lineTo(x1 + 8, 560); c.closePath(); c.clip();
+        c.fillStyle = '#3d5a86'; c.fillRect(ax - ar, y0, x1 - ax + ar + 8, 560 - y0);
+        for (let x = ax - ar; x < x1 + 8; x += 26) { c.fillStyle = 'rgba(10,18,40,0.34)'; c.fillRect(x + 24, y0, 2, 560 - y0); c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(x + 26, y0, 1.4, 560 - y0); }
+        c.fillStyle = 'rgba(10,18,40,0.3)'; c.fillRect(ax - ar, y0, 5, 560 - y0);
+        for (const hy of [176, 470]) { c.fillStyle = IRON; c.fillRect(ax - ar + 8, hy, 80, 12); c.beginPath(); c.moveTo(ax - ar + 8, hy - 7); c.lineTo(ax - ar - 3 + 8, hy + 6); c.lineTo(ax - ar + 8, hy + 19); c.lineTo(ax - ar + 15, hy + 6); c.closePath(); c.fill(); for (let x = ax - ar + 22; x < ax - ar + 88; x += 20) { c.fillStyle = '#4a4752'; c.beginPath(); c.arc(x, hy + 6, 2.4, 0, 7); c.fill(); } }
+        c.restore();
+        // the ring handle and the keyhole's plate
+        const hx = ax - ar + 26, hy = 322;
+        c.fillStyle = IRON; c.beginPath(); c.roundRect(hx - 8, hy - 26, 16, 44, 4); c.fill();
+        c.strokeStyle = IRON; c.lineWidth = 4.4; c.beginPath(); c.arc(hx, hy - 8, 14, 0, 7); c.stroke();
+        c.strokeStyle = EDGE; c.lineWidth = 1.2; c.beginPath(); c.arc(hx, hy - 8, 14, 3.4, 4.8); c.stroke();
+        c.fillStyle = '#0e0d12'; c.beginPath(); c.arc(hx, hy + 9, 2.6, 0, 7); c.fill(); c.fillRect(hx - 1.1, hy + 9, 2.2, 6);
+        // the worn doorstep along the foot of the wall, thyme in its cracks
+        c.fillStyle = '#9a8f7e'; c.fillRect(x0, 552, x1 - x0, y1 - 552);
+        for (let i = 0; i < 130; i++) { c.fillStyle = U.pick(r, ['#857a69', '#b3a998', '#92877a', '#c4baa8']); c.beginPath(); c.ellipse(x0 + r() * (x1 - x0), 566 + r() * (y1 - 566), 1.4 + r() * 2.4, 1 + r() * 1.4, 0, 0, 7); c.fill(); }
+        c.fillStyle = '#c4baa8'; c.fillRect(x0, 546, x1 - x0, 14); c.fillStyle = 'rgba(255,248,232,0.34)'; c.fillRect(x0, 546, x1 - x0, 2.4); c.fillStyle = 'rgba(40,32,24,0.3)'; c.fillRect(x0, 560, x1 - x0, 5);
+        for (const jx of [118, 236]) { c.fillStyle = 'rgba(40,32,24,0.34)'; c.fillRect(jx, 546, 2, 14); }
+        for (let i = 0; i < 90; i++) {
+          const a = r() * 6.283, d = Math.sqrt(r()), px = 58 + Math.cos(a) * d * 46, py = 549 + Math.sin(a) * d * 11;
+          c.fillStyle = U.pick(r, ['#5f8a4a', '#6f9a58', '#4f7a3e']); c.beginPath(); c.ellipse(px, py, 2.6, 1.6, r() * 3, 0, 7); c.fill();
+          if (i % 3 === 0) { c.fillStyle = U.pick(r, ['#b48fd8', '#c9a6e2']); c.beginPath(); c.arc(px, py - 2, 1.5, 0, 7); c.fill(); }
+        }
+        // dusk over all of it, and the candle's light on the stones
+        c.fillStyle = 'rgba(34,42,104,0.46)'; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+        const g = c.createRadialGradient(cx, 316, 30, cx, 316, 230);
+        g.addColorStop(0, 'rgba(255,196,120,0.3)'); g.addColorStop(1, 'rgba(255,196,120,0)');
+        c.fillStyle = g; c.fillRect(x0, y0, x1 - x0, y1 - y0);
+        softShadow(c, region, 12, 0.34, 6, 8);
+      },
+      clean(c) {
+        // the air inside lit warm, a stub of candle on its pricket, the flame
+        const g = c.createRadialGradient(cx, 318, 8, cx, 318, 150);
+        g.addColorStop(0, 'rgba(255,226,150,0.92)'); g.addColorStop(0.45, 'rgba(255,190,104,0.62)'); g.addColorStop(1, 'rgba(226,132,76,0.34)');
+        c.fillStyle = g; c.fillRect(lx - sw - 4, gy0 - 4, 2 * (fw + post + sw) + 8, gy1 - gy0 + 8);
+        c.fillStyle = IRON2; c.fillRect(cx - 4, gy1 - 16, 8, 16); c.beginPath(); c.ellipse(cx, gy1 - 16, 28, 6.5, 0, 0, 7); c.fill();
+        c.fillStyle = '#4c4955'; c.beginPath(); c.ellipse(cx, gy1 - 18, 26, 5.2, 0, 0, 7); c.fill();
+        const cg = c.createLinearGradient(cx - 19, 0, cx + 19, 0); cg.addColorStop(0, '#fff3d6'); cg.addColorStop(0.5, CANDLE); cg.addColorStop(1, '#d9b98a');
+        c.fillStyle = cg; c.beginPath(); c.moveTo(cx - 19, 346); c.lineTo(cx - 19, gy1 - 20); c.quadraticCurveTo(cx, gy1 - 12, cx + 19, gy1 - 20); c.lineTo(cx + 19, 340); c.quadraticCurveTo(cx, 332, cx - 19, 346); c.closePath(); c.fill();
+        c.fillStyle = '#fff6dc'; c.beginPath(); c.ellipse(cx, 340, 19, 7, -0.12, 0, 7); c.fill();
+        for (const [dx, h] of [[-13, 32], [9, 22], [16, 42]]) { c.fillStyle = '#f8ecd2'; c.beginPath(); c.roundRect(cx + dx - 3, 340, 6, h, 3); c.fill(); }
+        c.strokeStyle = '#3a2814'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx, 339); c.lineTo(cx + 1, 326); c.stroke();
+        const fg = c.createRadialGradient(cx, 304, 2, cx, 304, 62); fg.addColorStop(0, 'rgba(255,240,180,0.9)'); fg.addColorStop(1, 'rgba(255,214,120,0)');
+        c.fillStyle = fg; c.beginPath(); c.arc(cx, 304, 62, 0, 7); c.fill();
+        c.fillStyle = '#ffb648'; c.beginPath(); c.moveTo(cx, 278); c.bezierCurveTo(cx + 18, 304, cx + 13, 330, cx, 330); c.bezierCurveTo(cx - 13, 330, cx - 18, 304, cx, 278); c.fill();
+        c.fillStyle = '#ffe9a6'; c.beginPath(); c.moveTo(cx, 292); c.bezierCurveTo(cx + 10, 310, cx + 8, 328, cx, 328); c.bezierCurveTo(cx - 8, 328, cx - 10, 310, cx, 292); c.fill();
+      },
+      cleanOver(c) {
+        // the side panes a little darker, long reflections on the glass
+        for (const p of [panes[0], panes[2]]) { c.fillStyle = 'rgba(40,30,70,0.2)'; c.beginPath(); trace(c, p); c.fill(); }
+        c.save(); c.globalCompositeOperation = 'lighter';
+        for (const [o, wdt, al] of [[0, 18, 0.2], [26, 7, 0.14], [86, 20, 0.1]]) {
+          c.fillStyle = `rgba(255,255,255,${al})`;
+          c.beginPath(); c.moveTo(cx - fw + o + 26, gy0); c.lineTo(cx - fw + o + 26 + wdt, gy0); c.lineTo(cx - fw + o - 18 + wdt, gy1); c.lineTo(cx - fw + o - 18, gy1); c.closePath(); c.fill();
+        }
+        c.restore();
+      },
+      dirt(c) {
+        // soot from the old candles, blackest under the hood, over a film of dust
+        const g = ramp(['#6f6a64', '#837d74', '#98917f', '#aaa394']);
+        field(c, lx - sw - 4, gy0 - 4, rx + sw + 4, gy1 + 4, 2, (x, y) => { const v = nz.fbm(x * 0.03, y * 0.03, 5); return [...g(v), Math.min(255, 212 + v * 40 + (1 - (y - gy0) / (gy1 - gy0)) * 30)]; });
+        const sg = c.createLinearGradient(0, gy0, 0, gy0 + 130);
+        sg.addColorStop(0, 'rgba(26,22,24,0.82)'); sg.addColorStop(0.55, 'rgba(32,28,28,0.34)'); sg.addColorStop(1, 'rgba(32,28,28,0)');
+        c.fillStyle = sg; c.fillRect(lx - sw - 4, gy0 - 4, 2 * (fw + post + sw) + 8, 134);
+        // a smoky bloom over where the flame burns
+        const bg = c.createRadialGradient(cx, 262, 6, cx, 262, 64); bg.addColorStop(0, 'rgba(22,18,20,0.6)'); bg.addColorStop(1, 'rgba(22,18,20,0)');
+        c.fillStyle = bg; c.beginPath(); c.arc(cx, 262, 64, 0, 7); c.fill();
+        for (let i = 0; i < 1100; i++) { c.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(40,34,30,0.42)'; c.fillRect(lx - sw + r() * 2 * (fw + post + sw), gy0 + r() * (gy1 - gy0), 1 + r(), 1 + r()); }
+        grime(c, r, lx - sw, gy0, rx + sw, gy1, 16);
+        // rain runs through the soot
+        c.lineCap = 'round';
+        for (let i = 0; i < 34; i++) {
+          const x = lx - sw + r() * 2 * (fw + post + sw), y = gy0 + 6 + r() * 120, l = 20 + r() * 80;
+          c.strokeStyle = `rgba(190,180,160,${(0.1 + r() * 0.16).toFixed(2)})`; c.lineWidth = 1 + r() * 2;
+          c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 4, y + l); c.stroke();
+        }
+        // old cobwebs across the corners of the glass, hung with dust
+        for (const [wx, wy, a0, len] of [[cx + fw - 2, gy0 + 3, Math.PI / 2, 70], [cx - fw + 2, gy1 - 3, -Math.PI / 2, 62], [lx - sw + 3, gy0 + 12, 0.1, 34]]) {
+          c.strokeStyle = 'rgba(255,255,255,0.72)'; c.lineWidth = 0.75;
+          for (let k = 0; k < 6; k++) { const a = a0 + (k / 5) * (Math.PI / 2); c.beginPath(); c.moveTo(wx, wy); c.lineTo(wx + Math.cos(a) * len, wy + Math.sin(a) * len); c.stroke(); }
+          for (let ring = 11; ring < len; ring += 10) { c.beginPath(); for (let k = 0; k <= 5; k++) { const a = a0 + (k / 5) * (Math.PI / 2), q = ring + (k % 2) * 2; c.lineTo(wx + Math.cos(a) * q, wy + Math.sin(a) * q); } c.stroke(); }
+          for (let k = 0; k < 7; k++) { const a = a0 + r() * (Math.PI / 2), q = 10 + r() * (len - 10); dot(c, wx + Math.cos(a) * q, wy + Math.sin(a) * q, 0.8 + r() * 0.9, 'rgba(255,255,255,0.7)'); }
+        }
+      },
+      top(c) {
+        const ex0 = lx - sw - 11, ex1 = rx + sw + 11;
+        // the wall plate, its two scrolls and the short arm
+        c.fillStyle = 'rgba(14,12,30,0.34)'; c.beginPath(); c.roundRect(cx - 6, 24, 24, 96, 5); c.fill();
+        curl(c, cx - 42, 58, 30, 0.5, -1, 6); curl(c, cx + 42, 58, 30, Math.PI - 0.5, 1, 6);
+        curl(c, cx - 42, 58, 30, 0.5, -1, 1.6, EDGE); curl(c, cx + 42, 58, 30, Math.PI - 0.5, 1, 1.6, EDGE);
+        c.fillStyle = IRON; c.beginPath(); c.roundRect(cx - 12, 18, 24, 92, 6); c.fill();
+        c.fillStyle = EDGE; c.fillRect(cx - 9, 22, 2, 84);
+        for (const y of [32, 64, 96]) { c.fillStyle = '#4a4752'; c.beginPath(); c.arc(cx, y, 4.6, 0, 7); c.fill(); c.fillStyle = '#16151a'; c.fillRect(cx - 3.4, y - 0.7, 6.8, 1.4); }
+        // the ring it hangs from and the finial
+        c.strokeStyle = IRON; c.lineWidth = 5; c.beginPath(); c.arc(cx, 116, 10, 0, 7); c.stroke();
+        c.strokeStyle = EDGE; c.lineWidth = 1.2; c.beginPath(); c.arc(cx, 116, 10, 3.4, 5); c.stroke();
+        // the hood: curving up from the eave to a collar, pierced with little stars
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(ex0, gy0 - 2 + slant); c.lineTo(lx, gy0 - 14); c.quadraticCurveTo(cx - 44, gy0 - 28, cx - 22, gy0 - 52); c.quadraticCurveTo(cx - 11, gy0 - 64, cx - 10, gy0 - 72); c.lineTo(cx + 10, gy0 - 72); c.quadraticCurveTo(cx + 11, gy0 - 64, cx + 22, gy0 - 52); c.quadraticCurveTo(cx + 44, gy0 - 28, rx, gy0 - 14); c.lineTo(ex1, gy0 - 2 + slant); c.closePath(); c.fill();
+        c.fillStyle = IRON2; c.beginPath(); c.moveTo(cx - 10, gy0 - 72); c.quadraticCurveTo(cx - 11, gy0 - 64, cx - 22, gy0 - 52); c.quadraticCurveTo(cx - 44, gy0 - 28, lx, gy0 - 14); c.lineTo(cx - fw, gy0 - 14); c.quadraticCurveTo(cx - 28, gy0 - 34, cx - 8, gy0 - 72); c.closePath(); c.fill();
+        c.fillStyle = '#ffcf7a'; for (const [dx, dy, q] of [[-24, -24, 5], [0, -28, 6], [24, -24, 5], [-12, -44, 3.6], [12, -44, 3.6]]) star(c, cx + dx, gy0 + dy, q);
+        c.fillStyle = IRON2; c.fillRect(cx - 13, gy0 - 76, 26, 6); dot(c, cx, gy0 - 82, 6, IRON);
+        // the eave and the base band, following the turn of the lantern
+        const band = (y, h, s) => { c.beginPath(); c.moveTo(ex0, y + s); c.lineTo(lx - 3, y); c.lineTo(rx + 3, y); c.lineTo(ex1, y + s); c.lineTo(ex1, y + s + h); c.lineTo(rx + 3, y + h); c.lineTo(lx - 3, y + h); c.lineTo(ex0, y + s + h); c.closePath(); c.fill(); };
+        c.fillStyle = IRON; band(gy0 - 14, 15, slant); c.fillStyle = IRON2; band(gy0 - 14, 3.4, slant);
+        c.fillStyle = IRON; band(gy1 - 3, 15, -slant); c.fillStyle = IRON2; band(gy1 - 3, 3.4, -slant);
+        for (const [x, y] of [[ex0 + 8, gy0 - 2], [lx, gy0 - 8], [cx, gy0 - 8], [rx, gy0 - 8], [ex1 - 8, gy0 - 2], [ex0 + 8, gy1 - 6], [lx, gy1 + 5], [cx, gy1 + 5], [rx, gy1 + 5], [ex1 - 8, gy1 - 6]]) dot(c, x, y, 2, '#57535f');
+        // the posts, the pointed arch in the front pane, a bar across the sides
+        twist(c, lx + post / 2, gy0, gy1, post); twist(c, rx - post / 2, gy0, gy1, post);
+        twist(c, lx - sw - 3, gy0 + slant - 2, gy1 - slant + 2, 8); twist(c, rx + sw + 3, gy0 + slant - 2, gy1 - slant + 2, 8);
+        c.strokeStyle = IRON; c.lineWidth = 4.4; c.lineCap = 'round'; c.lineJoin = 'round';
+        c.beginPath(); c.moveTo(cx - fw, gy0 + 78); c.quadraticCurveTo(cx - fw + 8, gy0 + 34, cx, gy0 + 2); c.quadraticCurveTo(cx + fw - 8, gy0 + 34, cx + fw, gy0 + 78); c.stroke();
+        curl(c, cx - fw + 16, gy0 + 15, 13, 0.7, -1, 3); curl(c, cx + fw - 16, gy0 + 15, 13, Math.PI - 0.7, 1, 3);
+        for (const [a, b] of [[lx - sw, lx], [rx, rx + sw]]) { c.lineWidth = 3.4; c.beginPath(); c.moveTo(a, gy0 + 86); c.lineTo(b, gy0 + 82); c.stroke(); dot(c, (a + b) / 2, gy0 + 84, 4.6, IRON); }
+        // the pane's two hinges and its little latch
+        for (const y of [gy0 + 26, gy1 - 34]) { c.fillStyle = IRON; c.beginPath(); c.roundRect(cx - fw - 5, y, 13, 12, 2); c.fill(); }
+        c.fillStyle = IRON; c.beginPath(); c.roundRect(cx + fw - 13, 300, 18, 8, 3); c.fill(); dot(c, cx + fw - 13, 304, 4.2, IRON);
+        // the foot: a cone, a ball and a point, two small curls
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(lx + 2, gy1 + 11); c.lineTo(rx - 2, gy1 + 11); c.lineTo(cx + 13, gy1 + 44); c.lineTo(cx - 13, gy1 + 44); c.closePath(); c.fill();
+        c.fillStyle = IRON2; c.beginPath(); c.moveTo(lx + 2, gy1 + 11); c.lineTo(cx - 20, gy1 + 11); c.lineTo(cx - 8, gy1 + 44); c.lineTo(cx - 13, gy1 + 44); c.closePath(); c.fill();
+        dot(c, cx, gy1 + 54, 11, IRON); dot(c, cx - 3.5, gy1 + 50.5, 3, EDGE);
+        c.fillStyle = IRON; c.beginPath(); c.moveTo(cx - 5, gy1 + 62); c.lineTo(cx + 5, gy1 + 62); c.lineTo(cx, gy1 + 82); c.closePath(); c.fill();
+        curl(c, cx - 42, gy1 + 28, 12, -0.3, 1, 3.4); curl(c, cx + 42, gy1 + 28, 12, Math.PI + 0.3, -1, 3.4);
+      },
+    };
+  }
+
   function lantern(S) {
     if (S.opts.where === 'halt') return platformLamp(S);
     if (S.opts.where === 'curio') return brassLamp(S);
+    if (S.opts.where === 'observatory') return stoneLantern(S);
     const { r, nz, bleed } = S;
     const cx = 180, R = 150, gy0 = 156, gy1 = 466, ty = 312, mw = 10;
     const posts = [-62, -21, 21, 62].map((d) => cx + R * Math.sin((d * Math.PI) / 180));

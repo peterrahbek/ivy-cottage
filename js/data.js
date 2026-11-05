@@ -22,6 +22,8 @@ const DATA = (() => {
     stableYard: 'The stable yard', stableBlock: 'The stable block', tackRoom: 'The tack room', hayBarn: 'The hay barn',
     studio: 'The studio', loftYard: 'The yard', loftFront: 'The loft front',
     fromLoft: 'From the painter\'s loft', fromSky: 'From the night sky',
+    hillPath: 'The hill path', hilltop: 'The hilltop', dome: 'The dome', mapRoom: 'The map room',
+    poolside: 'The poolside', sunTerrace: 'The sun terrace', lidoKiosk: 'The kiosk', lidoFront: 'The way in',
   };
 
   // part = which piece of the place's picture this chore restores
@@ -313,6 +315,51 @@ const DATA = (() => {
     { id: 'lo-mix', area: 'studio', part: 'mix', name: 'Mix the colours', scene: 'mix', opts: {}, seed: 1515, how: 'Two jars in the bowl for each colour' },
   ];
 
+  // The fourteenth place: a little Victorian observatory on a hill, with a
+  // copper dome, a brass telescope, a map room, a stone bench and an owl in the
+  // oak. For sale a year after the loft is restored. Its two thinking jobs are
+  // joining the stars and a jigsaw of the night sky.
+  const OBSERVATORY_CHORES = [
+    { id: 'ob-path', area: 'hillPath', part: 'path', name: 'The path up the hill', scene: 'stones', opts: { shape: 'path' }, seed: 1601 },
+    { id: 'ob-grass', area: 'hilltop', part: 'grass', name: 'The hilltop grass', scene: 'lawn', opts: { shape: 'patch' }, seed: 1602 },
+    { id: 'ob-dome', area: 'dome', part: 'dome', name: 'The copper dome', scene: 'roof', opts: { what: 'dome' }, seed: 1603 },
+    { id: 'ob-lens', area: 'dome', part: 'lens', name: 'Polish the lens', scene: 'roundWindow', opts: { what: 'lens' }, seed: 1604 },
+    { id: 'ob-telescope', area: 'dome', part: 'telescope', name: 'The brass telescope', scene: 'counter', opts: { what: 'telescope' }, seed: 1605 },
+    { id: 'ob-window', area: 'mapRoom', part: 'window', name: 'The map-room window', scene: 'window', opts: { room: 'maproom' }, seed: 1606 },
+    { id: 'ob-charts', area: 'mapRoom', part: 'charts', name: 'Dusty star charts', scene: 'attic', opts: { where: 'charts' }, seed: 1607 },
+    { id: 'ob-door', area: 'hilltop', part: 'door', name: 'Paint the observatory door', scene: 'door', opts: {}, seed: 1608, color: 'obsDoor' },
+    { id: 'ob-sign', area: 'hilltop', part: 'sign', name: 'Paint the sign', scene: 'sign', opts: { title: 'OWL HILL', sub: '· OBSERVATORY ·', icon: 'star' }, seed: 1609, color: 'obsSign' },
+    { id: 'ob-lantern', area: 'hilltop', part: 'lantern', name: 'The lantern by the door', scene: 'lantern', opts: { where: 'observatory' }, seed: 1610 },
+    { id: 'ob-bench', area: 'hilltop', part: 'bench', name: 'The stone bench', scene: 'build', opts: { material: 'bricks' }, seed: 1611 },
+    { id: 'ob-steps', area: 'dome', part: 'steps', name: 'The dome steps', scene: 'build', opts: { material: 'planks' }, seed: 1612 },
+    { id: 'ob-thyme', area: 'hilltop', part: 'thyme', name: 'Wild thyme on the slope', scene: 'plant', opts: { box: 'bed', plants: 'thyme' }, seed: 1613 },
+    { id: 'ob-stars', area: 'dome', part: 'stars', name: 'Join the stars', scene: 'stars', opts: { where: 'observatory' }, seed: 1614, how: 'Join the stars in order' },
+    { id: 'ob-jigsaw', area: 'mapRoom', part: 'jigsaw', name: 'The night-sky jigsaw', scene: 'jigsaw', opts: { where: 'observatory' }, seed: 1615, how: 'Every piece to its place' },
+  ];
+
+  // The fifteenth place: an art deco open-air pool with pale blue tiles, a
+  // fountain, a diving board, changing huts and a kiosk. For sale a year after
+  // the observatory is restored. The pool is drained and rimed in winter,
+  // scrubbed in spring and full and shining in summer. The mosaic is a build job
+  // whose coloured tiles click in where they are faintly drawn.
+  const LIDO_CHORES = [
+    { id: 'li-tiles', area: 'poolside', part: 'tiles', name: 'The pool tiles', scene: 'stones', opts: { shape: 'pool' }, seed: 1701 },
+    { id: 'li-terrace', area: 'sunTerrace', part: 'terrace', name: 'The sun terrace', scene: 'stones', opts: { shape: 'terrace' }, seed: 1702 },
+    { id: 'li-fountain', area: 'poolside', part: 'fountain', name: 'The fountain', scene: 'pond', opts: { what: 'fountain', where: 'lido' }, seed: 1703 },
+    { id: 'li-huts', area: 'sunTerrace', part: 'huts', name: 'Paint the changing huts', scene: 'hut', opts: { what: 'lido' }, seed: 1704, color: 'lidoHuts' },
+    { id: 'li-gate', area: 'lidoFront', part: 'gate', name: 'Paint the turnstile gate', scene: 'fence', opts: { what: 'turnstile' }, seed: 1705, color: 'lidoGate' },
+    { id: 'li-sign', area: 'lidoFront', part: 'sign', name: 'Paint the lido sign', scene: 'sign', opts: { title: 'LIDO', sub: '· SUNNYBANK ·', icon: 'wave' }, seed: 1706, color: 'lidoSign' },
+    { id: 'li-kiosk', area: 'lidoKiosk', part: 'kiosk', name: 'The kiosk counter', scene: 'counter', opts: { what: 'kiosk' }, seed: 1707 },
+    { id: 'li-windows', area: 'lidoKiosk', part: 'windows', name: 'The kiosk windows', scene: 'window', opts: { room: 'kiosk' }, seed: 1708 },
+    { id: 'li-board', area: 'poolside', part: 'board', name: 'The diving board', scene: 'build', opts: { material: 'planks' }, seed: 1709 },
+    { id: 'li-steps', area: 'poolside', part: 'steps', name: 'The pool steps', scene: 'build', opts: { material: 'bricks' }, seed: 1710 },
+    { id: 'li-mosaic', area: 'poolside', part: 'mosaic', name: 'The mosaic', scene: 'build', opts: { material: 'tiles', pattern: 'starfish' }, seed: 1711, verb: 'lay each tile where it is drawn' },
+    { id: 'li-palms', area: 'sunTerrace', part: 'palms', name: 'Palms in pots', scene: 'plant', opts: { box: 'pots', plants: 'palms' }, seed: 1712 },
+    { id: 'li-litter', area: 'poolside', part: 'litter', name: 'Litter by the pool', scene: 'beach', opts: { items: 'litter', ground: 'tiles' }, seed: 1713, verb: 'pick up the litter' },
+    { id: 'li-chairs', area: 'sunTerrace', part: 'chairs', name: 'Deck chairs out', scene: 'serve', opts: { what: 'deckchairs' }, seed: 1714, verb: 'put each deck chair on its mark' },
+    { id: 'li-ices', area: 'lidoKiosk', part: 'ices', name: 'Ice creams for the queue', scene: 'feeding', opts: { what: 'ices' }, seed: 1715, how: 'Scoop each ice just as the board says' },
+  ];
+
   // The puzzle room, a beta place open from the start: jobs with a little
   // thinking instead of a tool (js/puzzles.js). No machines, no robots, a
   // new layout every time, and they can be taken in any order.
@@ -410,6 +457,10 @@ const DATA = (() => {
     { id: 'x-canal-stars', place: 'canal', area: 'lock', name: 'Stars over the lock', scene: 'stars', opts: { where: 'canal' }, seed: 363, how: 'Join the stars in order' },
     { id: 'x-beads-stitch', place: 'beads', area: 'backRoom', name: 'Stitch the tear', scene: 'stars', opts: { what: 'stitch' }, seed: 364, family: 'craft', how: 'Stitch from hole to hole, in order' },
     { id: 'x-rescue-stitch', place: 'rescue', area: 'farmhouse', name: 'Mend the dog\'s blanket', scene: 'stars', opts: { what: 'stitch', where: 'rescue' }, seed: 365, family: 'craft', how: 'Stitch from hole to hole, in order' },
+    // the observatory and the lido
+    { id: 'x-observatory-lights', place: 'observatory', area: 'dome', name: 'Fairy lights', scene: 'lights', opts: { where: 'observatory' }, seed: 366, verb: 'hang the lights' },
+    { id: 'x-lido-lights', place: 'lido', area: 'sunTerrace', name: 'Fairy lights', scene: 'lights', opts: { where: 'lido' }, seed: 367, verb: 'hang the lights' },
+    { id: 'x-lido-jigsaw', place: 'lido', area: 'lidoKiosk', name: 'A jigsaw of the lido', scene: 'jigsaw', opts: { where: 'lido' }, seed: 368, how: 'Every piece to its place' },
   ];
 
   const FAMILY_OF = {
@@ -427,8 +478,8 @@ const DATA = (() => {
 
   // indoor jobs get no snow or falling leaves from the season outside
   const INDOOR = new Set(['cafeFloor', 'tables', 'counter', 'fridge', 'attic', 'coffee', 'bowls', 'cat', 'hutch']);
-  const isIndoor = (c) => (INDOOR.has(c.scene) && !(c.scene === 'bowls' && c.opts.what === 'trough')) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles') || (c.scene === 'serve' && c.opts.what === 'napkins') || (c.scene === 'beach' && c.opts.ground === 'floor') ||
-    (c.scene === 'roundWindow' && c.opts.what === 'globe') || (c.scene === 'lantern' && c.opts.where === 'curio');
+  const isIndoor = (c) => (INDOOR.has(c.scene) && !(c.scene === 'bowls' && c.opts.what === 'trough')) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles' && !c.opts.pattern) || (c.scene === 'serve' && c.opts.what === 'napkins') || (c.scene === 'beach' && c.opts.ground === 'floor') ||
+    (c.scene === 'roundWindow' && (c.opts.what === 'globe' || c.opts.what === 'lens')) || (c.scene === 'lantern' && c.opts.where === 'curio');
 
   // What jobs pay. Kept modest: tools, helpers, decorations and new places
   // should take a while to save up for.
@@ -441,7 +492,7 @@ const DATA = (() => {
   function booksValue(i) { return Math.round(780 * Math.pow(1.06, i)); }
   // from the pottery on, a place's jobs pay its price / 90, rising 6% a job
   const byPrice = (price) => (i) => Math.round((price / 90) * Math.pow(1.06, i));
-  const potteryValue = byPrice(80000), haltValue = byPrice(90000), beadsValue = byPrice(100000), curioValue = byPrice(110000), stablesValue = byPrice(120000), loftValue = byPrice(130000);
+  const potteryValue = byPrice(80000), haltValue = byPrice(90000), beadsValue = byPrice(100000), curioValue = byPrice(110000), stablesValue = byPrice(120000), loftValue = byPrice(130000), observatoryValue = byPrice(140000), lidoValue = byPrice(150000);
   // puzzles pay like a job in the middle of the cottage: worth doing, but
   // never a shortcut past the other places
   function betaValue(i) { return Math.round(70 * Math.pow(1.15, i)); }
@@ -459,11 +510,13 @@ const DATA = (() => {
   CURIO_CHORES.forEach((c, i) => { c.index = i; c.place = 'curio'; c.family = c.family || familyOf(c.scene); c.value = curioValue(i); });
   STABLE_CHORES.forEach((c, i) => { c.index = i; c.place = 'stables'; c.family = c.family || familyOf(c.scene); c.value = stablesValue(i); });
   LOFT_CHORES.forEach((c, i) => { c.index = i; c.place = 'loft'; c.family = c.family || familyOf(c.scene); c.value = loftValue(i); });
+  OBSERVATORY_CHORES.forEach((c, i) => { c.index = i; c.place = 'observatory'; c.family = c.family || familyOf(c.scene); c.value = observatoryValue(i); });
+  LIDO_CHORES.forEach((c, i) => { c.index = i; c.place = 'lido'; c.family = c.family || familyOf(c.scene); c.value = lidoValue(i); });
   BETA_CHORES.forEach((c, i) => { c.index = i; c.place = 'beta'; c.family = familyOf(c.scene); c.value = betaValue(i); });
   EXTRAS.forEach((c) => { c.place = c.place || 'cottage'; c.family = c.family || familyOf(c.scene); c.extra = true; });
   // the thinking and the making jobs are puzzles wherever they live (js/puzzles.js)
   const HANDS = new Set(['think', 'craft']);
-  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (HANDS.has(c.family)) c.puzzle = true; }));
+  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (HANDS.has(c.family)) c.puzzle = true; }));
 
   // first cottage chore that uses each family sets the price level of its tools
   const intro = {};
@@ -812,10 +865,55 @@ const DATA = (() => {
         ['lo-yard', 'Moss in the yard'], ['lo-mural', 'A spring picture for the wall'], ['lo-canvas', 'A canvas for spring'],
       ],
     },
+    observatory: {
+      summer: [
+        ['ob-grass', 'The hilltop grass has grown back'], ['ob-path', 'Weeds on the hill path'], ['ob-lens', 'Summer dust on the lens'],
+        ['ob-window', 'Pollen on the map-room window'], ['ob-thyme', 'More thyme for the bees'], ['ob-telescope', 'Fingerprints on the telescope'],
+        ['ob-dome', 'Green on the copper dome'], ['ob-lantern', 'Moths round the lantern'], ['ob-stars', 'The summer stars'],
+      ],
+      autumn: [
+        ['ob-path', 'Leaves on the hill path', 'leaves'], ['ob-grass', 'Leaves all over the hilltop', 'leaves'], ['ob-steps', 'Leaves on the dome steps', 'leaves'],
+        ['ob-window', 'Rain spots on the map-room window'], ['ob-charts', 'Autumn dusting among the charts'], ['ob-lens', 'Mist on the lens'],
+        ['ob-lantern', 'The lantern for the long nights'], ['ob-stars', 'The autumn stars'], ['ob-jigsaw', 'A jigsaw for a rainy night', null, { season: 'autumn' }],
+      ],
+      winter: [
+        ['x-observatory-lights', 'Fairy lights round the dome'], ['ob-path', 'Snow on the hill path', 'snow'], ['ob-window', 'Frost on the map-room window', 'frost'],
+        ['ob-steps', 'Snow on the dome steps', 'snow'], ['ob-lantern', 'The lantern for the snow'], ['ob-telescope', 'The telescope for the clear nights'],
+        ['ob-charts', 'New charts for the new year'], ['ob-stars', 'The winter stars'], ['ob-jigsaw', 'A winter jigsaw of the night sky', null, { season: 'winter' }],
+      ],
+      spring: [
+        ['ob-door', 'A new colour for the door'], ['ob-sign', 'Repaint the sign'], ['ob-bench', 'Mend the stone bench'],
+        ['ob-thyme', 'Young thyme on the slope'], ['ob-grass', 'The first mow of the year'], ['ob-dome', 'Spring scrub on the dome'],
+        ['ob-path', 'Moss on the hill path'], ['ob-charts', 'Spring dusting among the charts'], ['ob-stars', 'The spring stars'],
+      ],
+    },
+    lido: {
+      summer: [
+        ['li-chairs', 'Deck chairs out for the morning'], ['li-litter', 'Litter after a hot day'], ['li-kiosk', 'A sticky kiosk counter'],
+        ['li-windows', 'Sun cream on the kiosk windows'], ['li-fountain', 'A green tinge in the fountain'], ['li-palms', 'New palms for the terrace'],
+        ['li-terrace', 'Sand on the sun terrace'], ['li-board', 'Mend the diving board'], ['li-ices', 'Ice creams for the queue'],
+      ],
+      autumn: [
+        ['li-tiles', 'Leaves in the drained pool', 'leaves'], ['li-terrace', 'Leaves on the sun terrace', 'leaves'], ['li-fountain', 'Leaves in the fountain', 'leaves'],
+        ['li-steps', 'Leaves on the pool steps', 'leaves'], ['li-chairs', 'Deck chairs for the last warm days'], ['li-windows', 'Rain spots on the kiosk windows'],
+        ['li-kiosk', 'Clean down the kiosk for the winter'], ['li-ices', 'The last ices of the year'], ['x-lido-jigsaw', 'A jigsaw for a rainy day', null, { season: 'autumn' }],
+      ],
+      winter: [
+        ['x-lido-lights', 'Fairy lights along the terrace'], ['li-tiles', 'Snow in the empty pool', 'snow'], ['li-terrace', 'Snow on the sun terrace', 'snow'],
+        ['li-steps', 'Snow on the pool steps', 'snow'], ['li-windows', 'Frost on the kiosk windows', 'frost'], ['li-board', 'Mend the diving board in the quiet'],
+        ['li-mosaic', 'Loose tiles in the mosaic'], ['li-kiosk', 'Dust in the shut-up kiosk'], ['x-lido-jigsaw', 'A winter jigsaw in the kiosk', null, { season: 'winter' }],
+      ],
+      spring: [
+        ['li-tiles', 'Scrub the pool for the summer'], ['li-huts', 'A new colour for the huts'], ['li-gate', 'Fresh paint for the turnstile gate'],
+        ['li-sign', 'Repaint the sign'], ['li-palms', 'Palms back out for spring'], ['li-fountain', 'Spring clean in the fountain'],
+        ['li-mosaic', 'Loose tiles in the mosaic'], ['li-terrace', 'Moss on the sun terrace'], ['li-litter', 'Blown in over the winter', null, { drained: true }],
+      ],
+    },
   };
-  // Christmas lights always come with winter
-  const ALWAYS = new Set(['x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights', 'x-pottery-lights', 'x-halt-lights', 'x-beads-lights', 'x-curio-lights', 'x-stables-lights', 'x-loft-lights']);
-  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5, pottery: 5, halt: 5, beads: 5, curio: 5, stables: 5, loft: 5 };
+  // Christmas lights always come with winter, and the lido's empty pool always
+  // has its season's job (leaves, snow, then the scrub before it is filled)
+  const ALWAYS = new Set(['li-tiles', 'x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights', 'x-pottery-lights', 'x-halt-lights', 'x-beads-lights', 'x-curio-lights', 'x-stables-lights', 'x-loft-lights', 'x-observatory-lights', 'x-lido-lights']);
+  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5, pottery: 5, halt: 5, beads: 5, curio: 5, stables: 5, loft: 5, observatory: 5, lido: 5 };
   // at most this many jobs of one kind in a season (default 2); one puzzle and
   // one thing made by hand per place
   const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2, brew: 1, walk: 1, brush: 1, muck: 1, think: 1, craft: 1 };
@@ -828,7 +926,7 @@ const DATA = (() => {
     const ceiling = 1.6 + 0.1 * Math.max(0, places - 7);
     return Math.round(choreValue(CHORES.length - 1) * 0.4 * Math.min(ceiling, Math.pow(1.05, n - 1)) * (1 + i * 0.04));
   }
-  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, EXTRAS);
+  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, EXTRAS);
   const byId = (id) => ALL().find((c) => c.id === id);
   // leaves in water are skimmed with a net, never raked
   const famFor = (b, dirt) => (dirt === 'leaves' ? (b.scene === 'pond' || b.scene === 'rockpool' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family);
@@ -838,7 +936,7 @@ const DATA = (() => {
   // and jobs from the same season last year pushed to the back.
   function pickSeason(n, place, history = true) {
     const pool = SEASON_POOL[place][seasonOf(n)];
-    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057, pottery: 729173, halt: 833177, beads: 937207, curio: 1041271, stables: 1145393, loft: 1249427 }[place]);
+    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057, pottery: 729173, halt: 833177, beads: 937207, curio: 1041271, stables: 1145393, loft: 1249427, observatory: 1353487, lido: 1457551 }[place]);
     const last = history && n > 4 ? new Set(pickSeason(n - 4, place, false)) : new Set();
     const scored = pool.map((p) => ({ p, s: r() + (last.has(p[0]) ? 0.6 : 0) - (ALWAYS.has(p[0]) ? 2 : 0) })).sort((a, b) => a.s - b.s).map((x) => x.p);
     const want = PER_SEASON[place], picked = [], count = {};
@@ -934,7 +1032,7 @@ const DATA = (() => {
     { name: 'Terracotta', c: '#d98b63' }, { name: 'Butter', c: '#f2d88a' }, { name: 'Cream', c: '#f4ecdc' },
     { name: 'Forest', c: '#4e7b5b' }, { name: 'Navy', c: '#3d5a86' }, { name: 'Charcoal', c: '#4b4a52' },
   ];
-  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86', potteryDoor: '#9cc5a1', potterySign: '#d98b63', haltSign: '#c9474f', haltDoor: '#4e7b5b', haltGate: '#f4ecdc', beadSign: '#efb4ae', beadDoor: '#a6d3d4', curioSign: '#c9474f', curioDoor: '#4e7b5b', stableFence: '#f4ecdc', stableDoor: '#4e7b5b', jumps: '#c9474f', stableSign: '#4e7b5b', loftDoor: '#3d5a86', loftSign: '#d98b63', swingSeat: '#f2d88a' };
+  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86', potteryDoor: '#9cc5a1', potterySign: '#d98b63', haltSign: '#c9474f', haltDoor: '#4e7b5b', haltGate: '#f4ecdc', beadSign: '#efb4ae', beadDoor: '#a6d3d4', curioSign: '#c9474f', curioDoor: '#4e7b5b', stableFence: '#f4ecdc', stableDoor: '#4e7b5b', jumps: '#c9474f', stableSign: '#4e7b5b', loftDoor: '#3d5a86', loftSign: '#d98b63', swingSeat: '#f2d88a', obsDoor: '#3d5a86', obsSign: '#d98b63', lidoHuts: '#efb4ae', lidoGate: '#a6d3d4', lidoSign: '#c9474f' };
 
   // one keepsake hidden in each job, found the first time through
   const FINDS = {
@@ -1015,6 +1113,16 @@ const DATA = (() => {
     'lo-sign': ['✏️', 'A pencil stub'], 'lo-swing': ['🪶', 'A feather on the swing seat'], 'lo-stairs': ['🧦', 'One paint-spotted sock'],
     'lo-yard': ['🐞', 'A ladybird on a paint lid'], 'lo-poppies': ['🌺', 'A poppy pressed in a sketchbook'], 'lo-boxes': ['🌿', 'A sprig of rosemary'],
     'lo-canvas': ['🎨', 'A dried-up palette'], 'lo-mural': ['🌅', 'A sunrise you painted'], 'lo-mix': ['🌈', 'A jar of every colour'],
+    'ob-path': ['🪨', 'A pebble worn smooth by the walk'], 'ob-grass': ['🦋', 'A moth that flies at dusk'], 'ob-dome': ['🪙', 'A penny gone green'],
+    'ob-lens': ['🔭', 'A lens cap'], 'ob-telescope': ['📏', 'A brass ruler with tiny numbers'], 'ob-window': ['🕷️', 'A spider mapping the window'],
+    'ob-charts': ['🗺️', 'A map of the moon'], 'ob-door': ['🛎️', 'The observatory bell'], 'ob-sign': ['⭐', 'A star that came off the sign'],
+    'ob-lantern': ['🕯️', 'A stub of lantern candle'], 'ob-bench': ['🦉', 'An owl pellet, cleaned'], 'ob-steps': ['🧣', 'A stargazer\'s scarf'],
+    'ob-thyme': ['🐝', 'A bumblebee asleep in the thyme'], 'ob-stars': ['🌠', 'A fallen star (a glass bead)'], 'ob-jigsaw': ['🌙', 'A tiny silver moon'],
+    'li-tiles': ['🐚', 'A tile shaped like a shell'], 'li-terrace': ['🧴', 'A bottle of very old sun cream'], 'li-fountain': ['🦆', 'A rubber duck in the fountain'],
+    'li-huts': ['🩴', 'One flip-flop'], 'li-gate': ['🎟️', 'A season ticket from long ago'], 'li-sign': ['🌊', 'A little painted wave'],
+    'li-kiosk': ['🍭', 'A lollipop stick with a joke on it'], 'li-windows': ['🥄', 'A little wooden ice-cream spoon'], 'li-board': ['🏅', 'A diving medal'],
+    'li-steps': ['🕶️', 'Sunglasses from the deep end'], 'li-mosaic': ['🌟', 'A gold tile from the starfish'], 'li-palms': ['🦎', 'A tiny gecko on a pot'],
+    'li-litter': ['🏐', 'A very small beach ball'], 'li-chairs': ['📕', 'A holiday paperback, swollen with water'], 'li-ices': ['🍦', 'The last cone of the summer'],
     'beta-numbers': ['🖍️', 'A crayon worn down to a stub'], 'beta-stars': ['🌠', 'A star you joined up yourself'], 'beta-mix': ['🧪', 'A little jar of a new colour'],
   };
 
@@ -1208,10 +1316,38 @@ const DATA = (() => {
     { id: 'pl-hammock', name: 'A hammock', icon: '🧺', cost: 19000 },
     { id: 'pl-vane', name: 'A paintbrush weathervane', icon: '🖌️', cost: 26000 },
   ];
+  const OBSERVATORY_DECOR = [
+    { id: 'oh-blanket', name: 'A stargazing blanket', icon: '🧺', cost: 1400 },
+    { id: 'oh-flowers', name: 'A patch of wildflowers', icon: '🌼', cost: 2000 },
+    { id: 'oh-stoneowl', name: 'A stone owl', icon: '🪨', cost: 2700 },
+    { id: 'oh-sundial', name: 'A brass sundial', icon: '☀️', cost: 3550 },
+    { id: 'oh-spyglass', name: 'A spyglass on the terrace', icon: '🔭', cost: 4650 },
+    { id: 'oh-moonlamp', name: 'A moon lamp', icon: '🌕', cost: 6050 },
+    { id: 'oh-owl', name: 'An owl in the oak', icon: '🦉', cost: 7750 },
+    { id: 'oh-weather', name: 'A little weather station', icon: '🌡️', cost: 9800 },
+    { id: 'oh-lights', name: 'Fairy lights round the dome', icon: '✨', cost: 12500 },
+    { id: 'oh-meteor', name: 'A meteor bench', icon: '☄️', cost: 15400 },
+    { id: 'oh-moonflower', name: 'A glowing moonflower', icon: '🌙', cost: 20450 },
+    { id: 'oh-vane', name: 'A copper weathervane', icon: '🧭', cost: 28000 },
+  ];
+  const LIDO_DECOR = [
+    { id: 'sb-bunting', name: 'Bunting over the pool', icon: '🎏', cost: 1500 },
+    { id: 'sb-flamingo', name: 'A flamingo pool float', icon: '🦩', cost: 2150 },
+    { id: 'sb-towels', name: 'A rainbow towel rack', icon: '🧺', cost: 2900 },
+    { id: 'sb-parasols', name: 'Striped parasols', icon: '⛱️', cost: 3800 },
+    { id: 'sb-cat', name: 'A cat on a deck chair', icon: '🐈', cost: 4950 },
+    { id: 'sb-palm', name: 'A big palm', icon: '🌴', cost: 6450 },
+    { id: 'sb-sundial', name: 'A sundial on the terrace', icon: '☀️', cost: 8300 },
+    { id: 'sb-lifeguard', name: 'A lifeguard\'s chair', icon: '🛟', cost: 10500 },
+    { id: 'sb-lights', name: 'Fairy lights along the terrace', icon: '✨', cost: 13400 },
+    { id: 'sb-fountainlight', name: 'Lights in the fountain', icon: '⛲', cost: 16500 },
+    { id: 'sb-shells', name: 'A shell mosaic on the kiosk wall', icon: '🐚', cost: 21900 },
+    { id: 'sb-jukebox', name: 'A jukebox by the kiosk', icon: '🎵', cost: 30000 },
+  ];
   const DECOR_UNLOCK = 6;
 
   // The places you can own; the picture of each is drawn by HOUSE, CAFE, COVE,
-  // RESCUE, GLASSHOUSE, CANAL, BOOKS, POTTERY, HALT, BEADS, CURIO, STABLES, LOFT or BETA. A place goes up for sale once
+  // RESCUE, GLASSHOUSE, CANAL, BOOKS, POTTERY, HALT, BEADS, CURIO, STABLES, LOFT, OBSERVATORY, LIDO or BETA. A place goes up for sale once
   // the one it needs is restored and `wait` more seasons have turned (main.js).
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
@@ -1228,14 +1364,16 @@ const DATA = (() => {
     { id: 'curio', name: 'Marchbank\'s Curiosities', short: 'the curiosity shop', toolPrice: 10, blurb: 'An old curiosity shop: a cabinet of twenty little drawers, a grandfather clock, a globe and a box nobody has opened in years. Polish it, mend it and find out what it hides.', price: 110000, needs: 'beads', wait: 4, chores: CURIO_CHORES, decor: CURIO_DECOR, done: 'The curiosity shop is open again', lights: 'mc-lights' },
     { id: 'stables', name: 'Foxglove Stables', short: 'the stables', toolPrice: 10, blurb: 'A little pony yard with three half-doors, a tack room, a paddock with jumps and a hay barn. Muck it out, mend it and put ribbons in a mane. The ponies are happy either way.', price: 120000, needs: 'curio', wait: 4, chores: STABLE_CHORES, decor: STABLE_DECOR, done: 'The stables are lovely again', lights: 'fs-lights' },
     { id: 'loft', name: 'The Painter\'s Loft', short: 'the loft', toolPrice: 10, blurb: 'A studio in an old hay loft: a skylight, easels, a store of frames and a long wall in the yard. Clean it, mend it and paint with your own hands.', price: 130000, needs: 'stables', wait: 4, chores: LOFT_CHORES, decor: LOFT_DECOR, done: 'The loft is open again', lights: 'pl-lights' },
+    { id: 'observatory', name: 'Owl Hill Observatory', short: 'the observatory', toolPrice: 10, blurb: 'A little Victorian observatory on a hill: a copper dome, a brass telescope, a map room and an owl in the oak. Polish it, mend it and join the stars.', price: 140000, needs: 'loft', wait: 4, chores: OBSERVATORY_CHORES, decor: OBSERVATORY_DECOR, done: 'The observatory is lovely again', lights: 'oh-lights' },
+    { id: 'lido', name: 'Sunnybank Lido', short: 'the lido', toolPrice: 10, blurb: 'An art deco open-air pool with pale blue tiles, a fountain, a diving board and striped deck chairs. Scrub it, mend it and fill it for the summer.', price: 150000, needs: 'observatory', wait: 4, chores: LIDO_CHORES, decor: LIDO_DECOR, done: 'The lido is open again', lights: 'sb-lights' },
     // open from the start and outside the order above: never bought, never in the seasons
     { id: 'beta', name: 'The Puzzle Room', short: 'the puzzle room', beta: true, blurb: 'New kinds of jobs to try: no tools, just a little thinking. Each one comes out different every time.', price: 0, chores: BETA_CHORES, decor: [], done: 'Every puzzle is solved' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
-    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
-    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, BEAD_DECOR, CURIO_DECOR, STABLE_DECOR, LOFT_DECOR, DECOR_UNLOCK, SEASON_NAMES,
+    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
+    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, BEAD_DECOR, CURIO_DECOR, STABLE_DECOR, LOFT_DECOR, OBSERVATORY_DECOR, LIDO_DECOR, DECOR_UNLOCK, SEASON_NAMES,
     seasonOf, seasonJobs, awakePlaces, SEASON_BUDGET, PER_SEASON, seasonValue, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();

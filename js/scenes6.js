@@ -52,6 +52,33 @@
     }
     for (let i = 0; i < 900; i++) { c.fillStyle = r() < 0.5 ? 'rgba(0,0,0,0.2)' : 'rgba(255,220,180,0.1)'; c.fillRect(r() * W, r() * H, 1 + r(), 1 + r()); }
   }
+  // the thin, stony ground of a dry slope
+  function stonySoil(c, r, nz) {
+    const g = ramp(['#7f7160', '#958771', '#a89a80', '#b8ab90']);
+    field(c, 0, 0, W, H, 2, (x, y) => g(nz.fbm(x * 0.04 + 5, y * 0.04, 4) * 0.8 + nz.n2(x * 0.4, y * 0.4) * 0.2));
+    for (let i = 0; i < 620; i++) dot(c, r() * W, r() * H, 0.7 + r() * 2.1, U.pick(r, ['#c9bda6', '#857966', '#d8cfbc', '#9d917c']));
+    for (let i = 0; i < 46; i++) {
+      const x = r() * W, y = r() * H, q = 4 + r() * 7, a = r() * 3;
+      c.fillStyle = 'rgba(50,40,28,0.3)'; c.beginPath(); c.ellipse(x + 1, y + 1.5, q, q * 0.72, a, 0, 7); c.fill();
+      c.fillStyle = U.pick(r, ['#c4bda9', '#b3ac99', '#d2ccba']); c.beginPath(); c.ellipse(x, y, q, q * 0.72, a, 0, 7); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.25)'; c.beginPath(); c.ellipse(x - q * 0.2, y - q * 0.2, q * 0.5, q * 0.3, a, 0, 7); c.fill();
+    }
+  }
+  // the lido's sun terrace: big cream slabs, warm in the sun, between coral lines
+  function sunTerrace(c, r, nz, { x0, y0, x1, y1 }) {
+    field(c, x0, y0, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.02, y * 0.02, 3); return [236 + v * 14, 222 + v * 14, 194 + v * 14]; });
+    const slab = 76;
+    for (let j = Math.floor(y0 / slab); j * slab < y1; j++) for (let i = Math.floor(x0 / slab) - 1; i * slab < x1; i++) {
+      const x = i * slab + (j % 2 ? slab / 2 : 0), y = j * slab;
+      c.fillStyle = U.pick(r, ['rgba(255,250,235,0.3)', 'rgba(190,160,120,0.09)', 'rgba(255,255,255,0)']); c.fillRect(x, y, slab, slab);
+      c.fillStyle = 'rgba(130,105,75,0.34)'; c.fillRect(x, y + slab - 1.4, slab, 1.4); c.fillRect(x + slab - 1.4, y, 1.4, slab);
+      c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(x, y, slab - 1.4, 1); c.fillRect(x, y, 1, slab - 1.4);
+    }
+    for (const y of [24, 572]) {
+      c.fillStyle = '#d8664e'; c.fillRect(x0, y, x1 - x0, 5);
+      c.fillStyle = '#f8f0de'; c.fillRect(x0, y + 5, x1 - x0, 2); c.fillRect(x0, y - 2, x1 - x0, 2);
+    }
+  }
   // sawdust, broken bits and leaves left lying on a building site
   function rubble(c, r, nz, bits, base) {
     const g = ramp(base);
@@ -299,6 +326,70 @@
         dot(c, x, y, f * 0.3, '#f7d54a');
       }
     },
+    // wild thyme: a low dome of small tufts, darker round the edge, flecked with
+    // tiny grey-green leaves and hazy with pinkish purple flowers
+    wildthyme(c, r, s) {
+      const tones = ['#55704e', '#617e58', '#6f8d62', '#7e9c6e', '#8aa878'];
+      dot(c, 0, 0, s * 0.8, '#4c6646');
+      const tufts = [];
+      for (let i = 0; i < 36; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * s * 0.8; tufts.push([Math.cos(a) * d, Math.sin(a) * d, s * (0.14 + r() * 0.1), d / s]); }
+      tufts.sort((p, q) => q[3] - p[3]);
+      for (const [x, y, q, d] of tufts) {
+        const t = U.clamp(1 - d * 1.1 + (r() - 0.5) * 0.3, 0, 0.8);
+        dot(c, x, y, q, tones[(t * 5) | 0]); dot(c, x - q * 0.2, y - q * 0.25, q * 0.55, tones[((t + 0.2) * 5) | 0]);
+      }
+      for (let i = 0; i < 60; i++) { const a = r() * 6.283, d = Math.sqrt(r()) * s * 0.92; dot(c, Math.cos(a) * d, Math.sin(a) * d, 0.7 + r() * 0.6, U.pick(r, ['#a3bb90', '#4c6646', '#b4c9a2'])); }
+      // the flowers come in drifts over the cushion
+      for (let i = 0; i < 6; i++) {
+        const a = r() * 6.283, d = Math.sqrt(r()) * s * 0.62, x = Math.cos(a) * d, y = Math.sin(a) * d;
+        for (let k = 0; k < 7; k++) {
+          const b = r() * 6.283, e = Math.sqrt(r()) * s * 0.36, fx = x + Math.cos(b) * e, fy = y + Math.sin(b) * e, col = U.pick(r, ['#b072c8', '#c88fdc', '#9a5fb8', '#d6a6e6']);
+          for (let n = 0; n < 3; n++) { const q = (n / 3) * 6.283 + b; dot(c, fx + Math.cos(q) * 1.2, fy + Math.sin(q) * 1.2, 1.15, col); }
+          dot(c, fx, fy, 0.55, '#f6eafa');
+        }
+      }
+    },
+    // a little fan palm: stiff pleated fans on thin stalks, older ones low down
+    // and young ones held up round the crown
+    fanpalm(c, r, s) {
+      const fan = (a, l, f, cols) => {
+        c.save(); c.rotate(a);
+        c.strokeStyle = '#8a9a52'; c.lineWidth = Math.max(0.9, s * 0.045);
+        c.beginPath(); c.moveTo(0, 0); c.lineTo(l, 0); c.stroke();
+        for (let k = -3; k <= 3; k++) {
+          leaf(c, l, 0, k * 0.36, f * (1 - Math.abs(k) * 0.07), s * 0.1, cols[(k + 6) % 2]);
+          c.strokeStyle = 'rgba(225,245,215,0.4)'; c.lineWidth = Math.max(0.5, s * 0.016);
+          c.beginPath(); c.moveTo(l, 0); c.lineTo(l + Math.cos(k * 0.36) * f * 0.84 * (1 - Math.abs(k) * 0.07), Math.sin(k * 0.36) * f * 0.84 * (1 - Math.abs(k) * 0.07)); c.stroke();
+        }
+        c.restore();
+      };
+      c.lineCap = 'round';
+      const n = 6, turn = r() * 6.283;
+      for (let i = 0; i < n; i++) fan(turn + (i / n) * 6.283 + r() * 0.2, s * 0.48, s * (0.74 + r() * 0.12), i % 2 ? ['#2f6b52', '#3d7f5e'] : ['#357458', '#478a66']);
+      for (let i = 0; i < 4; i++) fan(turn + ((i + 0.4) / 4) * 6.283 + r() * 0.3, s * 0.14, s * (0.6 + r() * 0.1), ['#4f9a70', '#68b084']);
+      dot(c, 0, 0, s * 0.09, '#8a9a52');
+    },
+    // a little date palm: long feathery fronds of narrow, stiff leaflets on pale
+    // ribs, shorter and brighter towards the middle
+    datepalm(c, r, s) {
+      const frond = (a, l, cols) => {
+        const bend = (r() - 0.5) * 0.36, col = U.pick(r, cols);
+        c.save(); c.rotate(a);
+        c.strokeStyle = '#a8ad5a'; c.lineWidth = Math.max(0.7, s * 0.032);
+        c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(l * 0.5, bend * l * 0.2, l, bend * l * 0.5); c.stroke();
+        for (let k = 1; k <= 11; k++) {
+          const t = k / 11.5, x = l * t, y = bend * l * 0.5 * t * t, len = s * 0.46 * (0.34 + 0.66 * Math.sin(Math.PI * (0.1 + t * 0.8)));
+          leaf(c, x, y, bend * t - 0.66, len, Math.max(0.8, len * 0.09), col);
+          leaf(c, x, y, bend * t + 0.66, len, Math.max(0.8, len * 0.09), col);
+        }
+        c.restore();
+      };
+      c.lineCap = 'round';
+      const n = 9 + ((r() * 2) | 0), turn = r() * 6.283;
+      for (let i = 0; i < n; i++) frond(turn + (i / n) * 6.283 + r() * 0.2, s * (1.16 + r() * 0.2), ['#4d8a3a', '#5a9842', '#468036']);
+      for (let i = 0; i < 6; i++) frond(turn + ((i + 0.5) / 6) * 6.283 + r() * 0.3, s * (0.72 + r() * 0.14), ['#6fae4a', '#7fbc56']);
+      dot(c, 0, 0, s * 0.12, '#7a5a3a'); dot(c, -s * 0.02, -s * 0.02, s * 0.06, '#b08a54');
+    },
   };
   const SETS = {
     dunes: ['marram', 'thrift', 'marram', 'seaholly', 'marram', 'beachrose'],
@@ -307,6 +398,8 @@
     sunflowers: ['sunflower'], bulbs: ['bulb'], veg: ['lettuce', 'cabbage', 'carrot', 'strawberry'],
     lavender: ['lavbush'],
     ferns: ['fern', 'hartstongue', 'fern', 'fern', 'hartstongue'],
+    thyme: ['wildthyme'],
+    palms: ['fanpalm', 'datepalm'],
   };
   // hanging baskets under a station canopy: [x, y, rx, ry] of the soil in each
   const BASKETS = [[100, 196, 62, 32], [260, 196, 62, 32], [180, 418, 72, 36]];
@@ -449,13 +542,14 @@
       });
     } else if (box === 'pots') {
       const spec = [[95, 150, 58], [250, 118, 40], [305, 205, 26], [78, 320, 42], [210, 332, 56], [322, 290, 24], [60, 452, 26], [150, 505, 40], [276, 490, 58]];
+      const sizes = setName === 'palms' ? [26, 31, 20] : [16, 22, 14]; // palms spill over the rim
       spec.forEach(([x, y, R], i) => {
         const p = { x, y, R, rim: 7 };
         pots.push(p);
         region.moveTo(x + R - 7, y); region.arc(x, y, R - 7, 0, Math.PI * 2);
         const kind = set[i % set.length];
-        if (R > 50) for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; add(x + Math.cos(a) * 22, y + Math.sin(a) * 22, 16, set[(i + k) % set.length]); }
-        else add(x, y, R > 30 ? 22 : 14, kind);
+        if (R > 50) for (let k = 0; k < 3; k++) { const a = k * 2.094 + 0.5; add(x + Math.cos(a) * 22, y + Math.sin(a) * 22, sizes[0], set[(i + k) % set.length]); }
+        else add(x, y, sizes[R > 30 ? 1 : 2], kind);
       });
     } else if (box === 'dunes') {
       // bare patches of sand among the dunes, planted with grass and flowers
@@ -494,14 +588,15 @@
       });
     } else {
       // an open garden bed in the lawn: sunflowers or bulbs in rows
-      // (lavender: a few big bushes in gravel)
+      // (lavender: a few big bushes in gravel; wild thyme: low cushions)
       const b = { x: 34, y: 48, w: 292, h: 504 };
       boxes.push(Object.assign({ rim: 0, bed: true }, b));
       rrPath(region, b.x, b.y, b.w, b.h, 26);
-      const big = setName === 'sunflowers', lav = setName === 'lavender';
-      const cols = big ? 3 : lav ? 4 : 5, rows = big ? 6 : lav ? 7 : 10, s = big ? 21 : lav ? 23 : 8.5;
+      const big = setName === 'sunflowers', lav = setName === 'lavender', cushion = setName === 'thyme';
+      const cols = big ? 3 : lav || cushion ? 4 : 5, rows = big ? 6 : lav ? 7 : cushion ? 6 : 10, s = big ? 21 : lav ? 23 : cushion ? 37 : 8.5;
+      const wander = cushion ? 16 : 5;
       for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-        add(b.x + (b.w * (i + 0.5 + (j % 2 ? 0.18 : -0.18))) / cols + jit(5), b.y + (b.h * (j + 0.5)) / rows + jit(5), s * (0.92 + r() * 0.16), set[0]);
+        add(b.x + (b.w * (i + 0.5 + (j % 2 ? 0.18 : -0.18))) / cols + jit(wander), b.y + (b.h * (j + 0.5)) / rows + jit(wander), s * (0.92 + r() * 0.16), set[0]);
       }
     }
 
@@ -546,8 +641,9 @@
             c.fillStyle = '#d9d0bf'; c.fillRect(36, b.y - 10, 288, 10);
           }
         } else if (box === 'pots') {
-          // three wide stone steps
-          for (let i = 0; i < 3; i++) {
+          // three wide stone steps, or the lido's sun terrace for the palms
+          if (setName === 'palms') sunTerrace(c, r, nz, bleed);
+          else for (let i = 0; i < 3; i++) {
             const y = y0 + ((y1 - y0) * i) / 3;
             field(c, x0, y, x1, y + (y1 - y0) / 3 + 1, 3, (x, yy) => { const v = nz.fbm(x * 0.03, yy * 0.03 + i * 9, 4); return [196 + v * 30 - i * 8, 190 + v * 28 - i * 8, 178 + v * 24 - i * 8]; });
             c.fillStyle = 'rgba(60,50,40,0.35)'; c.fillRect(x0, y + (y1 - y0) / 3 - 6, x1 - x0, 6);
@@ -580,6 +676,21 @@
           softShadow(c, p, 8, 0.35);
           c.setLineDash([12, 3]); c.strokeStyle = '#a9553a'; c.lineWidth = 9; c.stroke(p);
           c.strokeStyle = '#c66a48'; c.lineWidth = 5; c.stroke(p); c.setLineDash([]);
+        } else if (setName === 'thyme') {
+          // rough turf on a dry, stony slope, the bed edged with field stones
+          const g = ramp(['#7f9a52', '#93a95e', '#a8b56e', '#b9be7c']);
+          field(c, x0, y0, x1, y1, 3, (x, y) => g(0.15 + nz.fbm(x * 0.02, y * 0.02, 4) * 0.8));
+          grassGrain(c, r, x0, y0, x1, y1, 7, 0.2);
+          for (let i = 0; i < 40; i++) {
+            const x = x0 + r() * (x1 - x0), y = y0 + r() * (y1 - y0), s = 3 + r() * 6, a = r() * 3;
+            if (SCENES.nearRegion(region, x, y, 12)) continue;
+            c.fillStyle = 'rgba(50,40,25,0.25)'; c.beginPath(); c.ellipse(x + 1, y + 1.6, s, s * 0.7, a, 0, 7); c.fill();
+            c.fillStyle = U.pick(r, ['#b8b3a2', '#c9c4b2', '#a9a595']); c.beginPath(); c.ellipse(x, y, s, s * 0.7, a, 0, 7); c.fill();
+          }
+          const p = new Path2D(); rrPath(p, 34, 48, 292, 504, 26);
+          softShadow(c, p, 8, 0.35);
+          c.lineCap = 'round'; c.setLineDash([11, 11]); c.strokeStyle = '#8f8a7b'; c.lineWidth = 10; c.stroke(p);
+          c.strokeStyle = '#bdb8a7'; c.lineWidth = 7; c.stroke(p); c.setLineDash([]);
         } else {
           mowedLawn(c, nz, x0, y0, x1, y1, true);
           grassGrain(c, r, x0, y0, x1, y1, 6, 0.2);
@@ -592,6 +703,7 @@
       },
       clean(c) {
         if (box === 'dunes') field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.fbm(x * 0.05, y * 0.05, 3); return [198 + v * 26, 172 + v * 22, 124 + v * 18]; });
+        else if (box === 'bed' && setName === 'thyme') stonySoil(c, r, nz);
         else richSoil(c, r, nz, box === 'veg' || box === 'bed');
         if (opts.dirt) for (const u of units) drawPlant(c, u, 1);
       },
@@ -709,12 +821,281 @@
     c.restore();
   }
 
+  // ---------------------------------------------------------------- MOSAIC
+  // A starfish set into the floor of the lido's pool: five arms of coral
+  // triangles with a line of cream dots down each, a flower of gold diamonds
+  // in the middle and rounds of pale blue blocks behind it. Every colour has
+  // a shape of its own. One arm and the gap beside it are laid out here, then
+  // turned five times round the middle; only the glaze differs a little from
+  // tile to tile. Each tile stands faintly drawn on the floor from the start
+  // and pops in where its drawing is, so there is nothing to choose.
+  const MOSAIC = { x: 180, y: 300, R: 172 };
+  const GLAZE = {
+    coral: ['#e8604c', '#e56753', '#ec6d58', '#df5846'],
+    gold: ['#f2b632', '#f5bf46', '#eeae2a'],
+    cream: ['#fbf1da', '#f8ebd0', '#fdf5e4'],
+    blue: ['#9fd8e6', '#a8dde9', '#96d2e2'],
+  };
+  // faint fill and outline of a tile's drawing on the floor
+  const TILE_DRAWN = { coral: [0.28, 0.5], gold: [0.34, 0.52], cream: [0.5, 0.46], blue: [0.26, 0.28] };
+  const TILE_LINE = { coral: '#b23c2c', gold: '#a8761a', cream: '#a98f68', blue: '#4f9db5' };
+  const TILE_MARK = { coral: 'rgba(255,214,190,0.4)', gold: 'rgba(255,244,200,0.6)', blue: 'rgba(255,255,255,0.32)' };
+
+  // a shape pulled in by g on every side, which leaves room for the grout
+  function pullIn(shape, g) {
+    const pts = shape.filter((p, i) => { const q = shape[(i + 1) % shape.length]; return Math.hypot(p[0] - q[0], p[1] - q[1]) > 0.5; });
+    const n = pts.length;
+    let area = 0;
+    pts.forEach(([x, y], i) => { const [u, v] = pts[(i + 1) % n]; area += x * v - u * y; });
+    const s = area < 0 ? -1 : 1;
+    const normal = ([x0, y0], [x1, y1]) => { const l = Math.hypot(x1 - x0, y1 - y0); return [(-(y1 - y0) / l) * s, ((x1 - x0) / l) * s]; };
+    return pts.map((p, i) => {
+      const a = normal(pts[(i + n - 1) % n], p), b = normal(p, pts[(i + 1) % n]), k = g / Math.max(0.4, 1 + a[0] * b[0] + a[1] * b[1]);
+      return [p[0] + (a[0] + b[0]) * k, p[1] + (a[1] + b[1]) * k];
+    });
+  }
+  function roundShape(c, pts, rad) {
+    const n = pts.length, cut = (p, q) => Math.min(0.5, rad / Math.hypot(q[0] - p[0], q[1] - p[1]));
+    c.beginPath();
+    pts.forEach((p, i) => {
+      const a = pts[(i + n - 1) % n], b = pts[(i + 1) % n], ta = cut(p, a), tb = cut(p, b);
+      c.lineTo(p[0] + (a[0] - p[0]) * ta, p[1] + (a[1] - p[1]) * ta);
+      c.quadraticCurveTo(p[0], p[1], p[0] + (b[0] - p[0]) * tb, p[1] + (b[1] - p[1]) * tb);
+    });
+    c.closePath();
+  }
+  // the middle of a shape
+  function balance(pts) {
+    let a = 0, x = 0, y = 0;
+    pts.forEach(([p, q], i) => { const [u, v] = pts[(i + 1) % pts.length], w = p * v - u * q; a += w; x += (p + u) * w; y += (q + v) * w; });
+    return [x / (3 * a), y / (3 * a)];
+  }
+  const tileShape = (c, u, inset = 0) => {
+    if (u.dot) { c.beginPath(); c.arc(0, 0, u.dot - inset, 0, 7); }
+    else roundShape(c, inset ? pullIn(u.pts, inset) : u.pts, u.round);
+  };
+
+  function starfishTiles(r) {
+    const { x: cx, y: cy } = MOSAIC, deg = Math.PI / 180;
+    const polar = (q, a) => [q * Math.sin(a * deg), q * Math.cos(a * deg)];
+    const angle = ([x, d]) => Math.atan2(x, d) / deg;
+    const ring = (q, a, b) => Array.from({ length: 7 }, (_, i) => polar(q, a + ((b - a) * i) / 6));
+    const flip = ([x, d]) => [-x, d];
+    // from one side of the gap between two arms to the other
+    const across = (p) => polar(Math.hypot(...p), 72 - angle(p));
+    // the arms curl a little: a starfish, not a sheriff's badge
+    const curl = (p) => { const q = Math.hypot(...p); return polar(q, angle(p) + 7 * U.smooth(50, 171, q)); };
+    // the right side of an arm pointing straight up, x across and d outwards
+    const TIP = [0, 171], SIDE = [25, 129], VALLEY = polar(88, 36), EDGE = 13.6;
+    const low = [EDGE, 48.7], mid = [EDGE, 84], rim = 171, band = Math.hypot(...SIDE), bandAt = angle(SIDE), joint = 26;
+    const triangles = [[[low, VALLEY, mid], 0.9], [[mid, VALLEY, SIDE], 0.7]];
+    const dots = [[54.5, 13], [82.5, 13.5], [111.5, 14]];
+    const inner = [VALLEY, SIDE, ...ring(band, bandAt, 72 - bandAt), across(SIDE)];
+    const outerSide = [SIDE, ...ring(rim, 0, joint), ...ring(band, joint, bandAt)];
+    const outerMid = [...ring(rim, joint, 72 - joint), ...ring(band, 72 - joint, joint)];
+    const lists = { cream: [], coral: [], gold: [], blue: [] }, body = [];
+    const addDot = (x, y, dot) => lists.cream.push({ shape: 'circle', x, y, r: dot, dot, tile: 'cream', col: U.pick(r, GLAZE.cream), seed: (r() * 1e9) | 0 });
+    addDot(cx, cy, 14);
+    for (let k = 0; k < 5; k++) {
+      const a = k * 72 * deg, sin = Math.sin(a), cos = Math.cos(a);
+      const at = (p) => { const [x, d] = curl(p); return [cx + x * cos + d * sin, cy + x * sin - d * cos]; };
+      // a tile owns a circle of ground that reaches this far towards its corners;
+      // where circles overlap the tile listed first has it. Between them they
+      // cover every tile, so no dirt is left hiding under one
+      const add = (tile, shape, reach, round = tile === 'blue' ? 5 : 3.5) => {
+        const pts = pullIn(shape.map(at), 1);
+        const [x, y] = balance(pts);
+        const far = Math.max(...pts.map((p) => Math.hypot(p[0] - x, p[1] - y)));
+        const own = pts.map((p) => [p[0] - x, p[1] - y]);
+        lists[tile].push({ shape: 'circle', x, y, r: far * reach, tile, round, pts: own, inner: pullIn(own, 4.5), col: U.pick(r, GLAZE[tile]), seed: (r() * 1e9) | 0 });
+      };
+      for (const [d, dot] of dots) addDot(...at([0, d]), dot);
+      add('coral', [TIP, SIDE, flip(SIDE)], 0.9, 12);
+      for (const [t, reach] of triangles) { add('coral', t, reach); add('coral', t.map(flip), reach); }
+      add('gold', [polar(16, 36), polar(40, 0), VALLEY, polar(40, 72)], 0.85);
+      add('blue', outerMid, 0.84); add('blue', inner, 0.7);
+      add('blue', outerSide, 0.92); add('blue', outerSide.map(across), 0.92);
+      body.push(...[flip(VALLEY), flip(SIDE), TIP, SIDE].map(at));
+    }
+    return { tiles: [...lists.cream, ...lists.coral, ...lists.gold, ...lists.blue], body };
+  }
+
+  function drawMosaicTile(c, u, k) {
+    const e = k >= 1 ? 1 : U.easeBack(k);
+    const sc = 0.82 + e * 0.18;
+    c.save();
+    c.globalAlpha = Math.min(1, k * 3);
+    c.translate(u.x, u.y); c.scale(sc, sc);
+    const r = U.rng(u.seed);
+    // its shadow on the floor, the thickness of the tile and the glazed face
+    c.save(); c.translate(0.8, 1.5); tileShape(c, u); c.fillStyle = 'rgba(30,55,75,0.3)'; c.fill(); c.restore();
+    tileShape(c, u); c.fillStyle = U.shade(u.col, -0.2); c.fill();
+    c.save();
+    c.translate(0, -0.9); tileShape(c, u); c.fillStyle = u.col; c.fill(); c.clip();
+    // sun on the glaze, brightest at the top left
+    const s = u.dot || u.r * 1.2, g = c.createLinearGradient(-s, -s, s * 0.8, s * 0.8);
+    g.addColorStop(0, 'rgba(255,255,255,0.42)'); g.addColorStop(0.55, 'rgba(255,255,255,0.04)'); g.addColorStop(1, 'rgba(120,70,40,0.12)');
+    c.fillStyle = g; c.fillRect(-s * 1.2, -s * 1.2, s * 2.4, s * 2.4);
+    c.save(); c.translate(0.9, 1.1); tileShape(c, u); c.strokeStyle = 'rgba(255,255,255,0.5)'; c.lineWidth = 1.1; c.stroke(); c.restore();
+    if (u.dot) {
+      // the dots shine like pearls
+      c.fillStyle = 'rgba(255,255,255,0.8)'; c.beginPath(); c.ellipse(-u.dot * 0.3, -u.dot * 0.36, u.dot * 0.3, u.dot * 0.18, -0.6, 0, 7); c.fill();
+    } else {
+      // small flecks in the glaze and a line pressed in near the edge
+      for (let i = 0; i < 5; i++) { const a = r() * 6.28, d = r() * s * 0.7; dot(c, Math.cos(a) * d, Math.sin(a) * d, 0.5 + r() * 0.5, r() < 0.5 ? 'rgba(255,255,255,0.3)' : 'rgba(90,50,30,0.14)'); }
+      roundShape(c, u.inner, 2.5); c.lineWidth = 0.9; c.strokeStyle = TILE_MARK[u.tile]; c.stroke();
+    }
+    c.restore();
+    c.restore();
+  }
+
+  // the whole starfish, faintly, as it stands drawn on the floor
+  function mosaicDrawing(c, star) {
+    c.lineJoin = 'round';
+    roundShape(c, star.body, 10); c.fillStyle = 'rgba(232,130,105,0.14)'; c.fill();
+    for (const u of star.tiles) {
+      const [fill, line] = TILE_DRAWN[u.tile];
+      c.save(); c.translate(u.x, u.y);
+      tileShape(c, u, 0.6);
+      c.fillStyle = U.rgba(u.col, fill); c.fill();
+      c.strokeStyle = U.rgba(TILE_LINE[u.tile], line); c.lineWidth = 1.1; c.stroke();
+      c.restore();
+    }
+  }
+
+  // what lies over the floor before the tiles go in: pale dust and old grout,
+  // hairline cracks, chips of old tile and a few dry leaves blown in
+  function poolGrime(c, r, nz) {
+    const g = ramp(['#cfc9b7', '#dbd5c5', '#c6c2b3', '#e3ded0']);
+    field(c, 0, 0, W, H, 3, (x, y) => [...g(nz.fbm(x * 0.025, y * 0.025, 4)), 247]);
+    for (let i = 0; i < 26; i++) { c.fillStyle = r() < 0.6 ? 'rgba(150,130,95,0.1)' : 'rgba(255,255,250,0.14)'; c.beginPath(); c.ellipse(r() * W, 120 + r() * 360, 12 + r() * 30, 8 + r() * 20, r() * 3, 0, 7); c.fill(); }
+    c.strokeStyle = 'rgba(110,100,85,0.5)'; c.lineWidth = 0.8; c.lineCap = 'round';
+    for (let i = 0; i < 16; i++) { let x = 20 + r() * 320, y = 130 + r() * 340, a = r() * 6.28; c.beginPath(); c.moveTo(x, y); for (let k = 0; k < 5; k++) { a += (r() - 0.5) * 1.3; x += Math.cos(a) * (6 + r() * 10); y += Math.sin(a) * (6 + r() * 10); c.lineTo(x, y); } c.stroke(); }
+    for (let i = 0; i < 420; i++) { c.fillStyle = U.pick(r, ['rgba(120,110,95,0.4)', 'rgba(255,252,240,0.6)', 'rgba(150,175,175,0.4)']); c.fillRect(r() * W, r() * H, 0.8 + r() * 1.6, 0.8 + r() * 1.6); }
+    for (let i = 0; i < 14; i++) {
+      const s = 2.5 + r() * 3.5;
+      c.save(); c.translate(r() * W, 130 + r() * 340); c.rotate(r() * 6.28);
+      c.fillStyle = U.pick(r, ['#a9c9d2', '#bcd6da', '#d7d2c4']); c.beginPath(); c.moveTo(-s, -s * 0.5); c.lineTo(s * 0.9, -s * 0.7); c.lineTo(s * 0.6, s * 0.7); c.lineTo(-s * 0.7, s * 0.5); c.closePath(); c.fill();
+      c.restore();
+    }
+    for (let i = 0; i < 12; i++) leaf(c, r() * W, 130 + r() * 340, r() * 6.28, 8 + r() * 6, 3, U.pick(r, ['#b98f54', '#a87c44', '#c9a468']));
+  }
+
+  // the empty pool in the sun: pale blue floor tiles, the end wall under its
+  // cream coping, the lane line, a drain and the band round the mosaic
+  function poolFloor(c, r, nz, { x0, y0, x1, y1 }) {
+    const { x: mx, y: my, R } = MOSAIC, FOOT = 68, T = 24;
+    const g = ramp(['#a9dbe7', '#b8e3ec', '#c6eaf0', '#d5f1f5']);
+    field(c, x0, FOOT, x1, y1, 3, (x, y) => g(0.1 + nz.fbm(x * 0.011, y * 0.011, 3) * 0.5 + (1 - (x + y) / 960) * 0.45));
+    // the lane line runs under the mosaic from the end wall
+    c.fillStyle = '#4b9ec4'; c.fillRect(170, FOOT, 20, y1 - FOOT);
+    c.fillRect(138, FOOT, 84, 16);
+    // small square tiles, a few a shade off
+    for (let j = 0; FOOT + j * T < y1; j++) for (let i = Math.floor(x0 / T); i * T < x1; i++) {
+      const v = r();
+      if (v < 0.24) { c.fillStyle = v < 0.12 ? 'rgba(255,255,255,0.13)' : 'rgba(50,120,150,0.05)'; c.fillRect(i * T, FOOT + j * T, T, T); }
+    }
+    c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 1;
+    c.beginPath();
+    for (let x = Math.floor(x0 / T) * T; x < x1; x += T) { c.moveTo(x + 0.5, FOOT); c.lineTo(x + 0.5, y1); }
+    for (let y = FOOT; y < y1; y += T) { c.moveTo(x0, y + 0.5); c.lineTo(x1, y + 0.5); }
+    c.stroke();
+    // a drain in the floor
+    c.fillStyle = 'rgba(30,70,95,0.25)'; c.beginPath(); c.arc(61, 547, 17, 0, 7); c.fill();
+    dot(c, 60, 546, 16, '#dfe7e8'); dot(c, 60, 546, 13, '#7d97a3');
+    c.strokeStyle = '#dfe7e8'; c.lineWidth = 2; c.lineCap = 'round';
+    for (let i = -2; i <= 2; i++) { const h = Math.sqrt(160 - i * i * 25); c.beginPath(); c.moveTo(60 + i * 5, 546 - h); c.lineTo(60 + i * 5, 546 + h); c.stroke(); }
+    // the end wall, a deeper blue, with the sun's shadow at its foot
+    const wall = c.createLinearGradient(0, 24, 0, FOOT);
+    wall.addColorStop(0, '#6db4cc'); wall.addColorStop(0.4, '#8ccbdb'); wall.addColorStop(1, '#a4dae5');
+    c.fillStyle = wall; c.fillRect(x0, y0, x1 - x0, FOOT - y0);
+    c.strokeStyle = 'rgba(255,255,255,0.45)'; c.lineWidth = 1;
+    c.beginPath();
+    for (let x = Math.floor(x0 / T) * T; x < x1; x += T) { c.moveTo(x + 0.5, 26); c.lineTo(x + 0.5, FOOT); }
+    for (const y of [38, 51, 62]) { c.moveTo(x0, y); c.lineTo(x1, y); }
+    c.stroke();
+    const shade = c.createLinearGradient(0, FOOT, 0, FOOT + 34);
+    shade.addColorStop(0, 'rgba(30,85,120,0.3)'); shade.addColorStop(1, 'rgba(30,85,120,0)');
+    c.fillStyle = shade; c.fillRect(x0, FOOT, x1 - x0, 34);
+    c.fillStyle = 'rgba(30,85,120,0.35)'; c.fillRect(x0, FOOT - 1, x1 - x0, 2);
+    // the coping and the warm paving above it
+    c.fillStyle = '#efe4cd'; c.fillRect(x0, y0, x1 - x0, 12 - y0);
+    c.strokeStyle = 'rgba(130,105,75,0.3)'; c.lineWidth = 1; c.beginPath();
+    for (let x = Math.floor(x0 / 60) * 60; x < x1; x += 60) { c.moveTo(x, y0); c.lineTo(x, 10); }
+    for (let y = -30; y > y0; y -= 40) { c.moveTo(x0, y); c.lineTo(x1, y); }
+    c.stroke();
+    c.fillStyle = 'rgba(30,70,95,0.35)'; c.fillRect(x0, 26, x1 - x0, 4);
+    c.fillStyle = '#d9cbae'; c.fillRect(x0, 22, x1 - x0, 5);
+    c.fillStyle = '#f8f0de'; c.fillRect(x0, 10, x1 - x0, 13);
+    c.fillStyle = 'rgba(255,255,255,0.7)'; c.fillRect(x0, 10, x1 - x0, 2);
+    c.fillStyle = '#c9583f'; c.fillRect(x0, 15, x1 - x0, 1.6);
+    c.fillStyle = '#2f6f92'; c.font = '800 9px ui-rounded, system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('3 FT 6', 54, 42);
+    // the band round the mosaic: cream stone set with little blue squares
+    dot(c, mx + 0.8, my + 1.4, R + 7, 'rgba(30,70,95,0.3)');
+    dot(c, mx, my, R + 6.5, '#f6eedb');
+    c.strokeStyle = '#3f8fb5'; c.lineWidth = 3; c.setLineDash([5.5, 4.2]);
+    c.beginPath(); c.arc(mx, my, R + 3.2, 0, 7); c.stroke(); c.setLineDash([]);
+    c.strokeStyle = '#c9583f'; c.lineWidth = 1; c.beginPath(); c.arc(mx, my, R + 0.6, 0, 7); c.stroke();
+  }
+
+  // above everything: the ladder, the mason's things and the shadow of a palm
+  // leaning over from the terrace
+  function poolTop(c) {
+    // the ladder
+    for (const x of [286, 318]) {
+      c.strokeStyle = 'rgba(25,70,100,0.3)'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(x + 4, 28); c.lineTo(x + 4, 90); c.stroke();
+    }
+    for (const y of [40, 56, 72]) { c.strokeStyle = 'rgba(25,70,100,0.25)'; c.lineWidth = 3; c.beginPath(); c.moveTo(286, y + 3); c.lineTo(322, y + 3); c.stroke(); c.strokeStyle = '#b9c6cc'; c.beginPath(); c.moveTo(286, y); c.lineTo(318, y); c.stroke(); c.strokeStyle = '#eef3f4'; c.lineWidth = 1; c.beginPath(); c.moveTo(286, y - 0.7); c.lineTo(318, y - 0.7); c.stroke(); }
+    for (const x of [286, 318]) {
+      c.strokeStyle = '#9fb0b8'; c.lineWidth = 5; c.beginPath(); c.moveTo(x, 86); c.lineTo(x, 16); c.quadraticCurveTo(x, 4, x + 11, 4); c.stroke();
+      c.strokeStyle = '#eef3f4'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 1.2, 84); c.lineTo(x - 1.2, 16); c.quadraticCurveTo(x - 1.2, 2.6, x + 10, 2.6); c.stroke();
+    }
+    // a bucket of spare tiles
+    const bx = 292, by = 538;
+    dot(c, bx + 4, by + 6, 31, 'rgba(25,70,100,0.25)');
+    dot(c, bx, by, 30, '#8c9aa1'); dot(c, bx, by, 27.5, '#c3ced3'); dot(c, bx - 1, by - 1, 25, '#6f7f87'); dot(c, bx + 1, by + 2, 22.5, '#7f8f97');
+    const spare = (x, y, a, tile, pts) => {
+      c.save(); c.translate(x, y); c.rotate(a);
+      drawMosaicTile(c, { x: 0, y: 0, r: 11, tile, dot: pts ? 0 : 7.5, pts, inner: pts && pullIn(pts, 3), round: 1.5, col: GLAZE[tile][0], seed: 7 }, 1);
+      c.restore();
+    };
+    spare(bx - 9, by + 7, 0.3, 'coral', [[0, -11], [10, 7], [-10, 7]]);
+    spare(bx + 9, by + 8, 1.1, 'blue', [[-9, -8], [9, -8], [9, 8], [-9, 8]]);
+    spare(bx + 8, by - 9, 0, 'cream');
+    spare(bx - 8, by - 9, 0.5, 'gold', [[0, -12], [8, 0], [0, 12], [-8, 0]]);
+    // a pointing trowel with a dab of grout on it
+    c.save(); c.translate(216, 552); c.rotate(-0.3);
+    c.fillStyle = 'rgba(25,70,100,0.25)'; c.beginPath(); c.moveTo(-40, 4); c.lineTo(4, -9); c.lineTo(14, 16); c.lineTo(6, 20); c.closePath(); c.fill();
+    c.fillStyle = '#c9d3d8'; c.beginPath(); c.moveTo(-44, 0); c.lineTo(2, -15); c.quadraticCurveTo(8, -8, 7, 0); c.quadraticCurveTo(8, 8, 2, 15); c.closePath(); c.fill();
+    c.fillStyle = '#e8eef0'; c.beginPath(); c.moveTo(-44, 0); c.lineTo(2, -15); c.quadraticCurveTo(8, -8, 7, 0); c.closePath(); c.fill();
+    c.fillStyle = '#f4efe2'; c.beginPath(); c.ellipse(-22, 0, 9, 5, -0.1, 0, 7); c.fill();
+    c.strokeStyle = '#7f8c94'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(7, 0); c.lineTo(17, 0); c.stroke();
+    c.fillStyle = 'rgba(25,70,100,0.22)'; rect(c, 18, -3, 36, 12, 5); c.fill();
+    c.fillStyle = '#a4703f'; rect(c, 16, -5.5, 36, 11, 5); c.fill();
+    c.fillStyle = 'rgba(255,230,190,0.45)'; rect(c, 20, -3.8, 28, 2.4, 1); c.fill();
+    c.restore();
+    // the shadow of a palm from the terrace, soft over floor and tiles alike
+    c.fillStyle = 'rgba(40,95,135,0.1)'; c.beginPath();
+    for (const [a, l] of [[0.22, 300], [0.6, 330], [0.98, 330], [1.36, 280]]) {
+      for (let t = 0.1; t < 1; t += 0.05) {
+        const x = -74 + Math.cos(a) * l * t + Math.cos(a + 1.57) * l * 0.12 * t * t, y = -46 + Math.sin(a) * l * t + Math.sin(a + 1.57) * l * 0.12 * t * t;
+        const q = l * 0.2 * Math.pow(Math.sin(Math.PI * t), 0.6);
+        for (const s of [-1, 1]) {
+          const b = a + s * 0.85 + 0.12 * t, ex = x + Math.cos(b) * q, ey = y + Math.sin(b) * q, nx = -Math.sin(b) * q * 0.09, ny = Math.cos(b) * q * 0.09;
+          c.moveTo(x, y); c.quadraticCurveTo((x + ex) / 2 + nx, (y + ey) / 2 + ny, ex, ey); c.quadraticCurveTo((x + ex) / 2 - nx, (y + ey) / 2 - ny, x, y);
+        }
+      }
+    }
+    c.fill();
+  }
+
   function buildScene(S) {
     const { r, nz, opts, bleed } = S;
     const mat = opts.material || 'planks';
+    const mosaic = mat === 'tiles' && opts.pattern;
     const region = new Path2D();
     const units = [];
-    let drawUnit = drawPlank, joists = [], posts = [], area = null;
+    let drawUnit = drawPlank, joists = [], posts = [], area = null, star = null;
 
     if (mat === 'planks') {
       const parts = opts.jetty ? [{ x: 72, y: 40, w: 216, h: 150 }, { x: 128, y: 190, w: 104, h: 420 }] : opts.boardwalk ? [{ x: 112, y: -10, w: 136, h: 620 }] : [{ x: 18, y: 36, w: 324, h: 528 }];
@@ -759,6 +1140,12 @@
         }
       }
       for (let x = 18; x < 342; x += 82) units.push({ shape: 'rect', x, y: 120, w: Math.min(80, 342 - x), h: 18, top: true, seed: (r() * 1e9) | 0 });
+    } else if (mosaic) {
+      // a round of the pool floor, tiled with the starfish
+      region.arc(MOSAIC.x, MOSAIC.y, MOSAIC.R, 0, Math.PI * 2);
+      drawUnit = drawMosaicTile;
+      star = starfishTiles(r);
+      units.push(...star.tiles);
     } else if (mat === 'tiles') {
       // blue and white tiles on the wall behind the café counter
       const cols = 7, rows = 9, pitch = 41, tw = 38;
@@ -814,6 +1201,13 @@
         field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.n2(x * 0.4, y * 0.4); return [198 + v * 26, 192 + v * 24, 180 + v * 22]; });
         c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 0.8;
         for (let y = 456; y >= 140; y -= 26) { c.beginPath(); c.moveTo(10, y + 0.5); c.lineTo(350, y + 0.5); c.stroke(); }
+      } else if (mosaic) {
+        // pale blue setting bed, combed round in rings
+        field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.n2(x * 0.25, y * 0.25); return [205 + v * 14, 232 + v * 12, 238 + v * 10]; });
+        c.strokeStyle = 'rgba(90,150,175,0.2)'; c.lineWidth = 1.1;
+        for (let q = 8; q < MOSAIC.R; q += 6) { c.beginPath(); c.arc(MOSAIC.x, MOSAIC.y, q, 0, 7); c.stroke(); }
+        // the starfish's body is laid out in a warmer bed
+        roundShape(c, star.body, 10); c.fillStyle = 'rgba(244,196,174,0.8)'; c.fill();
       } else if (mat === 'tiles') {
         field(c, 0, 0, W, H, 2, (x, y) => { const v = nz.n2(x * 0.3, y * 0.3); return [196 + v * 18, 194 + v * 18, 188 + v * 16]; });
         // combed tile adhesive
@@ -831,6 +1225,7 @@
       unitKind: 'build', unitParticle: mat === 'planks' || mat === 'logs' ? 'chips' : 'dust', unitThreshold: 0.4, unitDur: 0.42,
       units: opts.dirt ? [] : units,
       drawUnit,
+      top: mosaic ? poolTop : undefined,
       decor(c) {
         const { x0, y0, x1, y1 } = bleed;
         if (mat === 'planks' && opts.jetty && opts.sea) {
@@ -868,6 +1263,8 @@
           field(c, x0, 482, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.04, y * 0.04, 3); return [190 + v * 24, 182 + v * 22, 168 + v * 20]; });
           c.strokeStyle = 'rgba(90,80,70,0.35)'; c.lineWidth = 1.5;
           for (let x = 0; x < 380; x += 60) { c.beginPath(); c.moveTo(x, 482); c.lineTo(x - 20, y1); c.stroke(); }
+        } else if (mosaic) {
+          poolFloor(c, r, nz, bleed);
         } else if (mat === 'tiles') {
           field(c, x0, y0, x1, y1, 3, (x, y) => { const v = nz.fbm(x * 0.02, y * 0.02, 3); return [238 + v * 10, 230 + v * 10, 214 + v * 10]; });
           // the counter in front
@@ -896,10 +1293,14 @@
       clean(c) {
         sitePaint(c);
         if (opts.dirt) for (const u of units) drawUnit(c, u, 1);
+        else if (mosaic) mosaicDrawing(c, star);
       },
       dirt(c) {
         sitePaint(c);
-        if (mat === 'tiles') {
+        if (mosaic) {
+          poolGrime(c, r, nz);
+          if (!opts.dirt) mosaicDrawing(c, star);
+        } else if (mat === 'tiles') {
           // old flaky plaster with stains
           const g = ramp(['#d8cdb3', '#e4dac3', '#cfc1a2']);
           field(c, 0, 0, W, H, 3, (x, y) => [...g(nz.fbm(x * 0.03, y * 0.03, 4)), 240]);

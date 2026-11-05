@@ -125,7 +125,7 @@
   // then a few seasons of looking after it (a whole year for the later ones),
   // and the coins. Seasons only turn when their jobs are done, never on their
   // own, so the wait is always in your own hands and nothing is ever lost.
-  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio', 'stables', 'loft']); // older saves wait for these only
+  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio', 'stables', 'loft', 'observatory', 'lido']); // older saves wait for these only
   const yearOf = (n) => 1 + Math.floor(n / 4);
   const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
   const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
@@ -168,6 +168,8 @@
     if (id === 'curio' && typeof CURIO !== 'undefined') return CURIO.render(st, S.colours, opts);
     if (id === 'stables' && typeof STABLES !== 'undefined') return STABLES.render(st, S.colours, opts);
     if (id === 'loft' && typeof LOFT !== 'undefined') return LOFT.render(st, S.colours, Object.assign({ painted: S.painted }, opts));
+    if (id === 'observatory' && typeof OBSERVATORY !== 'undefined') return OBSERVATORY.render(st, S.colours, opts);
+    if (id === 'lido' && typeof LIDO !== 'undefined') return LIDO.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -225,6 +227,8 @@
   // after nine in the evening, stopping is the main button
   const lateHour = () => { const h = hourNow(); return h >= 21 || h < 5; };
   const cottageName = () => S.name || 'Ivy Cottage';
+  // a job whose tool looks different from the tool's own picture: the pony's lead
+  const jobSprite = (c) => (c && c.scene === 'walk' && c.opts && c.opts.what === 'pony' ? 'halter' : undefined);
 
   function coinHtml(n) { return `<i class="coin"></i><span>${U.fmt(n)}</span>`; }
 
@@ -272,7 +276,7 @@
       card.innerHTML = `<div class="nextInfo"><div class="eyebrow">${where} · ${fam.job}</div><div class="nextName">${n.name}</div>
         <div class="nextMeta">${coinHtml(n.value)}<span class="dot">·</span><span>${S.wips[n.id] ? 'Half done' : tierOf(n.family, n.place).name}</span></div></div>
         <div class="nextPic"><img alt="" hidden><div class="nextIcon"></div></div><button class="go" id="goBtn">Start</button>`;
-      card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family, n.place), 46, S.colours[n.color]));
+      card.querySelector('.nextIcon').appendChild(TOOLS.icon(tierOf(n.family, n.place), 46, S.colours[n.color], jobSprite(n)));
       card.dataset.job = n.id;
       const showThumb = (url) => {
         const img = card.querySelector('.nextPic img');
@@ -440,7 +444,7 @@
     }
     chip.setAttribute('aria-label', 'Choose a tool');
     chip.innerHTML = '';
-    chip.appendChild(TOOLS.icon(t, 38, cur.color ? S.colours[cur.color] : null));
+    chip.appendChild(TOOLS.icon(t, 38, cur.color ? S.colours[cur.color] : null, jobSprite(cur)));
     const nm = document.createElement('span'); nm.textContent = t.name; chip.appendChild(nm);
     if (tierIdx(fam, pl) > 0) { const sw = document.createElement('b'); sw.className = 'swap'; sw.textContent = '⇄'; chip.appendChild(sw); }
     updateUpPill();
@@ -465,7 +469,7 @@
     TOOLS.FAM[fam].tiers.slice(0, tierIdx(fam, pl) + 1).forEach((t, i) => {
       const b = document.createElement('button');
       if (i === useIdx(fam, pl)) b.className = 'sel';
-      b.appendChild(TOOLS.icon(t, 34, cur.color ? S.colours[cur.color] : null));
+      b.appendChild(TOOLS.icon(t, 34, cur.color ? S.colours[cur.color] : null, jobSprite(cur)));
       const nm = document.createElement('span'); nm.textContent = t.name; b.appendChild(nm);
       b.onclick = () => {
         S.use[toolKey(fam, pl)] = i; save(); pick.classList.remove('on');
@@ -891,7 +895,7 @@
     const note = `<div class="setNote">These tools are for ${here().short}. Every place has its own toolbox${S.place === 'cottage' ? '' : ', and they cost a little more out here'}.</div>`;
     openSheet('The shed', tabs + `<div class="shedCoins">${coinHtml(S.coins)}</div>` + note + rows.join(''), (body) => {
       const td = body.querySelector('#tabDecor'); if (td) td.onclick = () => { AUDIO.soft(); openDecor(); };
-      body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(TOOLS.FAM[row.dataset.fam].tiers[tierIdx(row.dataset.fam)], 52)));
+      body.querySelectorAll('.shedRow[data-fam]').forEach((row) => row.querySelector('.ic').appendChild(TOOLS.icon(TOOLS.FAM[row.dataset.fam].tiers[tierIdx(row.dataset.fam)], 52, null, S.place === 'stables' && row.dataset.fam === 'walk' ? 'halter' : undefined)));
       body.querySelectorAll('.buy').forEach((b) => b.onclick = () => {
         if (b.dataset.helper) {
           const o = helperOffer(); if (!o || S.coins < o.cost) return nope(b);
@@ -1271,7 +1275,7 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startStables: (i) => startChore(DATA.STABLE_CHORES[i], false), startLoft: (i) => startChore(DATA.LOFT_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startStables: (i) => startChore(DATA.STABLE_CHORES[i], false), startLoft: (i) => startChore(DATA.LOFT_CHORES[i], false), startObservatory: (i) => startChore(DATA.OBSERVATORY_CHORES[i], false), startLido: (i) => startChore(DATA.LIDO_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
     render: () => renderHome(), save, openFinds, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
     setHour(h) { fakeHour = h; }, renderTitle, nextChore, nextPlaceWithJobs, resting, stopNow, oneJob,
   };

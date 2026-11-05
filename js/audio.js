@@ -356,6 +356,29 @@ const AUDIO = (() => {
         [[0, 9, 1], [1, 8, 1], [2, 6, 2]], [[0, 7, 1.5], [1.5, 5, 0.5], [2, 9, 2]], [[0, 8, 3], [3, 5, 1]], [[0, 8, 4]],
       ],
     },
+    // the observatory: the slowest and deepest of them all, long low notes like a
+    // glass bell, with an owl far away on the hill at the end of each phrase
+    observatory: {
+      bpm: 46, drop: 5, under: 12, lead: 'bowl', sparse: true, deep: true, owl: true,
+      chords: [[1], [6], [4], [1], [2, 1], [5], [1], [1], [6], [3], [4], [1], [2, 1], [5], [4], [1]],
+      melody: [
+        [[0, 5, 4]], [[0, 6, 2], [2, 5, 2]], [[0, 6, 4]], [[0, 5, 2], [2, 3, 2]],
+        [[0, 4, 4]], [[0, 5, 2], [2, 2, 2]], [[0, 3, 4]], [[0, 1, 4]],
+        [[0, 6, 2], [2, 8, 2]], [[0, 7, 4]], [[0, 8, 2], [2, 6, 2]], [[0, 5, 4]],
+        [[0, 6, 2], [2, 4, 2]], [[0, 5, 2], [2, 7, 2]], [[0, 6, 2], [2, 4, 2]], [[0, 3, 2], [2, 1, 2]],
+      ],
+    },
+    // the lido: slow and sunny, a soft vibraphone over warm sevenths and water lapping at the side
+    lido: {
+      bpm: 62, under: 12, lead: 'vibes', lap: true,
+      chords: [[1, 1], [4, 1], [1, 1], [2, 1], [5, 1], [4, 1], [1, 1], [5, 1], [6, 1], [2, 1], [5, 1], [1, 1], [4, 1], [3, 1], [2, 1], [1, 1]],
+      melody: [
+        [[0, 8, 1.5], [1.5, 9, 0.5], [2, 10, 2]], [[0, 11, 1], [1, 10, 1], [2, 8, 2]], [[0, 8, 1], [1, 10, 1], [2, 12, 2]], [[0, 11, 3], [3, 9, 1]],
+        [[0, 9, 1.5], [1.5, 10, 0.5], [2, 12, 1], [3, 11, 1]], [[0, 10, 2], [2, 8, 2]], [[0, 10, 1], [1, 12, 1], [2, 10, 1], [3, 8, 1]], [[0, 9, 4]],
+        [[0, 6, 1], [1, 8, 1], [2, 10, 2]], [[0, 9, 1.5], [1.5, 8, 0.5], [2, 6, 2]], [[0, 7, 1], [1, 9, 1], [2, 12, 2]], [[0, 10, 3], [3, 8, 1]],
+        [[0, 8, 1.5], [1.5, 10, 0.5], [2, 13, 2]], [[0, 12, 1], [1, 10, 1], [2, 8, 2]], [[0, 9, 1], [1, 11, 1], [2, 9, 2]], [[0, 8, 4]],
+      ],
+    },
   };
   const KEY = { spring: 65, summer: 60, autumn: 62, winter: 67 };
   let theme = { place: 'cottage', season: 'spring', night: false }, nextTheme = null;
@@ -432,6 +455,33 @@ const AUDIO = (() => {
     tone(f * 2, t, 0.4, 'sine', vol * 0.25, music, 0.35, 0.003);
     tone(f * 3, t, 0.16, 'sine', vol * 0.08, music, 0.3, 0.002);
   }
+  // a low glass bell: a slow swell, a long ring and a faint octave above it
+  function bowl(f, t, vol, dur) {
+    tone(f, t, dur + 1.6, 'sine', vol, music, 0.7, 0.22);
+    tone(f * 2.003, t + 0.06, dur + 0.5, 'sine', vol * 0.2, music, 0.65, 0.3);
+  }
+  // a soft vibraphone: a warm bar, a second a hair sharp so it shimmers, a little ring on top
+  function vibes(f, t, vol) {
+    tone(f, t, 2, 'sine', vol, music, 0.55, 0.008);
+    tone(f + 1.8, t, 1.7, 'sine', vol * 0.45, music, 0.55, 0.01);
+    tone(f * 4, t, 0.2, 'sine', vol * 0.09, music, 0.4, 0.003);
+  }
+  // an owl far away on the hill: two soft hoots, the second lower and longer
+  function owl(t, vol) {
+    for (const [dt, f, d] of [[0, 392, 0.55], [0.75, 349, 1]]) {
+      const o = tone(f, t + dt, d, 'sine', vol, music, 0.8, 0.09);
+      o.frequency.setValueAtTime(f, t + dt); o.frequency.exponentialRampToValueAtTime(f * 0.96, t + dt + d);
+    }
+  }
+  // water lapping at the side of the pool: a slow swell of soft noise
+  function lap(t, vol) {
+    const src = ac.createBufferSource(), g = ac.createGain(), lp = ac.createBiquadFilter();
+    src.buffer = noiseBuf; src.loop = true; lp.type = 'lowpass'; lp.Q.value = 0.4;
+    lp.frequency.setValueAtTime(420, t); lp.frequency.linearRampToValueAtTime(900, t + 0.9); lp.frequency.linearRampToValueAtTime(380, t + 2);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.9); g.gain.linearRampToValueAtTime(0.0001, t + 2.1);
+    src.connect(lp); lp.connect(g); out(g, 0.3);
+    src.start(t, Math.random()); src.stop(t + 2.2);
+  }
   function bass(f, t, dur, vol) {
     const o = ac.createOscillator(), g = ac.createGain();
     o.type = 'sine'; o.frequency.value = f;
@@ -440,7 +490,7 @@ const AUDIO = (() => {
   }
 
   function playBar(t, beat) {
-    const tune = TUNES[theme.place] || TUNES.cottage, tonic = KEY[theme.season] || 60;
+    const tune = TUNES[theme.place] || TUNES.cottage, tonic = (KEY[theme.season] || 60) - (tune.drop || 0);
     const i = bar % 16, [deg, seventh] = tune.chords[i];
     const r = U.rng(cycle * 97 + i * 13 + 1);
     // how this pass round the loop is arranged
@@ -463,7 +513,7 @@ const AUDIO = (() => {
       // a gentle broken chord, sparser on quiet passes
       const arp = [0, 1, 2, 3, 2, 1, 3, 1];
       for (let k = 0; k < 8; k++) {
-        if ((quiet || pass === 2) && k % 2) continue;
+        if ((quiet || pass === 2 || tune.sparse) && k % 2) continue;
         if (pass === 0 && k % 4 === 3) continue;
         keys(midi(tones[arp[k]] + (k === 0 ? -12 : 0)), t + k * beat * 0.5, beat * 2.6, k === 0 ? 0.05 : 0.032 + r() * 0.01);
       }
@@ -474,15 +524,18 @@ const AUDIO = (() => {
     if (tune.tick) for (let b = 0; b < beats; b++) tickTock(t + b * beat, quiet ? 0.007 : 0.011, b % 2 === 1);
     // the pony trots from the very first bar, softer on quiet passes
     if (tune.trot) for (let b = 0; b < beats; b++) clop(t + b * beat, quiet ? 0.012 : 0.02, b % 2 === 1);
+    // the owl at the end of each phrase, and the water lapping, softer on quiet passes
+    if (tune.owl && pass !== 0 && i % 8 === 7) owl(t + beat * 1.5, quiet ? 0.012 : 0.018);
+    if (tune.lap && i % 2 === 0) lap(t + beat, quiet ? 0.018 : 0.03);
     // a soft strum on two and four
     if (tune.strum && pass !== 0 && !quiet) for (const b of [1, 3]) tones.slice(0, 3).forEach((m, j) => uke(midi(m + 12), t + b * beat + j * 0.03, 0.012));
     // the tune itself, missing on the intro pass and only every other bar when breathing
     if (pass !== 0 && !(pass === 3 && i % 2)) {
-      const up = pass === 2 ? 12 : 0;
+      const up = pass === 2 && !tune.deep ? 12 : 0;
       for (const [at, d, len] of tune.melody[i]) {
         if (theme.night && r() < 0.25) continue;
-        const f = midi(note(tonic + 12 + up, d)), v = 0.07 * (len >= 2 ? 1 : 0.85);
-        if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else if (tune.lead === 'uke') uke(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
+        const f = midi(note(tonic + 12 + up - (tune.under || 0), d)), v = 0.07 * (len >= 2 ? 1 : 0.85);
+        if (tune.lead === 'bowl') bowl(f, t + at * beat, v * 1.25, len * beat); else if (tune.lead === 'vibes') vibes(f, t + at * beat, v * 0.95); else if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else if (tune.lead === 'uke') uke(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
       }
     }
   }
@@ -590,5 +643,7 @@ const AUDIO = (() => {
   function suspend() { if (ac && ac.state === 'running') ac.suspend(); }
   function resume() { if (ac && ac.state !== 'running') ac.resume(); }
 
-  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, nope, pour, turn, unit, buy, chime, shimmer, suspend, resume, birds, theme: music_, volume, fade, lightOff, debugRender, TUNES };
+  // test hook: the pace and the depth of every tune
+  const debugTunes = () => Object.fromEntries(Object.entries(TUNES).map(([k, t]) => [k, { bpm: t.bpm || 72, depth: (t.drop || 0) + (t.under || 0) }]));
+  return { unlock, set, on, setWork, stopWork, activity, coin, pop, soft, nope, pour, turn, unit, buy, chime, shimmer, suspend, resume, birds, debugTunes, theme: music_, volume, fade, lightOff, debugRender, TUNES };
 })();

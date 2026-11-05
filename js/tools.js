@@ -803,6 +803,8 @@ const TOOLS = (() => {
     walk2(c, t) { walkers(c, t.r, [[0.08, -0.46, 0.62], [-0.08, 0.46, 0.62]]); },
     walk3(c, t) { walkers(c, t.r, [[0, -0.62, 0.48], [0.18, 0, 0.5], [-0.05, 0.62, 0.48]]); },
     walk4(c, t) { walkers(c, t.r, [[0.05, -0.7, 0.38], [0.24, -0.24, 0.4], [0.2, 0.24, 0.38], [0.02, 0.7, 0.38], [-0.32, 0, 0.34]]); },
+    // ---- what the leads look like at a pony's walk (only the icon: the pony itself trots along in the job)
+    halter(c, t) { halterLead(c, t.r); },
 
     // ---- pet brushes
     // an open hand, fingers forward, with a sage cuff
@@ -918,13 +920,37 @@ const TOOLS = (() => {
     });
   }
 
+  // a pony's rope halter and its lead: the crown loop up ahead, the noseband
+  // under it with a brass ring either side, and the plaited lead running back
+  // from the chin ring to the hand. Drawn along +x like the other tools.
+  function halterLead(c, r) {
+    const strap = '#3d5a86', rope = '#c9a06a', plait = '#a97f4c', brass = '#d9a93a';
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    const leadPath = () => { c.beginPath(); c.moveTo(-r * 0.3, 0); c.bezierCurveTo(-r * 0.74, r * 0.72, -r * 1.1, -r * 0.72, -r * 1.56, 0); };
+    c.strokeStyle = rope; c.lineWidth = r * 0.17; leadPath(); c.stroke();
+    c.save(); c.setLineDash([r * 0.11, r * 0.12]); c.strokeStyle = plait; c.lineWidth = r * 0.07; leadPath(); c.stroke(); c.restore();
+    c.fillStyle = rope; c.beginPath(); c.ellipse(-r * 1.6, 0, r * 0.13, r * 0.16, 0, 0, 7); c.fill();
+    c.strokeStyle = plait; c.lineWidth = r * 0.06;
+    for (const y of [-0.13, 0, 0.13]) { c.beginPath(); c.moveTo(-r * 1.66, r * y); c.lineTo(-r * 1.82, r * y * 1.5); c.stroke(); }
+    c.strokeStyle = strap; c.lineWidth = r * 0.2;
+    c.beginPath(); c.ellipse(r * 0.62, 0, r * 0.74, r * 0.62, 0, 0, 7); c.stroke();
+    c.beginPath(); c.ellipse(-r * 0.04, 0, r * 0.26, r * 0.54, 0, 0, 7); c.stroke();
+    c.strokeStyle = '#7f9bc4'; c.lineWidth = r * 0.05;
+    c.beginPath(); c.ellipse(r * 0.62, 0, r * 0.74, r * 0.62, 0, 0.5, 2.6); c.stroke();
+    for (const [x, y, s] of [[0.1, -0.56, 0.15], [0.1, 0.56, 0.15], [-0.3, 0, 0.16]]) {
+      c.fillStyle = brass; disc(c, r * x, r * y, r * s); c.fill();
+      c.fillStyle = '#7a5a24'; disc(c, r * x, r * y, r * s * 0.42); c.fill();
+    }
+  }
+
   function drawSprite(c, tier, paint) {
     const f = SPR[tier.sprite];
     if (f) f(c, tier, paint);
   }
 
-  // Shed icon: draw the tool pointing up, scaled to fit a square.
-  function icon(tier, size, paint) {
+  // Shed icon: draw the tool pointing up, scaled to fit a square. sprite: draw
+  // this picture of the tool instead of its own (a pony's lead is not a dog's)
+  function icon(tier, size, paint, sprite) {
     const dpr = Math.min(window.devicePixelRatio || 1, 3);
     const cv = U.canvas(size * dpr, size * dpr);
     const c = cv.getContext('2d');
@@ -932,7 +958,7 @@ const TOOLS = (() => {
     const s = (size * 0.86) / ext;
     c.setTransform(dpr * s, 0, 0, dpr * s, (cv.width) / 2, (cv.height) / 2 + (tier.shape === 'rect' ? size * 0.12 : size * 0.1) * dpr);
     c.rotate(-Math.PI / 2);
-    drawSprite(c, tier, paint || '#9cc5a1');
+    drawSprite(c, sprite ? Object.assign({}, tier, { sprite }) : tier, paint || '#9cc5a1');
     cv.style.width = cv.style.height = size + 'px';
     return cv;
   }

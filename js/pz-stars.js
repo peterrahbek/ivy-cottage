@@ -11,9 +11,9 @@
 // every right move becomes a stitch across the tear and the tear closes behind
 // it. When it is mended a little patch with an embroidered motif is sewn on.
 // opts.what: undefined (the stars) or 'stitch'.
-// opts.where: for the stars undefined (a hill), 'cove' or 'canal' (what is on the
-// skyline); for the stitching undefined (a patchwork quilt on the table in the
-// back room) or 'rescue' (a dog's blanket in its basket).
+// opts.where: for the stars undefined (a hill), 'cove', 'canal' or 'observatory'
+// (what is on the skyline); for the stitching undefined (a patchwork quilt on the
+// table in the back room) or 'rescue' (a dog's blanket in its basket).
 // opts.key: 'letters' for A to L instead of 1 to 12.
 //   node test/run.mjs puzzle js/pz-stars.js stars --seeds 30 [--opts '{"what":"stitch"}']
 
@@ -169,15 +169,54 @@
         const q = c.createLinearGradient(0, my - 16, 0, my + 16); q.addColorStop(0, '#141b47'); q.addColorStop(1, '#172052');
         c.fillStyle = q; c.beginPath(); c.arc(mx - 6, my - 3, 11.4, 0, TAU); c.fill();
       }
-      function hill(c) {
+      // the observatory on the far hill: the dome open, a telescope looking out
+      function dome(c) {
+        const hx = 108, hy = 464;
+        c.fillStyle = '#1d2152'; c.fillRect(hx - 23, hy - 20, 46, 28);
+        c.fillRect(hx + 22, hy - 12, 30, 20); c.beginPath(); c.moveTo(hx + 19, hy - 11); c.lineTo(hx + 27, hy - 20); c.lineTo(hx + 47, hy - 20); c.lineTo(hx + 55, hy - 11); c.closePath(); c.fill();
+        c.fillStyle = '#272c6c'; c.beginPath(); c.moveTo(hx - 26, hy - 20); c.bezierCurveTo(hx - 26, hy - 54, hx + 26, hy - 54, hx + 26, hy - 20); c.closePath(); c.fill();
+        c.save(); c.clip();
+        c.strokeStyle = 'rgba(150,120,170,0.3)'; c.lineWidth = 1;
+        for (const q of [-17, -7, 15]) { c.beginPath(); c.moveTo(hx + q, hy - 20); c.quadraticCurveTo(hx + q * 0.8, hy - 38, hx, hy - 46); c.stroke(); }
+        c.strokeStyle = 'rgba(232,160,104,0.95)'; c.lineWidth = 3.2; c.beginPath(); c.moveTo(hx + 26, hy - 20); c.bezierCurveTo(hx + 26, hy - 40, hx + 14, hy - 45, hx + 3, hy - 46); c.stroke();
+        c.fillStyle = '#12153b'; c.beginPath(); c.moveTo(hx + 1, hy - 20); c.lineTo(hx + 13, hy - 20); c.lineTo(hx + 4, hy - 46); c.lineTo(hx - 1, hy - 46); c.closePath(); c.fill();
+        c.restore();
+        c.fillStyle = '#12153b'; c.fillRect(hx - 28, hy - 22, 56, 3.4); c.fillRect(hx - 0.8, hy - 51, 1.6, 7);
+        c.lineCap = 'round'; c.strokeStyle = '#12153b'; c.lineWidth = 5; seg(c, hx + 4, hy - 30, hx + 25, hy - 52);
+        c.strokeStyle = 'rgba(236,196,120,0.85)'; c.lineWidth = 1.4; seg(c, hx + 6, hy - 33, hx + 24, hy - 52);
+        c.fillStyle = '#ffd98a'; c.beginPath(); c.arc(hx - 11, hy - 8, 3.4, Math.PI, 0); c.lineTo(hx - 7.6, hy - 2); c.lineTo(hx - 14.4, hy - 2); c.closePath(); c.fill();
+        c.fillRect(hx + 7, hy - 12, 6, 8); c.fillRect(hx + 28, hy - 8, 6, 7); c.fillRect(hx + 40, hy - 8, 6, 7);
+        halo(c, hx - 2, hy - 7, 26, 0.18); halo(c, hx + 37, hy - 5, 22, 0.16);
+      }
+      // the oak's owl, two bright eyes among the leaves
+      function owl(c) {
+        const ox = 272, oy = 484;
+        c.fillStyle = '#20265e'; c.beginPath(); c.ellipse(ox, oy, 8, 9.6, 0, 0, TAU); c.fill();
+        c.beginPath(); c.moveTo(ox - 7.4, oy - 4); c.lineTo(ox - 7, oy - 12); c.lineTo(ox - 1.6, oy - 8.4); c.lineTo(ox + 1.6, oy - 8.4); c.lineTo(ox + 7, oy - 12); c.lineTo(ox + 7.4, oy - 4); c.closePath(); c.fill();
+        for (const s of [-1, 1]) { dot(c, ox + s * 3.4, oy - 3, 2.9, '#ffe2a0'); dot(c, ox + s * 3.4, oy - 3, 1.3, '#12153b'); }
+      }
+      // a little telescope on its tripod, out on the near slope
+      function spyglass(c) {
+        c.save(); c.translate(62, 478);
+        c.strokeStyle = '#12153b'; c.lineWidth = 2.6; c.lineCap = 'round'; seg(c, 0, 0, -13, 29); seg(c, 0, 0, 13, 29); seg(c, 0, 0, 2, 31);
+        c.rotate(-0.72);
+        c.fillStyle = '#12153b'; PZ.rr(c, -21, -3.4, 37, 6.8, 2); c.fill(); PZ.rr(c, 12, -5, 13, 10, 2); c.fill(); PZ.rr(c, -27, -2, 8, 4, 1.4); c.fill();
+        c.fillStyle = 'rgba(236,196,120,0.9)'; c.fillRect(-20, -2.6, 33, 1.3); c.fillRect(13, -4.2, 11, 1.4);
+        c.fillStyle = '#fff3cf'; c.fillRect(24, -3.6, 1.4, 7.2);
+        c.restore();
+      }
+      function hill(c, observatory) {
         const { x0, x1, y1 } = S.bleed;
         c.fillStyle = '#2e3370'; c.beginPath(); c.moveTo(x0, 476); c.quadraticCurveTo(70, 450, 150, 470); c.quadraticCurveTo(240, 492, x1, 456); c.lineTo(x1, y1); c.lineTo(x0, y1); c.closePath(); c.fill();
-        // a cottage on the far hill, with a light on
-        const hx = 86, hy = 460;
-        c.fillStyle = '#1d2152'; c.fillRect(hx - 16, hy - 12, 32, 16); c.beginPath(); c.moveTo(hx - 21, hy - 11); c.lineTo(hx, hy - 27); c.lineTo(hx + 21, hy - 11); c.closePath(); c.fill();
-        c.fillRect(hx + 7, hy - 28, 5, 12);
-        c.fillStyle = '#ffd98a'; c.fillRect(hx - 10, hy - 7, 6, 6); c.fillRect(hx + 4, hy - 7, 6, 6);
-        halo(c, hx, hy - 4, 24, 0.3);
+        if (observatory) dome(c);
+        else {
+          // a cottage on the far hill, with a light on
+          const hx = 86, hy = 460;
+          c.fillStyle = '#1d2152'; c.fillRect(hx - 16, hy - 12, 32, 16); c.beginPath(); c.moveTo(hx - 21, hy - 11); c.lineTo(hx, hy - 27); c.lineTo(hx + 21, hy - 11); c.closePath(); c.fill();
+          c.fillRect(hx + 7, hy - 28, 5, 12);
+          c.fillStyle = '#ffd98a'; c.fillRect(hx - 10, hy - 7, 6, 6); c.fillRect(hx + 4, hy - 7, 6, 6);
+          halo(c, hx, hy - 4, 24, 0.3);
+        }
         c.fillStyle = '#1b1f4f'; c.beginPath(); c.moveTo(x0, 520); c.quadraticCurveTo(110, 474, 214, 506); c.quadraticCurveTo(290, 530, x1, 492); c.lineTo(x1, y1); c.lineTo(x0, y1); c.closePath(); c.fill();
         // an old tree on the near hill
         const tx = 0, ty = 0;
@@ -187,6 +226,7 @@
         c.fillStyle = '#12153b';
         for (const [a, b, q] of [[-30, -52, 19], [-8, -66, 24], [18, -60, 21], [34, -46, 15], [-16, -44, 16]]) { c.beginPath(); c.arc(tx + a, ty + b, q, 0, TAU); c.fill(); }
         c.restore();
+        if (observatory) { owl(c); spyglass(c); return; }
         // the fence along the top of the near hill
         c.strokeStyle = '#12153b'; c.lineWidth = 2;
         c.beginPath(); c.moveTo(x0, 513); c.quadraticCurveTo(60, 494, 150, 490); c.stroke();
@@ -248,7 +288,7 @@
         P: pts, crop: { x: 0, y: U.clamp(mid.y - 180, 40, 100), w: 360, h: 360 }, title: F.name,
         decor(c) {
           sky(c);
-          if (where === 'cove') cove(c); else if (where === 'canal') canal(c); else hill(c);
+          if (where === 'cove') cove(c); else if (where === 'canal') canal(c); else hill(c, where === 'observatory');
           PZ.text(c, letters ? 'Join the stars from A onwards' : 'Join the stars in order', W / 2, 22, { size: 13, color: '#dfe3f6', maxW: 300 });
         },
         draw(c, t, still) {
