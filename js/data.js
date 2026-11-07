@@ -1010,16 +1010,39 @@ const DATA = (() => {
   // tool families that first appear in a season
   const FAMILY_SEASON = { rake: 2, snow: 3 };
 
+  // Every kind of tool sits in the same narrow price band, set by what the
+  // first five jobs at the cottage pay: tools are small purchases, the places
+  // and the decorations are what the coins are saved up for.
   function famBase(fam) {
-    if (fam in intro) return choreValue(intro[fam]);
-    if (FAMILY_SEASON[fam]) return seasonValue(FAMILY_SEASON[fam], 0);
-    if (['collect', 'polish', 'feed', 'walk', 'brush', 'muck'].includes(fam)) return coveValue(0);
-    return cafeValue(0); // planting, building, arranging and pouring
+    return choreValue(Math.min(4, fam in intro ? intro[fam] : 4));
   }
-  // every place has its own toolbox, and the later places are dearer
+  // every place has its own toolbox; away from the cottage tools cost double
   function toolCost(fam, tierIdx, place) {
     const base = famBase(fam) * 2 * ((place && placeOf(place).toolPrice) || 1);
     return Math.round(TOOLS.COST_MULT[tierIdx] * base / 5) * 5;
+  }
+  // What a tool used to cost, kept only to hand the difference back to a game
+  // that bought its tools before the shed lowered its prices.
+  const OLD_TOOL_PRICE = { cottage: 1, cafe: 2, cove: 3, rescue: 4, glasshouse: 5, canal: 6, books: 7, pottery: 8, halt: 9, beads: 10, curio: 10, stables: 10, loft: 10, observatory: 10, lido: 10 };
+  function oldFamBase(fam) {
+    if (fam in intro) return choreValue(intro[fam]);
+    if (FAMILY_SEASON[fam]) return seasonValue(FAMILY_SEASON[fam], 0);
+    if (['collect', 'polish', 'feed', 'walk', 'brush', 'muck'].includes(fam)) return coveValue(0);
+    return cafeValue(0);
+  }
+  function oldToolCost(fam, tierIdx, place) {
+    const base = oldFamBase(fam) * 2 * (OLD_TOOL_PRICE[place] || 1);
+    return Math.round(TOOLS.COST_MULT[tierIdx] * base / 5) * 5;
+  }
+  // the coins to hand back for a toolbox (save.tiers: 'place:family' -> best tier bought)
+  function shedRefund(tiers) {
+    let coins = 0;
+    for (const [k, best] of Object.entries(tiers || {})) {
+      const [place, fam] = k.split(':'), F = TOOLS.FAM[fam];
+      if (!F || !(place in OLD_TOOL_PRICE)) continue;
+      for (let t = 1; t <= best && t < F.tiers.length; t++) coins += Math.max(0, oldToolCost(fam, t, place) - toolCost(fam, t, place));
+    }
+    return coins;
   }
 
   // helper robots: unlocked after a few chores
@@ -1352,20 +1375,20 @@ const DATA = (() => {
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
     { id: 'cafe', name: 'Marigold Café', short: 'the café', toolPrice: 2, blurb: 'A little corner café, closed for years. Sweep it, build it, plant it and open it again.', price: 9000, needs: 'cottage', chores: CAFE_CHORES, decor: CAFE_DECOR, done: 'The café is open again', lights: 'c-lights' },
-    { id: 'cove', name: 'Seashell Cove', short: 'the cove', toolPrice: 3, blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', wait: 1, chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
-    { id: 'rescue', name: 'Bluebell Rescue', short: 'the rescue', toolPrice: 4, blurb: 'An old farm that takes in dogs, cats, rabbits and the odd seal pup. Feed them, walk them, brush them and mend the place.', price: 30000, needs: 'cove', wait: 2, chores: RESCUE_CHORES, decor: RESCUE_DECOR, done: 'The animals are at home again', lights: 'r-lights' },
-    { id: 'glasshouse', name: 'Primrose Glasshouse', short: 'the glasshouse', toolPrice: 5, blurb: 'A walled garden with an old glasshouse, an orchard and a potting shed, all gone wild. Water it, grow it, mend it and bring it back into bloom.', price: 42000, needs: 'rescue', wait: 3, chores: GLASS_CHORES, decor: GLASS_DECOR, done: 'The garden is in bloom again', lights: 'g-lights' },
-    { id: 'canal', name: 'Kingfisher Lock', short: 'the canal', toolPrice: 6, blurb: 'A canal lock with a narrowboat, a humpback bridge and the lock-keeper\'s cottage, all left to the ducks. Paint the boat, mend the gates and load it for a trip.', price: 55000, needs: 'glasshouse', wait: 4, chores: CANAL_CHORES, decor: CANAL_DECOR, done: 'The canal is lovely again', lights: 'k-lights' },
-    { id: 'books', name: 'Hollyhock Books', short: 'the bookshop', toolPrice: 7, blurb: 'An old bookshop on a cobbled lane, with a reading nook, a shop cat and a courtyard at the back. Dust it, sort it, paint it and open the door to readers again.', price: 70000, needs: 'canal', wait: 4, chores: BOOK_CHORES, decor: BOOK_DECOR, done: 'The bookshop is open again', lights: 'b-lights' },
-    { id: 'pottery', name: 'Kiln Lane Pottery', short: 'the pottery', toolPrice: 8, blurb: 'A pottery in an old brick barn down a field lane, with a big kiln, a potter\'s wheel and shelves of glazes. Clean it, mend it and make your first bowl.', price: 80000, needs: 'books', wait: 4, chores: POTTERY_CHORES, decor: POTTERY_DECOR, done: 'The pottery is open again', lights: 'p-lights' },
-    { id: 'halt', name: 'Halfpenny Halt', short: 'the station', toolPrice: 9, blurb: 'A little country station where no train has stopped for years: a waiting room, a signal box and a lost-property office full of little mysteries.', price: 90000, needs: 'pottery', wait: 4, chores: HALT_CHORES, decor: HALT_DECOR, done: 'The station is lovely again', lights: 'h-lights' },
+    { id: 'cove', name: 'Seashell Cove', short: 'the cove', toolPrice: 2, blurb: 'A beach hut, a rowing boat, an old camper van and a lighthouse, left to the gulls.', price: 20000, needs: 'cafe', wait: 1, chores: COVE_CHORES, decor: COVE_DECOR, done: 'The cove is lovely again', lights: 'v-lanterns' },
+    { id: 'rescue', name: 'Bluebell Rescue', short: 'the rescue', toolPrice: 2, blurb: 'An old farm that takes in dogs, cats, rabbits and the odd seal pup. Feed them, walk them, brush them and mend the place.', price: 30000, needs: 'cove', wait: 2, chores: RESCUE_CHORES, decor: RESCUE_DECOR, done: 'The animals are at home again', lights: 'r-lights' },
+    { id: 'glasshouse', name: 'Primrose Glasshouse', short: 'the glasshouse', toolPrice: 2, blurb: 'A walled garden with an old glasshouse, an orchard and a potting shed, all gone wild. Water it, grow it, mend it and bring it back into bloom.', price: 42000, needs: 'rescue', wait: 3, chores: GLASS_CHORES, decor: GLASS_DECOR, done: 'The garden is in bloom again', lights: 'g-lights' },
+    { id: 'canal', name: 'Kingfisher Lock', short: 'the canal', toolPrice: 2, blurb: 'A canal lock with a narrowboat, a humpback bridge and the lock-keeper\'s cottage, all left to the ducks. Paint the boat, mend the gates and load it for a trip.', price: 55000, needs: 'glasshouse', wait: 4, chores: CANAL_CHORES, decor: CANAL_DECOR, done: 'The canal is lovely again', lights: 'k-lights' },
+    { id: 'books', name: 'Hollyhock Books', short: 'the bookshop', toolPrice: 2, blurb: 'An old bookshop on a cobbled lane, with a reading nook, a shop cat and a courtyard at the back. Dust it, sort it, paint it and open the door to readers again.', price: 70000, needs: 'canal', wait: 4, chores: BOOK_CHORES, decor: BOOK_DECOR, done: 'The bookshop is open again', lights: 'b-lights' },
+    { id: 'pottery', name: 'Kiln Lane Pottery', short: 'the pottery', toolPrice: 2, blurb: 'A pottery in an old brick barn down a field lane, with a big kiln, a potter\'s wheel and shelves of glazes. Clean it, mend it and make your first bowl.', price: 80000, needs: 'books', wait: 4, chores: POTTERY_CHORES, decor: POTTERY_DECOR, done: 'The pottery is open again', lights: 'p-lights' },
+    { id: 'halt', name: 'Halfpenny Halt', short: 'the station', toolPrice: 2, blurb: 'A little country station where no train has stopped for years: a waiting room, a signal box and a lost-property office full of little mysteries.', price: 90000, needs: 'pottery', wait: 4, chores: HALT_CHORES, decor: HALT_DECOR, done: 'The station is lovely again', lights: 'h-lights' },
     // from the bead shop on, tools cost ten times what they cost at the cottage, and no more
-    { id: 'beads', name: 'Button & Bead', short: 'the bead shop', toolPrice: 10, blurb: 'A tiny haberdashery on a cobbled street: a bow window full of ribbons, drawers of buttons, trays of beads and an old sewing machine. Dust it, mend it and make something with your own hands.', price: 100000, needs: 'halt', wait: 4, chores: BEAD_CHORES, decor: BEAD_DECOR, done: 'The bead shop is open again', lights: 'bd-lights' },
-    { id: 'curio', name: 'Marchbank\'s Curiosities', short: 'the curiosity shop', toolPrice: 10, blurb: 'An old curiosity shop: a cabinet of twenty little drawers, a grandfather clock, a globe and a box nobody has opened in years. Polish it, mend it and find out what it hides.', price: 110000, needs: 'beads', wait: 4, chores: CURIO_CHORES, decor: CURIO_DECOR, done: 'The curiosity shop is open again', lights: 'mc-lights' },
-    { id: 'stables', name: 'Foxglove Stables', short: 'the stables', toolPrice: 10, blurb: 'A little pony yard with three half-doors, a tack room, a paddock with jumps and a hay barn. Muck it out, mend it and put ribbons in a mane. The ponies are happy either way.', price: 120000, needs: 'curio', wait: 4, chores: STABLE_CHORES, decor: STABLE_DECOR, done: 'The stables are lovely again', lights: 'fs-lights' },
-    { id: 'loft', name: 'The Painter\'s Loft', short: 'the loft', toolPrice: 10, blurb: 'A studio in an old hay loft: a skylight, easels, a store of frames and a long wall in the yard. Clean it, mend it and paint with your own hands.', price: 130000, needs: 'stables', wait: 4, chores: LOFT_CHORES, decor: LOFT_DECOR, done: 'The loft is open again', lights: 'pl-lights' },
-    { id: 'observatory', name: 'Owl Hill Observatory', short: 'the observatory', toolPrice: 10, blurb: 'A little Victorian observatory on a hill: a copper dome, a brass telescope, a map room and an owl in the oak. Polish it, mend it and join the stars.', price: 140000, needs: 'loft', wait: 4, chores: OBSERVATORY_CHORES, decor: OBSERVATORY_DECOR, done: 'The observatory is lovely again', lights: 'oh-lights' },
-    { id: 'lido', name: 'Sunnybank Lido', short: 'the lido', toolPrice: 10, blurb: 'An art deco open-air pool with pale blue tiles, a fountain, a diving board and striped deck chairs. Scrub it, mend it and fill it for the summer.', price: 150000, needs: 'observatory', wait: 4, chores: LIDO_CHORES, decor: LIDO_DECOR, done: 'The lido is open again', lights: 'sb-lights' },
+    { id: 'beads', name: 'Button & Bead', short: 'the bead shop', toolPrice: 2, blurb: 'A tiny haberdashery on a cobbled street: a bow window full of ribbons, drawers of buttons, trays of beads and an old sewing machine. Dust it, mend it and make something with your own hands.', price: 100000, needs: 'halt', wait: 4, chores: BEAD_CHORES, decor: BEAD_DECOR, done: 'The bead shop is open again', lights: 'bd-lights' },
+    { id: 'curio', name: 'Marchbank\'s Curiosities', short: 'the curiosity shop', toolPrice: 2, blurb: 'An old curiosity shop: a cabinet of twenty little drawers, a grandfather clock, a globe and a box nobody has opened in years. Polish it, mend it and find out what it hides.', price: 110000, needs: 'beads', wait: 4, chores: CURIO_CHORES, decor: CURIO_DECOR, done: 'The curiosity shop is open again', lights: 'mc-lights' },
+    { id: 'stables', name: 'Foxglove Stables', short: 'the stables', toolPrice: 2, blurb: 'A little pony yard with three half-doors, a tack room, a paddock with jumps and a hay barn. Muck it out, mend it and put ribbons in a mane. The ponies are happy either way.', price: 120000, needs: 'curio', wait: 4, chores: STABLE_CHORES, decor: STABLE_DECOR, done: 'The stables are lovely again', lights: 'fs-lights' },
+    { id: 'loft', name: 'The Painter\'s Loft', short: 'the loft', toolPrice: 2, blurb: 'A studio in an old hay loft: a skylight, easels, a store of frames and a long wall in the yard. Clean it, mend it and paint with your own hands.', price: 130000, needs: 'stables', wait: 4, chores: LOFT_CHORES, decor: LOFT_DECOR, done: 'The loft is open again', lights: 'pl-lights' },
+    { id: 'observatory', name: 'Owl Hill Observatory', short: 'the observatory', toolPrice: 2, blurb: 'A little Victorian observatory on a hill: a copper dome, a brass telescope, a map room and an owl in the oak. Polish it, mend it and join the stars.', price: 140000, needs: 'loft', wait: 4, chores: OBSERVATORY_CHORES, decor: OBSERVATORY_DECOR, done: 'The observatory is lovely again', lights: 'oh-lights' },
+    { id: 'lido', name: 'Sunnybank Lido', short: 'the lido', toolPrice: 2, blurb: 'An art deco open-air pool with pale blue tiles, a fountain, a diving board and striped deck chairs. Scrub it, mend it and fill it for the summer.', price: 150000, needs: 'observatory', wait: 4, chores: LIDO_CHORES, decor: LIDO_DECOR, done: 'The lido is open again', lights: 'sb-lights' },
     // open from the start and outside the order above: never bought, never in the seasons
     { id: 'beta', name: 'The Puzzle Room', short: 'the puzzle room', beta: true, blurb: 'New kinds of jobs to try: no tools, just a little thinking. Each one comes out different every time.', price: 0, chores: BETA_CHORES, decor: [], done: 'Every puzzle is solved' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
@@ -1374,6 +1397,6 @@ const DATA = (() => {
   return {
     AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
     DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, BEAD_DECOR, CURIO_DECOR, STABLE_DECOR, LOFT_DECOR, OBSERVATORY_DECOR, LIDO_DECOR, DECOR_UNLOCK, SEASON_NAMES,
-    seasonOf, seasonJobs, awakePlaces, SEASON_BUDGET, PER_SEASON, seasonValue, FAMILY_SEASON, toolCost, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
+    seasonOf, seasonJobs, awakePlaces, SEASON_BUDGET, PER_SEASON, seasonValue, FAMILY_SEASON, toolCost, oldToolCost, shedRefund, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();

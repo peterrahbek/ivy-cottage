@@ -28,7 +28,10 @@
 // and the ice creams played in place, the mosaic laid tile by tile, deck chairs
 // on their marks, a halter on the tool button at the pony's walk, a save from v24
 // meeting the new places, the opening money for both, and the observatory's tune
-// the slowest and deepest of them all.
+// the slowest and deepest of them all. Since v25.1 also: every tool's price against
+// the ceiling (the first two tiers under 5% of a season's pay, the top one under
+// 10%, the season's pay measured with 15 places, and shown with 7), and a save from
+// v25 with bought tools getting the difference back, once.
 // Prints a JSON report; pictures go to --out.
 //
 //   node test/game.mjs [--out dir] [--economy]     --economy prints the money only, in seconds
@@ -799,6 +802,30 @@ try {
       if (e.shortWithSpend > e.oneSeason) problem(`economy: ${id} is more than a season out of reach with typical spending (${e.shortWithSpend} short)`);
     }
     for (const [k, v] of Object.entries(report.economy.places)) if (v.jobsPerSeason.some((n) => n > 37)) problem(`economy: ${k} places have a season over 37 jobs`);
+    // the shed: every tool at every place against the ceiling. The first two
+    // tiers stay under 5% of a season's pay, the top tier under 10%, with 15 places
+    const shed = report.economy.shed = await js(b, `(() => {
+      const fams = Object.keys(TOOLS.FAM).filter((f) => !TOOLS.FAM[f].hands), rows = [], byTier = {};
+      for (const f of fams) for (const pl of DATA.PLACES.filter((p) => !p.beta)) {
+        const n = TOOLS.FAM[f].tiers.length;
+        for (let t = 1; t < n; t++) {
+          const c = DATA.toolCost(f, t, pl.id), o = DATA.oldToolCost(f, t, pl.id);
+          rows.push({ f, pl: pl.id, t, c, top: t === n - 1 });
+          const b = byTier[t] = byTier[t] || { min: c, max: c, oldMax: o }; b.min = Math.min(b.min, c); b.max = Math.max(b.max, c); b.oldMax = Math.max(b.oldMax, o);
+        }
+      }
+      return { byTier, rows, famBand: [Math.min(...rows.filter((r) => r.t === 1).map((r) => r.c)), Math.max(...rows.filter((r) => r.t === 1).map((r) => r.c))], topMax: Math.max(...rows.filter((r) => r.top).map((r) => r.c)) };
+    })()`);
+    const pay15 = Math.round(report.economy.places['15'].coinsPerYearPlayed / 4), pay7 = Math.round(report.economy.places['7'].coinsPerYear / 4);
+    for (const r of shed.rows) {
+      if (r.t <= 2 && r.c >= pay15 * 0.05) problem(`shed: ${r.f} tier ${r.t} at ${r.pl} costs ${r.c}, over 5% of a season (${pay15})`);
+      if (r.c >= pay15 * 0.10) problem(`shed: ${r.f} tier ${r.t} at ${r.pl} costs ${r.c}, over 10% of a season (${pay15})`);
+    }
+    shed.ceiling = { seasonPay15: pay15, under5pct: Math.round(pay15 * 0.05), under10pct: Math.round(pay15 * 0.10), seasonPay7: pay7, top: shed.topMax, topShareOf15: +(shed.topMax / pay15).toFixed(3), topShareOf7: +(shed.topMax / pay7).toFixed(3) };
+    if (shed.topMax / pay7 > 0.11) problem(`shed: the dearest tool (${shed.topMax}) is well over a tenth of a season with 7 places (${pay7})`);
+    const tiered = Object.entries(shed.byTier);
+    if (!(shed.byTier[1].min >= 40 && shed.byTier[1].max <= 170 && shed.byTier[2].max <= 480 && shed.byTier[3].max <= 1200 && shed.byTier[4].max <= 2800)) problem('shed: the bands moved ' + JSON.stringify(tiered));
+    delete shed.rows;
     // the music for the new places renders
     report.music = await js(b, `(async () => ({ pottery: await AUDIO.debugRender({ place: 'pottery', season: 'summer' }, 12), halt: await AUDIO.debugRender({ place: 'halt', season: 'winter', night: true }, 12),
       beads: await AUDIO.debugRender({ place: 'beads', season: 'spring' }, 12), curio: await AUDIO.debugRender({ place: 'curio', season: 'autumn' }, 12),
@@ -811,6 +838,49 @@ try {
     // the observatory's tune is the slowest and the deepest of them all
     const tunes = report.tunes = await js(b, 'AUDIO.debugTunes()');
     for (const [k, t] of Object.entries(tunes)) if (k !== 'observatory' && (t.bpm <= tunes.observatory.bpm || t.depth > tunes.observatory.depth)) problem(`music: ${k} is as slow or as deep as the observatory ${JSON.stringify(t)}`);
+  }
+
+  // a save from v25 with tools bought at the old prices gets the difference
+  // back once, says so quietly, and a new game gets nothing
+  {
+    const land = async () => {
+      await sleep(600);
+      for (let i = 0; i < 100 && !(await js(b, '!!(window.__ivy && document.readyState === "complete")').catch(() => false)); i++) await sleep(100);
+      await js(b, `document.querySelector('#title').click()`); await sleep(1400);
+    };
+    const keep = await js(b, 'JSON.stringify(__ivy.S)');
+    const bought = { 'lido:snow': 2, 'beads:build': 3, 'cottage:mow': 3, 'cove:feed': 1, 'beta:mow': 1 };
+    const r = report.refund = await js(b, `(() => { const t = ${JSON.stringify(bought)}; let want = 0; const lines = {};
+      for (const [k, best] of Object.entries(t)) { const [pl, f] = k.split(':'); if (pl === 'beta') continue;
+        for (let i = 1; i <= best; i++) { const o = DATA.oldToolCost(f, i, pl), n = DATA.toolCost(f, i, pl); want += o - n; lines[k + ':' + i] = [o, n]; } }
+      return { want, lines, widePusherStep: DATA.oldToolCost('snow', 2, 'lido') - DATA.toolCost('snow', 2, 'lido') }; })()`);
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S)); S.tiers = ${JSON.stringify(bought)}; S.use = {}; S.coins = 30000; S.owned = Object.assign(S.owned, { lido: 1, beads: 1, cove: 1 }); S.wips = {}; delete S.shedRefund;
+      sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await land();
+    r.coinsAfter = await js(b, '__ivy.S.coins'); r.mark = await js(b, '__ivy.S.shedRefund');
+    r.toast = await js(b, `(() => { const t = document.querySelector('#toast'); return { on: t.classList.contains('on'), text: t.textContent }; })()`);
+    await pic(b, 'shed-refund-toast');
+    if (r.want < 30000) problem('refund: too little to hand back in the planted save ' + r.want);
+    if (r.widePusherStep !== 15745) problem('refund: the wide pusher step should give 15,745 back, got ' + r.widePusherStep);
+    if (r.coinsAfter !== 30000 + r.want) problem(`refund: expected ${30000 + r.want} coins, got ${r.coinsAfter}`);
+    if (r.mark !== 1) problem('refund: not marked in the save');
+    if (!r.toast.on || !/lowered its prices/.test(r.toast.text)) problem('refund: no quiet note ' + JSON.stringify(r.toast));
+    // the bought tools are still there
+    r.tools = await js(b, `(() => ({ snow: __ivy.S.tiers['lido:snow'], build: __ivy.S.tiers['beads:build'] }))()`);
+    if (r.tools.snow !== 2 || r.tools.build !== 3) problem('refund: the bought tools should stay ' + JSON.stringify(r.tools));
+    // once only: the same save loaded again hands nothing back
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S)); S.wips = {}; sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await land();
+    r.coinsAgain = await js(b, '__ivy.S.coins');
+    if (r.coinsAgain !== r.coinsAfter) problem(`refund: paid twice (${r.coinsAfter} became ${r.coinsAgain})`);
+    // a new game has nothing to get back
+    await js(b, `(() => { const S = JSON.parse(JSON.stringify(__ivy.S)); S.tiers = {}; S.use = {}; S.coins = 500; delete S.shedRefund; S.wips = {}; sessionStorage.setItem('ivy-test-save', JSON.stringify(S)); location.reload(); })()`);
+    await land();
+    r.noTools = { coins: await js(b, '__ivy.S.coins'), toast: await js(b, `document.querySelector('#toast').classList.contains('on')`) };
+    if (r.noTools.coins !== 500 || r.noTools.toast) problem('refund: a game with no tools should get nothing and no note ' + JSON.stringify(r.noTools));
+    // and on with the game as it was
+    await js(b, `(() => { sessionStorage.setItem('ivy-test-save', ${JSON.stringify('')} + ${'JSON.stringify(' + 'KEEP' + ')'}); location.reload(); })()`.replace('KEEP', JSON.stringify(keep)));
+    await land();
   }
 
   // every other job, straight through

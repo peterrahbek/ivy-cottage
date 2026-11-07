@@ -39,10 +39,12 @@ Play: https://peterrahbek.github.io/ivy-cottage/
   with five, a soft brush to a double brush for the cat, a hand fork to a
   wheelbarrow for mucking out ...). Every place has its own toolbox: tools
   stay where you buy them, a new place starts with simple tools, and tools
-  cost twice as much at the café, three times as much at the cove, four
-  times as much at the rescue and five, six, seven, eight and nine times as
-  much at the glasshouse, the canal, the bookshop, the pottery and the
-  station, and ten times as much from the bead shop on. The next
+  cost twice as much away from the cottage. Every kind of tool sits in the
+  same small price band (the first upgrade 40 to 170 coins, the second 115
+  to 480, the third 290 to 1,200, and a fourth, where there is one, 670 to
+  2,800), so a tool is a small purchase; places and decorations are what the
+  coins are saved up for. A game that bought tools at the older, higher prices got the
+  difference back in its purse, once. The next
   tool can be bought mid-job from the button at the bottom, or in the shed.
   Tap the tool at the bottom to switch to any tool you already own (the shears
   are sometimes nicer than the tractor).

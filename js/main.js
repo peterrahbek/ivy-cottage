@@ -4,10 +4,11 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const SAVE_KEY = 'ivycottage.v1';
+  let shedNote = 0; // coins handed back when an older save met the lower tool prices
 
   // ------------------------------------------------------------------ save
   function fresh() {
-    return { board: 'think', painted: {}, coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {}, goodnight: true };
+    return { board: 'think', painted: {}, coins: 0, earned: 0, tiers: {}, done: {}, finds: {}, colours: Object.assign({}, DATA.DEFAULT_COLOURS), helpers: 0, sfx: true, music: true, touched: 0, seasonNo: 0, sdone: {}, decor: {}, name: '', evening: true, wips: {}, place: 'cottage', owned: { cottage: 1, beta: 1 }, use: {}, musicVol: 0.45, cloud: {}, jobsDone: 0, pauses: true, started: Date.now(), robots: true, round: 1, restoredAt: {}, goodnight: true, shedRefund: 1 };
   }
   // fill in anything an older save does not have yet
   function upgrade(s) {
@@ -30,6 +31,12 @@
       return n;
     };
     out.tiers = perPlace(out.tiers || {}); out.use = perPlace(out.use);
+    // the shed lowered its prices: a game that paid the old ones gets the
+    // difference back, once
+    if (!s.shedRefund) {
+      const back = DATA.shedRefund(out.tiers);
+      out.coins = (Number(out.coins) || 0) + back; out.shedRefund = 1; shedNote += back;
+    }
     if (typeof out.musicVol !== 'number') out.musicVol = 0.45;
     out.cloud = out.cloud || {};
     if (typeof out.pauses !== 'boolean') out.pauses = true;
@@ -67,7 +74,7 @@
   }
 
   // Every place has its own toolbox: tools bought at the cottage stay there,
-  // and a new place starts with simple tools again (a little dearer).
+  // and a new place starts with simple tools again (at double the cottage's prices).
   // tierIdx = the best tool owned there; useIdx = the one picked for work,
   // which can be any owned tool (some days the shears are nicer than the tractor)
   const toolKey = (fam, pl = S.place) => `${pl}:${fam}`;
@@ -236,6 +243,7 @@
   let freshPart = null;
   function renderHome() {
     noteRestored();
+    if (shedNote) { const n = shedNote; shedNote = 0; setTimeout(() => toast(`The shed has lowered its prices. ${U.fmt(n)} coins are back in your purse`, 6000), 900); }
     const pl = here();
     const st = partsDone(pl.id), pending = pendingAt(pl.id);
     const pct = doneCount() / pl.chores.length;

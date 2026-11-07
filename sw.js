@@ -1,6 +1,6 @@
 // Caches the game so it works offline once it has been opened.
 // Bump CACHE whenever a file changes, or phones keep the old version.
-const CACHE = "ivy-cottage-v25";
+const CACHE = "ivy-cottage-v25-1";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
   "./js/util.js", "./js/tools.js", "./js/scenes.js", "./js/scenes2.js", "./js/scenes3.js", "./js/scenes4.js", "./js/scenes5.js", "./js/scenes6.js", "./js/scenes7.js", "./js/scenes8.js", "./js/scenes9.js", "./js/scenes10.js", "./js/scenes11.js", "./js/scenes12.js", "./js/scenes13.js", "./js/scenes14.js", "./js/scenes15.js", "./js/scenes16.js", "./js/scenes17.js",
