@@ -132,11 +132,11 @@
   // then a few seasons of looking after it (a whole year for the later ones),
   // and the coins. Seasons only turn when their jobs are done, never on their
   // own, so the wait is always in your own hands and nothing is ever lost.
-  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio', 'stables', 'loft', 'observatory', 'lido']); // older saves wait for these only
+  const NEWER = new Set(['canal', 'books', 'pottery', 'halt', 'beads', 'curio', 'stables', 'loft', 'observatory', 'lido', 'theatre', 'manor']); // older saves wait for these only
   const yearOf = (n) => 1 + Math.floor(n / 4);
   const whenLabel = (n) => `${DATA.SEASON_NAMES[n > 0 ? DATA.seasonOf(n) : 'spring']}, year ${yearOf(n)}`;
   const waitOf = (p) => (S.oldWaits && !NEWER.has(p.id) ? 0 : p.wait || 0);
-  const WAIT_WORDS = ['', 'One season after that', 'Two seasons after that', 'Three seasons after that', 'A year after that'];
+  const WAIT_WORDS = ['', 'One season after that', 'Two seasons after that', 'Three seasons after that', 'A year after that', '', '', '', 'Two years after that'];
   // remember the season each place was first restored in
   function noteRestored() {
     for (const p of MAIN) if (owned(p.id) && restored(p.id) && S.restoredAt[p.id] == null) S.restoredAt[p.id] = S.seasonNo;
@@ -177,6 +177,8 @@
     if (id === 'loft' && typeof LOFT !== 'undefined') return LOFT.render(st, S.colours, Object.assign({ painted: S.painted }, opts));
     if (id === 'observatory' && typeof OBSERVATORY !== 'undefined') return OBSERVATORY.render(st, S.colours, opts);
     if (id === 'lido' && typeof LIDO !== 'undefined') return LIDO.render(st, S.colours, opts);
+    if (id === 'theatre' && typeof THEATRE !== 'undefined') return THEATRE.render(st, S.colours, Object.assign({ painted: S.painted }, opts));
+    if (id === 'manor' && typeof MANOR !== 'undefined') return MANOR.render(st, S.colours, opts);
     return HOUSE.render(st, S.colours, opts);
   }
   // the cottage's painted wall shows around its doors and windows; the café
@@ -1283,7 +1285,7 @@
 
   // test hooks
   window.__ivy = {
-    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startStables: (i) => startChore(DATA.STABLE_CHORES[i], false), startLoft: (i) => startChore(DATA.LOFT_CHORES[i], false), startObservatory: (i) => startChore(DATA.OBSERVATORY_CHORES[i], false), startLido: (i) => startChore(DATA.LIDO_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
+    get S() { return S; }, ENGINE, startChore: (i) => startChore(DATA.CHORES[i], false), startCafe: (i) => startChore(DATA.CAFE_CHORES[i], false), startCove: (i) => startChore(DATA.COVE_CHORES[i], false), startRescue: (i) => startChore(DATA.RESCUE_CHORES[i], false), startBeta: (i) => startChore(DATA.BETA_CHORES[i], false), startPottery: (i) => startChore(DATA.POTTERY_CHORES[i], false), startHalt: (i) => startChore(DATA.HALT_CHORES[i], false), startBeads: (i) => startChore(DATA.BEAD_CHORES[i], false), startCurio: (i) => startChore(DATA.CURIO_CHORES[i], false), startStables: (i) => startChore(DATA.STABLE_CHORES[i], false), startLoft: (i) => startChore(DATA.LOFT_CHORES[i], false), startObservatory: (i) => startChore(DATA.OBSERVATORY_CHORES[i], false), startLido: (i) => startChore(DATA.LIDO_CHORES[i], false), startTheatre: (i) => startChore(DATA.THEATRE_CHORES[i], false), startManor: (i) => startChore(DATA.MANOR_CHORES[i], false), startJob: (c) => startChore(c, false), openJobs,
     render: () => renderHome(), save, openFinds, cloudPush, cloudPull, openFriends, openPause, sitting, reset() { S = fresh(); save(); renderHome(); }, keepWip, finish: () => ENGINE.debugFinish(), goPlace, openPlaces, seasonJobs,
     setHour(h) { fakeHour = h; }, renderTitle, nextChore, nextPlaceWithJobs, resting, stopNow, oneJob,
   };

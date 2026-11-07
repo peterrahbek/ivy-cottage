@@ -9,6 +9,7 @@
 // the lines when the picture is finished.
 // opts.what: undefined (paper on the table in the puzzle room), 'canvas' (on an
 // easel in the studio), 'mural' (the long wall in the yard, twelve spaces),
+// 'backdrop' (the cloth at the back of the theatre's stage, the same wide pictures),
 // 'picture' (in a frame on the cottage table) or 'chalkboard' (the café's board,
 // with sticks of chalk for jars). opts.key 'letters': A, B, C instead of 1, 2, 3.
 // keep() says which picture came out and in which colours, for the place's wall.
@@ -27,6 +28,7 @@
     picture: { pic: { x: 28, y: 64, w: 304, h: 304 }, jarY: 446, crop: { x: 8, y: 44, w: 344, h: 344 } },
     canvas: { pic: { x: 24, y: 56, w: 312, h: 312 }, jarY: 446, crop: { x: 8, y: 44, w: 344, h: 344 } },
     mural: { pic: { x: 6, y: 84, w: 348, h: 204.7 }, jarY: 406, crop: { x: 0, y: 26, w: 360, h: 360 } },
+    backdrop: { pic: { x: 6, y: 84, w: 348, h: 204.7 }, jarY: 406, crop: { x: 0, y: 26, w: 360, h: 360 } },
     chalkboard: { pic: { x: 26, y: 62, w: 308, h: 308 }, jarY: 446, crop: { x: 8, y: 44, w: 344, h: 344 } },
   };
 
@@ -42,8 +44,9 @@
   function numbers(S) {
     const r = S.r, o = S.opts || {};
     const what = WHERE[o.what] ? o.what : 'paper', V = WHERE[what], chalk = what === 'chalkboard', jarY = V.jarY;
-    const word = o.key === 'letters' ? 'letter' : 'number', holder = chalk ? 'chalk' : what === 'mural' ? 'tin' : 'jar';
-    const m = U.pick(r, what === 'mural' ? PAINTINGS.MURAL : PAINTINGS.CANVAS), M = PAINTINGS.MOTIFS[m];
+    const wide = what === 'mural' || what === 'backdrop';
+    const word = o.key === 'letters' ? 'letter' : 'number', holder = chalk ? 'chalk' : wide ? 'tin' : 'jar';
+    const m = U.pick(r, wide ? PAINTINGS.MURAL : PAINTINGS.CANVAS), M = PAINTINGS.MOTIFS[m];
     const p = (r() * M.pals.length) | 0, pal = M.pals[p];
     const Pic = V.pic, sx = Pic.w / M.w, sy = Pic.h / M.h, unit = Math.min(sx, sy);
     const at = ([x, y]) => [Pic.x + x * sx, Pic.y + y * sy];
@@ -208,6 +211,25 @@
           c.strokeStyle = '#6f9a6a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x, foot + 4); c.quadraticCurveTo(x + 2, foot - h / 2, x + (pop() - 0.5) * 6, foot - h); c.stroke();
           if (i % 2 === 0) { c.fillStyle = '#d9483f'; c.beginPath(); c.arc(x, foot - h, 4.4, 0, TAU); c.fill(); c.fillStyle = '#3b2a22'; c.beginPath(); c.arc(x, foot - h, 1.3, 0, TAU); c.fill(); }
         }
+        shelf(c, jarY + JAR.h, '#c4a06f', true);
+      },
+      // the theatre: the cloth hung at the back of the stage under a red pelmet
+      backdrop(c) {
+        const { x0, y0, x1, y1 } = S.bleed, foot = 316;
+        c.fillStyle = '#1f2a4a'; c.fillRect(x0, y0, x1 - x0, foot - y0);
+        c.fillStyle = 'rgba(255,255,255,0.03)'; for (let x = Math.floor(x0 / 30) * 30; x < x1; x += 30) c.fillRect(x, y0, 14, foot - y0);
+        title(c, '#eadfc6');
+        c.fillStyle = 'rgba(0,0,0,0.34)'; c.fillRect(Pic.x - 3, Pic.y - 2, Pic.w + 8, Pic.h + 9);
+        c.fillStyle = '#fbf8f0'; c.fillRect(Pic.x - 3, Pic.y - 3, Pic.w + 6, Pic.h + 6);
+        // the batten and the pelmet with its gold fringe
+        c.fillStyle = '#5c3f2a'; c.fillRect(x0, Pic.y - 9, x1 - x0, 6);
+        c.fillStyle = '#8c2f39'; c.fillRect(x0, 38, x1 - x0, 30);
+        for (let x = Math.floor(x0 / 40) * 40; x < x1; x += 40) { c.fillStyle = '#8c2f39'; c.beginPath(); c.arc(x + 20, 67, 20, 0, Math.PI); c.fill(); c.strokeStyle = '#d8ae4e'; c.lineWidth = 2.2; c.beginPath(); c.arc(x + 20, 67, 20, 0, Math.PI); c.stroke(); c.fillStyle = 'rgba(30,8,14,0.2)'; c.fillRect(x + 8, 38, 8, 30); }
+        c.fillStyle = 'rgba(255,220,150,0.32)'; c.fillRect(x0, 38, x1 - x0, 2);
+        // the stage boards and a row of footlights
+        planks(c, foot, '#a97f4f', 26);
+        c.fillStyle = 'rgba(60,40,20,0.3)'; c.fillRect(x0, foot, x1 - x0, 5);
+        for (let x = Math.floor(x0 / 44) * 44 + 22; x < x1; x += 44) { const g = c.createRadialGradient(x, foot + 2, 1, x, foot + 2, 16); g.addColorStop(0, 'rgba(255,226,150,0.9)'); g.addColorStop(1, 'rgba(255,226,150,0)'); c.fillStyle = g; c.fillRect(x - 16, foot - 14, 32, 30); }
         shelf(c, jarY + JAR.h, '#c4a06f', true);
       },
       // the café: the slate board on its wall, sticks of chalk in a box on the counter
@@ -381,7 +403,7 @@
         jars.forEach((J) => {
           const y = jarY - J.lift * (chalk ? 22 : 12);
           if (!chalk) PZ.shadow(c, J.x, jarY + JAR.h + 2, 25, 4, 0.2);
-          if (chalk) chalkStick(c, J, y); else if (what === 'mural') tin(c, J, y); else jarGlass(c, J, y);
+          if (chalk) chalkStick(c, J, y); else if (wide) tin(c, J, y); else jarGlass(c, J, y);
         });
         if (chalk) {
           c.fillStyle = '#b98a5a'; PZ.rr(c, 12, jarY + 62, 336, 28, 6); c.fill();

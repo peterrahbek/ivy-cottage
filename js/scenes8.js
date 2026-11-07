@@ -726,8 +726,8 @@
   }
   function lights(S) {
     const { r, nz, opts, bleed } = S;
-    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt' || where === 'curio' || where === 'stables' || where === 'observatory';
-    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc', beads: '#e2b4ad', curio: '#2f5546', stables: '#7d5a3e', loft: '#e4d8c2', observatory: '#a89e8c', lido: '#efe4cc' }[where] || '#f2d88a';
+    const where = opts.where || 'cottage', warm = where === 'cafe' || where === 'books' || where === 'halt' || where === 'curio' || where === 'stables' || where === 'observatory' || where === 'theatre' || where === 'manor';
+    const wall = { cottage: '#f2d88a', cafe: '#f1e6cc', cove: '#8fbfe6', rescue: '#b5533c', glasshouse: '#cfe3dc', canal: '#4e7b5b', books: '#3d5a86', pottery: '#b5603f', halt: '#efe4cc', beads: '#e2b4ad', curio: '#2f5546', stables: '#7d5a3e', loft: '#e4d8c2', observatory: '#a89e8c', lido: '#efe4cc', theatre: '#7c2c36', manor: '#cfc6b2' }[where] || '#f2d88a';
     const pottery = where === 'pottery', halt = where === 'halt', beads = where === 'beads', curio = where === 'curio';
     const stables = where === 'stables', loft = where === 'loft', observatory = where === 'observatory', lido = where === 'lido';
     const boarded = where === 'cove' || where === 'rescue' || stables, boat = where === 'canal';
@@ -948,6 +948,25 @@
           c.beginPath(); c.arc(224, 348, 16, 0, 7); c.fill(); c.fillRect(221, 362, 6, 8); c.fillRect(213, 366, 22, 4);
           c.strokeStyle = '#3a4a66'; c.lineWidth = 6; arch(0); c.stroke();
           c.fillStyle = '#3a4a66'; c.fillRect(177, 226, 6, 176); c.fillRect(108, 300, 144, 5); c.fillRect(108, 352, 144, 5);
+        } else if (where === 'theatre') {
+          // the lit board over the door with tonight's title, and a poster either side
+          c.fillStyle = '#ffd98a'; c.beginPath(); c.roundRect(64, 226, 232, 84, 10); c.fill();
+          c.strokeStyle = '#c9a23e'; c.lineWidth = 7; c.beginPath(); c.roundRect(64, 226, 232, 84, 10); c.stroke();
+          c.fillStyle = '#7c2c36'; c.font = 'bold 27px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('THE LITTLE', 180, 252, 200); c.fillText('THEATRE', 180, 286, 200);
+          for (const x of [40, 248]) {
+            c.fillStyle = '#c9a23e'; c.fillRect(x, 330, 72, 104); c.fillStyle = '#f3e7cc'; c.fillRect(x + 5, 335, 62, 94);
+            c.fillStyle = '#2b3a66'; c.fillRect(x + 12, 344, 48, 40); c.fillStyle = '#d8ae4e'; c.beginPath(); c.arc(x + 36, 364, 12, 0, 7); c.fill();
+            c.fillStyle = 'rgba(70,40,30,0.7)'; c.fillRect(x + 14, 394, 44, 4); c.fillRect(x + 20, 406, 32, 3);
+          }
+        } else if (where === 'manor') {
+          // three tall lit windows with fine glazing bars
+          for (const x of [46, 141, 236]) {
+            c.fillStyle = '#ffd98a'; c.beginPath(); c.moveTo(x, 410); c.lineTo(x, 216); c.arc(x + 39, 216, 39, Math.PI, 0); c.lineTo(x + 78, 410); c.closePath(); c.fill();
+            c.strokeStyle = '#efe8d8'; c.lineWidth = 6; c.stroke();
+            c.strokeStyle = 'rgba(120,100,70,0.7)'; c.lineWidth = 2.4;
+            for (const k of [26, 52]) { c.beginPath(); c.moveTo(x + k, 410); c.lineTo(x + k, 180); c.stroke(); }
+            for (let y = 236; y < 410; y += 44) { c.beginPath(); c.moveTo(x, y); c.lineTo(x + 78, y); c.stroke(); }
+          }
         } else if (lido) {
           // the long kiosk window with rounded ends, the glow behind it, a stack of
           // deck chairs and a big cone in silhouette, and the name in coral on the render

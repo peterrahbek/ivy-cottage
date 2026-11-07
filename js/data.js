@@ -24,6 +24,9 @@ const DATA = (() => {
     fromLoft: 'From the painter\'s loft', fromSky: 'From the night sky',
     hillPath: 'The hill path', hilltop: 'The hilltop', dome: 'The dome', mapRoom: 'The map room',
     poolside: 'The poolside', sunTerrace: 'The sun terrace', lidoKiosk: 'The kiosk', lidoFront: 'The way in',
+    theatreFront: 'The front of house', auditorium: 'The auditorium', backstage: 'Backstage', theStage: 'The stage',
+    fromTheatre: 'From the little theatre', fromManor: 'From the manor',
+    manorGrounds: 'The grounds', manorFront: 'The house front', manorInside: 'Inside the house', manorGarden: 'The kitchen garden', manorLake: 'The lake',
   };
 
   // part = which piece of the place's picture this chore restores
@@ -360,6 +363,47 @@ const DATA = (() => {
     { id: 'li-ices', area: 'lidoKiosk', part: 'ices', name: 'Ice creams for the queue', scene: 'feeding', opts: { what: 'ices' }, seed: 1715, how: 'Scoop each ice just as the board says' },
   ];
 
+  const THEATRE_CHORES = [
+    { id: 'th-steps', area: 'theatreFront', part: 'steps', name: 'The front steps', scene: 'stones', opts: { shape: 'step' }, seed: 1801 },
+    { id: 'th-foyer', area: 'theatreFront', part: 'foyer', name: 'The foyer floor', scene: 'cafeFloor', opts: { where: 'theatre' }, seed: 1802 },
+    { id: 'th-seats', area: 'auditorium', part: 'seats', name: 'The velvet seats', scene: 'tables', opts: { what: 'seats' }, seed: 1803 },
+    { id: 'th-curtains', area: 'theStage', part: 'curtains', name: 'The red curtains', scene: 'awning', opts: { what: 'curtains' }, seed: 1804 },
+    { id: 'th-roof', area: 'theatreFront', part: 'roof', name: 'The tin roof', scene: 'roof', opts: { what: 'tin' }, seed: 1805 },
+    { id: 'th-booth', area: 'theatreFront', part: 'booth', name: 'The ticket booth', scene: 'window', opts: { room: 'booth' }, seed: 1806 },
+    { id: 'th-mirror', area: 'backstage', part: 'mirror', name: 'The dressing-room mirror', scene: 'roundWindow', opts: { what: 'mirror' }, seed: 1807 },
+    { id: 'th-door', area: 'backstage', part: 'door', name: 'Paint the stage door', scene: 'door', opts: { where: 'theatre' }, seed: 1808, color: 'theatreDoor' },
+    { id: 'th-sign', area: 'theatreFront', part: 'sign', name: 'Paint the sign', scene: 'sign', opts: { title: 'THE LITTLE THEATRE', sub: '· TONIGHT ·', icon: 'mask' }, seed: 1809, color: 'theatreSign' },
+    { id: 'th-stage', area: 'theStage', part: 'stage', name: 'The stage boards', scene: 'build', opts: { material: 'planks' }, seed: 1810 },
+    { id: 'th-props', area: 'theStage', part: 'props', name: 'Set the stage', scene: 'serve', opts: { what: 'props' }, seed: 1811, verb: 'put each prop on its mark' },
+    { id: 'th-backdrop', area: 'theStage', part: 'backdrop', name: 'Paint the backdrop', scene: 'numbers', opts: { what: 'backdrop' }, seed: 1812, how: 'Tap a jar, then the spaces with its number' },
+    { id: 'th-costume', area: 'backstage', part: 'costume', name: 'Sequins on the costume', scene: 'beads', opts: { what: 'sequins' }, seed: 1813, how: 'Carry on the pattern, sequin by sequin' },
+    { id: 'th-marquee', area: 'theatreFront', part: 'marquee', name: 'Letters on the marquee', scene: 'letters', opts: {}, seed: 1814, how: 'Each letter to its place on the board' },
+    { id: 'th-hat', area: 'backstage', part: 'hat', name: 'Who took the top hat?', scene: 'owners', opts: { what: 'hat' }, seed: 1815, how: 'Read the notes, then find out who took it' },
+  ];
+
+  const MANOR_CHORES = [
+    { id: 'ma-drive', area: 'manorGrounds', part: 'drive', name: 'The gravel drive', scene: 'sand', opts: { what: 'gravel' }, seed: 1901 },
+    { id: 'ma-lawn', area: 'manorGrounds', part: 'lawn', name: 'The great lawn', scene: 'lawn', opts: { shape: 'wide' }, seed: 1902 },
+    { id: 'ma-topiary', area: 'manorGrounds', part: 'topiary', name: 'The topiary beds', scene: 'bed', opts: { flower: 'box' }, seed: 1903 },
+    { id: 'ma-fountain', area: 'manorGrounds', part: 'fountain', name: 'The fountain', scene: 'pond', opts: { what: 'fountain', where: 'manor' }, seed: 1904 },
+    { id: 'ma-lake', area: 'manorLake', part: 'lake', name: 'The lake', scene: 'pond', opts: { what: 'lake' }, seed: 1905 },
+    { id: 'ma-door', area: 'manorFront', part: 'door', name: 'Paint the grand door', scene: 'door', opts: { what: 'grand' }, seed: 1906, color: 'manorDoor' },
+    { id: 'ma-win-left', area: 'manorFront', part: 'winLeft', name: 'The tall windows, left', scene: 'window', opts: { room: 'ballroom' }, seed: 1907 },
+    { id: 'ma-win-right', area: 'manorFront', part: 'winRight', name: 'The tall windows, right', scene: 'window', opts: { room: 'library' }, seed: 1908 },
+    { id: 'ma-ballroom', area: 'manorInside', part: 'ballroom', name: 'The ballroom floor', scene: 'cafeFloor', opts: { where: 'ballroom' }, seed: 1909 },
+    { id: 'ma-chandelier', area: 'manorInside', part: 'chandelier', name: 'The chandelier', scene: 'lantern', opts: { where: 'manor' }, seed: 1910 },
+    { id: 'ma-clock', area: 'manorFront', part: 'clock', name: 'The clock tower', scene: 'roundWindow', opts: { what: 'clock' }, seed: 1911 },
+    { id: 'ma-wisteria', area: 'manorFront', part: 'wisteria', name: 'The wisteria', scene: 'bed', opts: { flower: 'wisteria' }, seed: 1912 },
+    { id: 'ma-garden', area: 'manorGarden', part: 'garden', name: 'The kitchen garden', scene: 'plant', opts: { box: 'veg' }, seed: 1913 },
+    { id: 'ma-orchard', area: 'manorGarden', part: 'orchard', name: 'Windfalls in the orchard', scene: 'beach', opts: { items: 'apples', ground: 'grass' }, seed: 1914, verb: 'gather the apples' },
+    { id: 'ma-gate', area: 'manorGrounds', part: 'gate', name: 'Paint the iron gate', scene: 'fence', opts: { what: 'iron' }, seed: 1915, color: 'manorGate' },
+    { id: 'ma-boathouse', area: 'manorLake', part: 'boathouse', name: 'Paint the boathouse', scene: 'hut', opts: { what: 'boathouse' }, seed: 1916, color: 'manorBoathouse' },
+    { id: 'ma-library', area: 'manorInside', part: 'library', name: 'The library shelves', scene: 'books', opts: { where: 'manor' }, seed: 1917, how: 'Every series on a shelf of its own' },
+    { id: 'ma-portraits', area: 'manorInside', part: 'portraits', name: 'The portrait gallery', scene: 'seek', opts: { where: 'manor' }, seed: 1918, how: 'Find the five things hidden in the portraits' },
+    { id: 'ma-study', area: 'manorInside', part: 'study', name: 'The locked study', scene: 'lock', opts: { where: 'manor', dice: true }, seed: 1919, how: 'Add up the dice, then turn the dials' },
+    { id: 'ma-maze', area: 'manorGrounds', part: 'maze', name: 'The maze', scene: 'maze', opts: {}, seed: 1920, how: 'Find the way to the middle' },
+  ];
+
   // The puzzle room, a beta place open from the start: jobs with a little
   // thinking instead of a tool (js/puzzles.js). No machines, no robots, a
   // new layout every time, and they can be taken in any order.
@@ -382,6 +426,8 @@ const DATA = (() => {
     { id: 'beta-numbers', area: 'fromLoft', part: 'numbers', name: 'Paint by numbers', scene: 'numbers', opts: {}, seed: 616, how: 'Tap a jar, then the spaces with its number' },
     { id: 'beta-stars', area: 'fromSky', part: 'stars', name: 'Join the stars', scene: 'stars', opts: {}, seed: 617, how: 'Join the stars in order' },
     { id: 'beta-mix', area: 'fromLoft', part: 'mix', name: 'Mix the colours', scene: 'mix', opts: {}, seed: 618, how: 'Two jars in the bowl for each colour' },
+    { id: 'beta-letters', area: 'fromTheatre', part: 'letters', name: 'Letters on the marquee', scene: 'letters', opts: {}, seed: 619, how: 'Each letter to its place on the board' },
+    { id: 'beta-maze', area: 'fromManor', part: 'maze', name: 'The maze', scene: 'maze', opts: {}, seed: 620, how: 'Find the way to the middle' },
   ];
 
   // Jobs that only turn up in the seasons, for variety: planting and
@@ -461,6 +507,11 @@ const DATA = (() => {
     { id: 'x-observatory-lights', place: 'observatory', area: 'dome', name: 'Fairy lights', scene: 'lights', opts: { where: 'observatory' }, seed: 366, verb: 'hang the lights' },
     { id: 'x-lido-lights', place: 'lido', area: 'sunTerrace', name: 'Fairy lights', scene: 'lights', opts: { where: 'lido' }, seed: 367, verb: 'hang the lights' },
     { id: 'x-lido-jigsaw', place: 'lido', area: 'lidoKiosk', name: 'A jigsaw of the lido', scene: 'jigsaw', opts: { where: 'lido' }, seed: 368, how: 'Every piece to its place' },
+    // the theatre and the manor
+    { id: 'x-theatre-lights', place: 'theatre', area: 'theatreFront', name: 'Fairy lights', scene: 'lights', opts: { where: 'theatre' }, seed: 369, verb: 'hang the lights' },
+    { id: 'x-theatre-jigsaw', place: 'theatre', area: 'backstage', name: 'A jigsaw of the theatre', scene: 'jigsaw', opts: { where: 'theatre' }, seed: 370, how: 'Every piece to its place' },
+    { id: 'x-manor-lights', place: 'manor', area: 'manorFront', name: 'Fairy lights', scene: 'lights', opts: { where: 'manor' }, seed: 371, verb: 'hang the lights' },
+    { id: 'x-manor-jigsaw', place: 'manor', area: 'manorInside', name: 'A jigsaw of the manor', scene: 'jigsaw', opts: { where: 'manor' }, seed: 372, how: 'Every piece to its place' },
   ];
 
   const FAMILY_OF = {
@@ -470,7 +521,7 @@ const DATA = (() => {
     dog: 'groom', beach: 'collect', sand: 'rake', hut: 'paint', boat: 'scrub', boatPaint: 'paint', rockpool: 'skim', lantern: 'wash', lighthouse: 'paint', castle: 'build',
     coffee: 'brew', serve: 'arrange', seal: 'feed', bowls: 'feed', walk: 'walk', cat: 'brush', hutch: 'muck',
     cups: 'think', feeding: 'think', hose: 'think', beds: 'think', plan: 'think', books: 'think', pack: 'think', narrowboat: 'paint', porthole: 'wash',
-    kiln: 'scrub', owners: 'think', post: 'think', seek: 'think', lock: 'think', jigsaw: 'think', stars: 'think',
+    kiln: 'scrub', owners: 'think', post: 'think', seek: 'think', lock: 'think', jigsaw: 'think', stars: 'think', letters: 'think', maze: 'think',
     // made with your own hands: no tools, no robots, a Hint button like the puzzles
     wheel: 'craft', beads: 'craft', buttons: 'craft', numbers: 'craft', mix: 'craft',
   };
@@ -479,7 +530,8 @@ const DATA = (() => {
   // indoor jobs get no snow or falling leaves from the season outside
   const INDOOR = new Set(['cafeFloor', 'tables', 'counter', 'fridge', 'attic', 'coffee', 'bowls', 'cat', 'hutch']);
   const isIndoor = (c) => (INDOOR.has(c.scene) && !(c.scene === 'bowls' && c.opts.what === 'trough')) || (c.scene === 'van' && c.opts.stage === 'inside') || (c.scene === 'build' && c.opts.material === 'tiles' && !c.opts.pattern) || (c.scene === 'serve' && c.opts.what === 'napkins') || (c.scene === 'beach' && c.opts.ground === 'floor') ||
-    (c.scene === 'roundWindow' && (c.opts.what === 'globe' || c.opts.what === 'lens')) || (c.scene === 'lantern' && c.opts.where === 'curio');
+    (c.scene === 'roundWindow' && (c.opts.what === 'globe' || c.opts.what === 'lens' || c.opts.what === 'mirror')) || (c.scene === 'lantern' && (c.opts.where === 'curio' || c.opts.where === 'manor')) ||
+    (c.scene === 'awning' && c.opts.what === 'curtains') || (c.scene === 'serve' && c.opts.what === 'props') || c.id === 'th-stage';
 
   // What jobs pay. Kept modest: tools, helpers, decorations and new places
   // should take a while to save up for.
@@ -492,7 +544,7 @@ const DATA = (() => {
   function booksValue(i) { return Math.round(780 * Math.pow(1.06, i)); }
   // from the pottery on, a place's jobs pay its price / 90, rising 6% a job
   const byPrice = (price) => (i) => Math.round((price / 90) * Math.pow(1.06, i));
-  const potteryValue = byPrice(80000), haltValue = byPrice(90000), beadsValue = byPrice(100000), curioValue = byPrice(110000), stablesValue = byPrice(120000), loftValue = byPrice(130000), observatoryValue = byPrice(140000), lidoValue = byPrice(150000);
+  const potteryValue = byPrice(80000), haltValue = byPrice(90000), beadsValue = byPrice(100000), curioValue = byPrice(110000), stablesValue = byPrice(120000), loftValue = byPrice(130000), observatoryValue = byPrice(140000), lidoValue = byPrice(150000), theatreValue = byPrice(160000), manorValue = byPrice(250000);
   // puzzles pay like a job in the middle of the cottage: worth doing, but
   // never a shortcut past the other places
   function betaValue(i) { return Math.round(70 * Math.pow(1.15, i)); }
@@ -512,11 +564,13 @@ const DATA = (() => {
   LOFT_CHORES.forEach((c, i) => { c.index = i; c.place = 'loft'; c.family = c.family || familyOf(c.scene); c.value = loftValue(i); });
   OBSERVATORY_CHORES.forEach((c, i) => { c.index = i; c.place = 'observatory'; c.family = c.family || familyOf(c.scene); c.value = observatoryValue(i); });
   LIDO_CHORES.forEach((c, i) => { c.index = i; c.place = 'lido'; c.family = c.family || familyOf(c.scene); c.value = lidoValue(i); });
+  THEATRE_CHORES.forEach((c, i) => { c.index = i; c.place = 'theatre'; c.family = c.family || familyOf(c.scene); c.value = theatreValue(i); });
+  MANOR_CHORES.forEach((c, i) => { c.index = i; c.place = 'manor'; c.family = c.family || familyOf(c.scene); c.value = manorValue(i); });
   BETA_CHORES.forEach((c, i) => { c.index = i; c.place = 'beta'; c.family = familyOf(c.scene); c.value = betaValue(i); });
   EXTRAS.forEach((c) => { c.place = c.place || 'cottage'; c.family = c.family || familyOf(c.scene); c.extra = true; });
   // the thinking and the making jobs are puzzles wherever they live (js/puzzles.js)
   const HANDS = new Set(['think', 'craft']);
-  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (HANDS.has(c.family)) c.puzzle = true; }));
+  [CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, THEATRE_CHORES, MANOR_CHORES, BETA_CHORES, EXTRAS].forEach((l) => l.forEach((c) => { if (HANDS.has(c.family)) c.puzzle = true; }));
 
   // first cottage chore that uses each family sets the price level of its tools
   const intro = {};
@@ -909,11 +963,56 @@ const DATA = (() => {
         ['li-mosaic', 'Loose tiles in the mosaic'], ['li-terrace', 'Moss on the sun terrace'], ['li-litter', 'Blown in over the winter', null, { drained: true }],
       ],
     },
+    theatre: {
+      summer: [
+        ['th-seats', 'Sticky seats after the matinée'], ['th-foyer', 'Sweet papers in the foyer'], ['th-props', 'Set the stage for the summer play'],
+        ['th-marquee', 'A new title on the marquee'], ['th-booth', 'Fingerprints on the ticket booth'], ['th-curtains', 'Dust in the red curtains'],
+        ['th-costume', 'Sequins for the summer show'], ['th-steps', 'Scuffs on the front steps'], ['th-hat', 'Who took the top hat?'],
+      ],
+      autumn: [
+        ['th-steps', 'Leaves on the front steps', 'leaves'], ['th-roof', 'Leaves on the tin roof', 'leaves'], ['th-booth', 'Rain spots on the ticket booth'],
+        ['th-seats', 'The velvet seats before the season'], ['th-backdrop', 'A new backdrop for the autumn play'], ['th-mirror', 'Polish the dressing-room mirror'],
+        ['th-stage', 'Mend the stage boards'], ['th-hat', 'Who took the top hat this time?'], ['x-theatre-jigsaw', 'A jigsaw in the green room', null, { season: 'autumn' }],
+      ],
+      winter: [
+        ['x-theatre-lights', 'Fairy lights round the marquee'], ['th-steps', 'Snow on the front steps', 'snow'], ['th-roof', 'Snow on the tin roof', 'snow'],
+        ['th-booth', 'Frost on the ticket booth', 'frost'], ['th-foyer', 'Wet footprints in the foyer'], ['th-props', 'Set the stage for the pantomime'],
+        ['th-costume', 'Sequins for the pantomime'], ['th-marquee', 'The pantomime on the marquee'], ['x-theatre-jigsaw', 'A winter jigsaw in the green room', null, { season: 'winter' }],
+      ],
+      spring: [
+        ['th-door', 'A new colour for the stage door'], ['th-sign', 'Repaint the sign'], ['th-roof', 'Moss on the tin roof'],
+        ['th-curtains', 'Spring clean for the curtains'], ['th-stage', 'New boards for the stage'], ['th-mirror', 'Spring shine on the mirror'],
+        ['th-backdrop', 'A spring backdrop'], ['th-marquee', 'A spring title on the marquee'], ['th-seats', 'Spring clean in the stalls'],
+      ],
+    },
+    manor: {
+      summer: [
+        ['ma-lawn', 'The great lawn in June'], ['ma-topiary', 'Weeds round the topiary'], ['ma-wisteria', 'The wisteria after the flowers'],
+        ['ma-fountain', 'A green tinge in the fountain'], ['ma-lake', 'Duckweed on the lake'], ['ma-garden', 'Beans in the kitchen garden'],
+        ['ma-win-left', 'Summer dust on the tall windows'], ['ma-boathouse', 'A fresh coat for the boathouse'], ['ma-maze', 'Lost in the maze'],
+        ['ma-portraits', 'The portrait gallery'],
+      ],
+      autumn: [
+        ['ma-drive', 'Leaves on the gravel drive', 'leaves'], ['ma-lawn', 'Leaves on the great lawn', 'leaves'], ['ma-lake', 'Leaves on the lake', 'leaves'],
+        ['ma-fountain', 'Leaves in the fountain', 'leaves'], ['ma-orchard', 'Windfalls in the orchard'], ['ma-garden', 'Pumpkins in the kitchen garden'],
+        ['ma-library', 'The library after the summer'], ['ma-study', 'The locked study'], ['x-manor-jigsaw', 'A jigsaw in the library', null, { season: 'autumn' }],
+      ],
+      winter: [
+        ['x-manor-lights', 'Fairy lights along the front'], ['ma-drive', 'Snow on the gravel drive', 'snow'], ['ma-lawn', 'Snow on the great lawn', 'snow'],
+        ['ma-win-right', 'Frost on the tall windows', 'frost'], ['ma-win-left', 'Frost on the ballroom windows', 'frost'], ['ma-ballroom', 'The ballroom before the winter dance'],
+        ['ma-chandelier', 'The chandelier for the winter dance'], ['ma-library', 'A quiet afternoon in the library'], ['x-manor-jigsaw', 'A winter jigsaw by the fire', null, { season: 'winter' }],
+      ],
+      spring: [
+        ['ma-drive', 'Rake the gravel drive'], ['ma-wisteria', 'Wisteria buds in spring'], ['ma-topiary', 'Spring weeds round the topiary'],
+        ['ma-door', 'A new colour for the grand door'], ['ma-gate', 'Fresh paint for the iron gate'], ['ma-clock', 'Spring clean on the clock'],
+        ['ma-garden', 'Spring sowing in the kitchen garden'], ['ma-portraits', 'Spring clean in the portrait gallery'], ['ma-maze', 'The maze in spring'],
+      ],
+    },
   };
   // Christmas lights always come with winter, and the lido's empty pool always
   // has its season's job (leaves, snow, then the scrub before it is filled)
-  const ALWAYS = new Set(['li-tiles', 'x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights', 'x-pottery-lights', 'x-halt-lights', 'x-beads-lights', 'x-curio-lights', 'x-stables-lights', 'x-loft-lights', 'x-observatory-lights', 'x-lido-lights']);
-  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5, pottery: 5, halt: 5, beads: 5, curio: 5, stables: 5, loft: 5, observatory: 5, lido: 5 };
+  const ALWAYS = new Set(['li-tiles', 'x-lights', 'x-cafe-lights', 'x-cove-lights', 'x-rescue-lights', 'x-glass-lights', 'x-canal-lights', 'x-books-lights', 'x-pottery-lights', 'x-halt-lights', 'x-beads-lights', 'x-curio-lights', 'x-stables-lights', 'x-loft-lights', 'x-observatory-lights', 'x-lido-lights', 'x-theatre-lights', 'x-manor-lights']);
+  const PER_SEASON = { cottage: 6, cafe: 6, cove: 5, rescue: 5, glasshouse: 5, canal: 5, books: 5, pottery: 5, halt: 5, beads: 5, curio: 5, stables: 5, loft: 5, observatory: 5, lido: 5, theatre: 5, manor: 5 };
   // at most this many jobs of one kind in a season (default 2); one puzzle and
   // one thing made by hand per place
   const FAMILY_CAP = { mow: 1, paint: 2, rake: 2, snow: 2, plant: 2, build: 1, polish: 1, arrange: 2, brew: 1, walk: 1, brush: 1, muck: 1, think: 1, craft: 1 };
@@ -926,7 +1025,7 @@ const DATA = (() => {
     const ceiling = 1.6 + 0.1 * Math.max(0, places - 7);
     return Math.round(choreValue(CHORES.length - 1) * 0.4 * Math.min(ceiling, Math.pow(1.05, n - 1)) * (1 + i * 0.04));
   }
-  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, EXTRAS);
+  const ALL = () => CHORES.concat(CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, THEATRE_CHORES, MANOR_CHORES, EXTRAS);
   const byId = (id) => ALL().find((c) => c.id === id);
   // leaves in water are skimmed with a net, never raked
   const famFor = (b, dirt) => (dirt === 'leaves' ? (b.scene === 'pond' || b.scene === 'rockpool' ? 'skim' : 'rake') : dirt === 'snow' ? 'snow' : dirt === 'frost' ? 'wash' : b.family);
@@ -936,7 +1035,7 @@ const DATA = (() => {
   // and jobs from the same season last year pushed to the back.
   function pickSeason(n, place, history = true) {
     const pool = SEASON_POOL[place][seasonOf(n)];
-    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057, pottery: 729173, halt: 833177, beads: 937207, curio: 1041271, stables: 1145393, loft: 1249427, observatory: 1353487, lido: 1457551 }[place]);
+    const r = U.rng(n * 7919 + { cottage: 0, cafe: 104729, cove: 208759, rescue: 312899, glasshouse: 416951, canal: 521009, books: 625057, pottery: 729173, halt: 833177, beads: 937207, curio: 1041271, stables: 1145393, loft: 1249427, observatory: 1353487, lido: 1457551, theatre: 1561607, manor: 1665673 }[place]);
     const last = history && n > 4 ? new Set(pickSeason(n - 4, place, false)) : new Set();
     const scored = pool.map((p) => ({ p, s: r() + (last.has(p[0]) ? 0.6 : 0) - (ALWAYS.has(p[0]) ? 2 : 0) })).sort((a, b) => a.s - b.s).map((x) => x.p);
     const want = PER_SEASON[place], picked = [], count = {};
@@ -1055,7 +1154,7 @@ const DATA = (() => {
     { name: 'Terracotta', c: '#d98b63' }, { name: 'Butter', c: '#f2d88a' }, { name: 'Cream', c: '#f4ecdc' },
     { name: 'Forest', c: '#4e7b5b' }, { name: 'Navy', c: '#3d5a86' }, { name: 'Charcoal', c: '#4b4a52' },
   ];
-  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86', potteryDoor: '#9cc5a1', potterySign: '#d98b63', haltSign: '#c9474f', haltDoor: '#4e7b5b', haltGate: '#f4ecdc', beadSign: '#efb4ae', beadDoor: '#a6d3d4', curioSign: '#c9474f', curioDoor: '#4e7b5b', stableFence: '#f4ecdc', stableDoor: '#4e7b5b', jumps: '#c9474f', stableSign: '#4e7b5b', loftDoor: '#3d5a86', loftSign: '#d98b63', swingSeat: '#f2d88a', obsDoor: '#3d5a86', obsSign: '#d98b63', lidoHuts: '#efb4ae', lidoGate: '#a6d3d4', lidoSign: '#c9474f' };
+  const DEFAULT_COLOURS = { fence: '#f4ecdc', door: '#4e7b5b', wall: '#f2d88a', shutters: '#a6d3d4', sign: '#3d5a86', cafeDoor: '#c9474f', awning: '#2f8068', hut: '#8fbfe6', boat: '#c9474f', stripes: '#c9474f', paddock: '#f4ecdc', rescueDoor: '#3d5a86', rescueSign: '#4e7b5b', pottingShed: '#9cc5a1', gardenDoor: '#3d5a86', narrowboat: '#4e7b5b', lockFence: '#f4ecdc', lockDoor: '#c9474f', dinghy: '#8fbfe6', lockSign: '#3d5a86', bookSign: '#4e7b5b', bookDoor: '#3d5a86', potteryDoor: '#9cc5a1', potterySign: '#d98b63', haltSign: '#c9474f', haltDoor: '#4e7b5b', haltGate: '#f4ecdc', beadSign: '#efb4ae', beadDoor: '#a6d3d4', curioSign: '#c9474f', curioDoor: '#4e7b5b', stableFence: '#f4ecdc', stableDoor: '#4e7b5b', jumps: '#c9474f', stableSign: '#4e7b5b', loftDoor: '#3d5a86', loftSign: '#d98b63', swingSeat: '#f2d88a', obsDoor: '#3d5a86', obsSign: '#d98b63', lidoHuts: '#efb4ae', lidoGate: '#a6d3d4', theatreDoor: '#8c2f39', theatreSign: '#d8ae4e', manorDoor: '#3d5a86', manorGate: '#2f3d36', manorBoathouse: '#4e7b5b', lidoSign: '#c9474f' };
 
   // one keepsake hidden in each job, found the first time through
   const FINDS = {
@@ -1146,7 +1245,20 @@ const DATA = (() => {
     'li-kiosk': ['🍭', 'A lollipop stick with a joke on it'], 'li-windows': ['🥄', 'A little wooden ice-cream spoon'], 'li-board': ['🏅', 'A diving medal'],
     'li-steps': ['🕶️', 'Sunglasses from the deep end'], 'li-mosaic': ['🌟', 'A gold tile from the starfish'], 'li-palms': ['🦎', 'A tiny gecko on a pot'],
     'li-litter': ['🏐', 'A very small beach ball'], 'li-chairs': ['📕', 'A holiday paperback, swollen with water'], 'li-ices': ['🍦', 'The last cone of the summer'],
+    'th-steps': ['🎟️', 'A front-row ticket'], 'th-foyer': ['🍬', 'A toffee from the interval'], 'th-seats': ['🪙', 'A coin down the back of a seat'],
+    'th-curtains': ['🪡', 'A needle still threaded with gold'], 'th-roof': ['🕊️', 'A dove that lives in the rafters'], 'th-booth': ['🖋️', 'The booking clerk\'s pen'],
+    'th-mirror': ['💄', 'A stub of stage lipstick'], 'th-door': ['⭐', 'A tin star from a dressing room'], 'th-sign': ['🎭', 'A tiny mask'],
+    'th-stage': ['🧵', 'A curl of gaffer tape'], 'th-props': ['👑', 'A cardboard crown'], 'th-backdrop': ['🖌️', 'A scene painter\'s brush'],
+    'th-costume': ['🪩', 'One perfect sequin'], 'th-marquee': ['🔠', 'A spare letter Q'], 'th-hat': ['🎩', 'The top hat, found at last'],
+    'ma-drive': ['🪨', 'A pebble shaped like a heart'], 'ma-lawn': ['🏏', 'A croquet ball from long ago'], 'ma-topiary': ['🐦', 'A bird that thinks the hedge is a bird'],
+    'ma-fountain': ['🪙', 'A wish from a hundred years ago'], 'ma-lake': ['🦆', 'A wooden decoy duck'], 'ma-door': ['🔔', 'The butler\'s little bell'],
+    'ma-win-left': ['🪞', 'A hand mirror with a silver back'], 'ma-win-right': ['🔖', 'A bookmark in a neat hand'], 'ma-ballroom': ['🧤', 'One long white glove'],
+    'ma-chandelier': ['💎', 'A drop of crystal'], 'ma-clock': ['🕰️', 'The clock tower\'s spare key'], 'ma-wisteria': ['🪻', 'A pressed sprig of wisteria'],
+    'ma-garden': ['🥕', 'A carrot with two legs'], 'ma-orchard': ['🍎', 'The last apple on the tree'], 'ma-gate': ['🪝', 'An old iron latch'],
+    'ma-boathouse': ['🛶', 'A toy boat in the rafters'], 'ma-library': ['📜', 'A letter in a drawer'], 'ma-portraits': ['🦚', 'A peacock feather'],
+    'ma-study': ['🗝️', 'The key to the study'], 'ma-maze': ['🧶', 'A ball of string, just in case'],
     'beta-numbers': ['🖍️', 'A crayon worn down to a stub'], 'beta-stars': ['🌠', 'A star you joined up yourself'], 'beta-mix': ['🧪', 'A little jar of a new colour'],
+    'beta-letters': ['🔤', 'A letter from an old marquee'], 'beta-maze': ['🌿', 'A clipping from the middle of the maze'],
   };
 
   // what you do in each kind of job, for the first-time hint
@@ -1353,6 +1465,40 @@ const DATA = (() => {
     { id: 'oh-moonflower', name: 'A glowing moonflower', icon: '🌙', cost: 20450 },
     { id: 'oh-vane', name: 'A copper weathervane', icon: '🧭', cost: 28000 },
   ];
+  const THEATRE_DECOR = [
+    { id: 'lt-bunting', name: 'Bunting over the door', icon: '🎏', cost: 1600 },
+    { id: 'lt-cat', name: 'The theatre cat', icon: '🐈', cost: 2300 },
+    { id: 'lt-rope', name: 'A velvet rope', icon: '🎗️', cost: 3100 },
+    { id: 'lt-ticket', name: 'A roll of tickets', icon: '🎟️', cost: 4050 },
+    { id: 'lt-poster', name: 'A framed poster', icon: '🖼️', cost: 5300 },
+    { id: 'lt-star', name: 'A star on the stage door', icon: '⭐', cost: 6900 },
+    { id: 'lt-gramophone', name: 'A gramophone', icon: '📯', cost: 8850 },
+    { id: 'lt-spotlight', name: 'A spotlight', icon: '🔦', cost: 11200 },
+    { id: 'lt-lights', name: 'Fairy lights round the marquee', icon: '✨', cost: 14300 },
+    { id: 'lt-puppets', name: 'A pair of puppets', icon: '🎎', cost: 17600 },
+    { id: 'lt-chandelier', name: 'A little chandelier', icon: '💡', cost: 23400 },
+    { id: 'lt-piano', name: 'An upright piano', icon: '🎹', cost: 32000 },
+  ];
+
+  const MANOR_DECOR = [
+    { id: 'wm-dog', name: 'A dog on the steps', icon: '🐕', cost: 2500 },
+    { id: 'wm-cat', name: 'A cat in a window', icon: '🐈', cost: 3200 },
+    { id: 'wm-flag', name: 'A flagpole', icon: '🚩', cost: 4100 },
+    { id: 'wm-sundial', name: 'A sundial', icon: '☀️', cost: 5200 },
+    { id: 'wm-swing', name: 'A swing in the oak', icon: '🪢', cost: 6600 },
+    { id: 'wm-lanterns', name: 'Lanterns along the drive', icon: '🏮', cost: 8400 },
+    { id: 'wm-statue', name: 'A statue', icon: '🗿', cost: 10600 },
+    { id: 'wm-lights', name: 'Fairy lights along the front', icon: '✨', cost: 13500 },
+    { id: 'wm-rosearch', name: 'A rose arch', icon: '🌹', cost: 17000 },
+    { id: 'wm-jetty', name: 'A jetty on the lake', icon: '🛟', cost: 19500 },
+    { id: 'wm-rowboat', name: 'A rowing boat', icon: '🚣', cost: 22500 },
+    { id: 'wm-lions', name: 'Stone lions by the steps', icon: '🦁', cost: 26000 },
+    { id: 'wm-fountainfig', name: 'A figure for the fountain', icon: '⛲', cost: 30000 },
+    { id: 'wm-glasshouse', name: 'A little glasshouse', icon: '🏡', cost: 35000 },
+    { id: 'wm-gazebo', name: 'A summer house', icon: '🛖', cost: 42000 },
+    { id: 'wm-peacock', name: 'A peacock', icon: '🦚', cost: 50000 },
+  ];
+
   const LIDO_DECOR = [
     { id: 'sb-bunting', name: 'Bunting over the pool', icon: '🎏', cost: 1500 },
     { id: 'sb-flamingo', name: 'A flamingo pool float', icon: '🦩', cost: 2150 },
@@ -1370,7 +1516,7 @@ const DATA = (() => {
   const DECOR_UNLOCK = 6;
 
   // The places you can own; the picture of each is drawn by HOUSE, CAFE, COVE,
-  // RESCUE, GLASSHOUSE, CANAL, BOOKS, POTTERY, HALT, BEADS, CURIO, STABLES, LOFT, OBSERVATORY, LIDO or BETA. A place goes up for sale once
+  // RESCUE, GLASSHOUSE, CANAL, BOOKS, POTTERY, HALT, BEADS, CURIO, STABLES, LOFT, OBSERVATORY, LIDO, THEATRE, MANOR or BETA. A place goes up for sale once
   // the one it needs is restored and `wait` more seasons have turned (main.js).
   const PLACES = [
     { id: 'cottage', name: 'Ivy Cottage', short: 'the cottage', blurb: 'The forgotten cottage where it all began.', price: 0, chores: CHORES, decor: DECOR, done: 'The cottage is lovely again', lights: 'lights' },
@@ -1389,14 +1535,16 @@ const DATA = (() => {
     { id: 'loft', name: 'The Painter\'s Loft', short: 'the loft', toolPrice: 2, blurb: 'A studio in an old hay loft: a skylight, easels, a store of frames and a long wall in the yard. Clean it, mend it and paint with your own hands.', price: 130000, needs: 'stables', wait: 4, chores: LOFT_CHORES, decor: LOFT_DECOR, done: 'The loft is open again', lights: 'pl-lights' },
     { id: 'observatory', name: 'Owl Hill Observatory', short: 'the observatory', toolPrice: 2, blurb: 'A little Victorian observatory on a hill: a copper dome, a brass telescope, a map room and an owl in the oak. Polish it, mend it and join the stars.', price: 140000, needs: 'loft', wait: 4, chores: OBSERVATORY_CHORES, decor: OBSERVATORY_DECOR, done: 'The observatory is lovely again', lights: 'oh-lights' },
     { id: 'lido', name: 'Sunnybank Lido', short: 'the lido', toolPrice: 2, blurb: 'An art deco open-air pool with pale blue tiles, a fountain, a diving board and striped deck chairs. Scrub it, mend it and fill it for the summer.', price: 150000, needs: 'observatory', wait: 4, chores: LIDO_CHORES, decor: LIDO_DECOR, done: 'The lido is open again', lights: 'sb-lights' },
+    { id: 'theatre', name: 'The Little Theatre', short: 'the theatre', toolPrice: 2, blurb: 'A tin-roofed village hall that became a little theatre: red curtains, velvet seats, a ticket booth and a marquee with its letters gone. Mend it, paint the backdrop and find out who took the top hat.', price: 160000, needs: 'lido', wait: 4, chores: THEATRE_CHORES, decor: THEATRE_DECOR, done: 'The theatre is open again', lights: 'lt-lights' },
+    { id: 'manor', name: 'Wisteria Manor', short: 'the manor', toolPrice: 2, blurb: 'The big house on the hill that every place in the village can see: wisteria on the stone, a ballroom, a library, a clock tower, a maze and a lake. The last and the longest of them all.', price: 250000, needs: 'theatre', wait: 8, chores: MANOR_CHORES, decor: MANOR_DECOR, done: 'Wisteria Manor is lovely again', lights: 'wm-lights' },
     // open from the start and outside the order above: never bought, never in the seasons
     { id: 'beta', name: 'The Puzzle Room', short: 'the puzzle room', beta: true, blurb: 'New kinds of jobs to try: no tools, just a little thinking. Each one comes out different every time.', price: 0, chores: BETA_CHORES, decor: [], done: 'Every puzzle is solved' },
   ].filter((p) => !p.soon); // a place still being built can be hidden with soon: true
   const placeOf = (id) => PLACES.find((p) => p.id === id) || PLACES[0];
 
   return {
-    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
-    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, BEAD_DECOR, CURIO_DECOR, STABLE_DECOR, LOFT_DECOR, OBSERVATORY_DECOR, LIDO_DECOR, DECOR_UNLOCK, SEASON_NAMES,
+    AREAS, CHORES, CAFE_CHORES, COVE_CHORES, RESCUE_CHORES, GLASS_CHORES, CANAL_CHORES, BOOK_CHORES, POTTERY_CHORES, HALT_CHORES, BEAD_CHORES, CURIO_CHORES, STABLE_CHORES, LOFT_CHORES, OBSERVATORY_CHORES, LIDO_CHORES, THEATRE_CHORES, MANOR_CHORES, BETA_CHORES, EXTRAS, PLACES, placeOf, FINDS, SEASON_FINDS, SEASON_ORDER, VERBS,
+    DECOR, CAFE_DECOR, COVE_DECOR, RESCUE_DECOR, GLASS_DECOR, CANAL_DECOR, BOOK_DECOR, POTTERY_DECOR, HALT_DECOR, BEAD_DECOR, CURIO_DECOR, STABLE_DECOR, LOFT_DECOR, OBSERVATORY_DECOR, LIDO_DECOR, THEATRE_DECOR, MANOR_DECOR, DECOR_UNLOCK, SEASON_NAMES,
     seasonOf, seasonJobs, awakePlaces, SEASON_BUDGET, PER_SEASON, seasonValue, FAMILY_SEASON, toolCost, oldToolCost, shedRefund, HELPER_COSTS, HELPER_UNLOCK, PAINTS, DEFAULT_COLOURS, choreValue, intro, isIndoor,
   };
 })();

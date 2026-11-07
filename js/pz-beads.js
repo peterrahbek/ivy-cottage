@@ -6,7 +6,7 @@
 // of its own. Drag the next bead from the box to the next place on the thread
 // (only that place takes one, so there is never a gap): the right bead clicks
 // on with a little bounce, any other glides back to the box.
-// opts.what: undefined (a necklace on a velvet tray), 'bracelet' (twelve
+// opts.what: undefined (a necklace on a velvet tray), 'sequins' (a row round the neck of a costume), 'bracelet' (twelve
 // places round a little cushion), 'collar' (a cat's collar with a buckle) or
 // 'mane' (ribbons along the plait in a pony's mane, out of a wooden saddle box).
 //   node test/run.mjs puzzle js/pz-beads.js beads --seeds 30 [--opts '{"what":"bracelet"}']
@@ -171,6 +171,11 @@
       size: 27, inside: [620, 220], crop: { x: 0, y: 44, w: 360, h: 360 },
       make: () => along(maneAt, 0.03, 0.985, N),
     },
+    // a row of sequins round the neck of a stage costume on its dress form
+    sequins: {
+      size: 34, inside: [180, 150], crop: { x: 0, y: 40, w: 360, h: 360 },
+      make: () => along((u) => [44 + 272 * u, 98 + 240 * (1 - Math.pow(Math.abs(2 * u - 1), 2.2))], 0.035, 0.965, N),
+    },
   };
 
   // the smallest period of a row of beads read straight through
@@ -243,7 +248,7 @@
         c.fillStyle = '#f0d6d0'; c.fillRect(x0, y0, x1 - x0, 46 - y0);
         c.fillStyle = 'rgba(205,140,140,0.2)'; for (let x = Math.floor(x0 / 18) * 18; x < x1; x += 18) c.fillRect(x, y0, 7, 46 - y0);
       }
-      PZ.text(c, what === 'mane' ? 'Carry on the pattern, ribbon by ribbon' : 'Carry on the pattern, bead by bead', W / 2, 22, { size: 13, color: INK2, maxW: 340 });
+      PZ.text(c, what === 'mane' ? 'Carry on the pattern, ribbon by ribbon' : what === 'sequins' ? 'Carry on the pattern, sequin by sequin' : 'Carry on the pattern, bead by bead', W / 2, 22, { size: 13, color: INK2, maxW: 340 });
     }
     function table(c) {
       const { x0, x1, y1 } = S.bleed, rr = U.rng(4517);
@@ -282,6 +287,22 @@
       c.lineCap = 'round'; c.lineJoin = 'round';
       c.strokeStyle = 'rgba(0,0,0,0.3)'; c.lineWidth = 3; poly(c, ps, 0.8, 1.4); c.stroke();
       c.strokeStyle = '#f3e3c3'; c.lineWidth = 2; poly(c, ps); c.stroke();
+    }
+    // the costume on its dress form: deep blue velvet, gold braid at the shoulders
+    function sequinBase(c) {
+      c.fillStyle = 'rgba(60,40,20,0.22)'; PZ.rr(c, 19, 53, 328, 352, 22); c.fill();
+      c.fillStyle = '#6e2630'; PZ.rr(c, 16, 48, 328, 352, 22); c.fill();
+      c.fillStyle = 'rgba(30,8,14,0.2)'; for (let x = 28; x < 340; x += 26) c.fillRect(x, 50, 11, 348);
+      c.save(); PZ.rr(c, 16, 48, 328, 352, 22); c.clip();
+      const dress = () => { c.beginPath(); c.moveTo(34, 58); c.quadraticCurveTo(10, 150, 58, 260); c.quadraticCurveTo(84, 330, 66, 404); c.lineTo(294, 404); c.quadraticCurveTo(276, 330, 302, 260); c.quadraticCurveTo(350, 150, 326, 58); c.closePath(); };
+      c.fillStyle = '#2b3a66'; dress(); c.fill();
+      c.save(); dress(); c.clip(); nap(c, 16, 48, 328, 352, 1100); c.restore();
+      c.fillStyle = 'rgba(0,0,0,0.16)'; c.beginPath(); c.moveTo(150, 330); c.quadraticCurveTo(180, 404, 170, 404); c.lineTo(190, 404); c.quadraticCurveTo(180, 404, 210, 330); c.closePath(); c.fill();
+      // the neckline, cut away to the lining
+      c.fillStyle = '#f0e4cc'; c.beginPath(); c.moveTo(74, 58); c.quadraticCurveTo(180, 240, 286, 58); c.closePath(); c.fill();
+      c.strokeStyle = '#d8ae4e'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(74, 58); c.quadraticCurveTo(180, 240, 286, 58); c.stroke();
+      c.restore();
+      thread(c, pts);
     }
     function necklaceBase(c) {
       const x = 16, y = 48, w = 328, h = 352;
@@ -562,7 +583,7 @@
       decor(c) {
         wall(c);
         table(c);
-        if (what === 'bracelet') braceletBase(c); else if (what === 'collar') collarBase(c); else if (what === 'mane') maneBase(c); else necklaceBase(c);
+        if (what === 'bracelet') braceletBase(c); else if (what === 'collar') collarBase(c); else if (what === 'mane') maneBase(c); else if (what === 'sequins') sequinBase(c); else necklaceBase(c);
         box(c);
       },
       draw(c, t, still) {

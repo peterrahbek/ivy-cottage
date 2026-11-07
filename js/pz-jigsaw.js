@@ -6,7 +6,7 @@
 // to turn and no timer. The postcard shows one of the places, drawn here
 // in canvas: opts.where 'curio', 'cottage', 'cafe', 'cove', 'rescue',
 // 'glasshouse', 'canal', 'books', 'pottery', 'halt', 'beads', 'stables', 'loft',
-// 'observatory' (a night sky) or 'lido' (without it one is picked), and
+// 'observatory' (a night sky), 'lido', 'theatre' or 'manor' (without it one is picked), and
 // opts.season 'autumn' or 'winter' turns its trees and roofs to the season.
 //   node test/run.mjs puzzle js/pz-jigsaw.js jigsaw --seeds 30 [--opts '{"where":"cove","season":"winter"}']
 
@@ -897,6 +897,66 @@
         for (let k = 0; k < 6; k++) { const a = -30 + k * 10; c.beginPath(); c.moveTo(P, 108); c.quadraticCurveTo(P + a * 0.6, 110, P + a, 128); c.lineTo(P + a + 10, 128); c.quadraticCurveTo(P + (a + 10) * 0.6, 110, P, 108); fill(c, k % 2 ? CREAM : CORAL); }
         chair(6, 188); chair(268, 208);
       } else { poly(c, [[P - 4, 122], [P + 4, 122], [P + 2, 152], [P - 2, 152]], CORAL); poly(c, [[P - 1.6, 122], [P + 1.6, 122], [P + 0.8, 152], [P - 0.8, 152]], CREAM); if (pal.snow) oval(c, P, 122, 5, 2, SNOW); }
+    } },
+
+    theatre: { name: 'The Little Theatre', of: 'The Little Theatre', draw(c, pal, r) {
+      const RED = '#a93a3f', RED_DK = '#7c2c36', GOLD = '#d8ae4e', NAVY = '#2b3a66', CREAM = '#f4e7cd', TIN = '#a9b2b8';
+      sky(c, pal, r, { sunX: 56, clouds: [[120, 26, 0.8], [226, 18, 0.9]] });
+      rect(c, 0, 168, PW, PH - 168, pal.snow ? SNOW : '#cdbfa8');
+      cobbles(c, pal, 168, r, pal.snow ? '#e7edf2' : '#c9bca6');
+      if (pal.canopy) { tree(c, pal, 22, 170, 72, r); tree(c, pal, 280, 172, 60, r); }
+      // the hall: tall red boards under a corrugated tin roof
+      rect(c, 58, 76, 184, 96, RED);
+      for (let x = 62; x < 242; x += 9) rect(c, x, 76, 1, 96, 'rgba(70,20,25,0.28)');
+      roof(c, pal, [[50, 78], [150, 26], [250, 78]], TIN, '#7f8a92');
+      if (!pal.snow) for (let k = -8; k <= 8; k++) line(c, 'rgba(70,80,90,0.32)', 0.8, [[150 + k * 1.8, 34], [150 + k * 11.4, 76]]);
+      // a round window in the gable and a poster each side of the doors
+      dot(c, 150, 58, 8, GOLD); dot(c, 150, 58, 6, '#fdeec2');
+      for (const x of [74, 204]) { rect(c, x, 112, 24, 34, GOLD); rect(c, x + 2, 114, 20, 30, CREAM); rect(c, x + 5, 118, 14, 12, NAVY); dot(c, x + 12, 124, 3.4, GOLD); }
+      // the marquee over the doors, its bulbs and the title of the play
+      rect(c, 90, 86, 120, 24, NAVY); rect(c, 86, 110, 128, 4, GOLD);
+      word(c, 'TONIGHT', 150, 98, 12.5, '#fdeec2', 900, SERIF);
+      for (let x = 92; x <= 208; x += 8) dot(c, x, 84, 1.3, '#ffe39b');
+      doorAt(c, 134, 122, 32, 50, RED_DK, true, null); rect(c, 149, 126, 2, 46, '#4a1c22');
+      ledge(c, pal, 90, 86, 120);
+      // the front steps and a little ticket booth at the side
+      rect(c, 122, 172, 56, 5, '#d8cdb9'); rect(c, 114, 177, 72, 5, '#c8bda8');
+      rect(c, 232, 126, 30, 46, CREAM); rect(c, 236, 134, 22, 18, '#ffd98a'); rect(c, 230, 120, 34, 7, RED_DK); word(c, 'TICKETS', 247, 160, 5.4, RED_DK, 900);
+      ledge(c, pal, 230, 120, 34);
+      if (pal.flowers) flowers(c, pal, 40, 110, 178, r, pal.flowers);
+    } },
+
+    manor: { name: 'Wisteria Manor', of: 'Wisteria Manor', draw(c, pal, r) {
+      const STONE = '#d9cfbc', STONE_DK = '#b9ad97', SLATE = '#6d7682', GLASS = pal.snow ? '#c9dbe6' : '#9ec3d4', GOLD = '#d8ae4e';
+      sky(c, pal, r, { sunX: 262, clouds: [[58, 24, 0.9], [150, 16, 0.6]] });
+      if (pal.canopy) { tree(c, pal, 24, 134, 70, r); tree(c, pal, 278, 134, 76, r); }
+      // the long stone front, two wings and the clock tower in the middle
+      rect(c, 40, 74, 220, 66, STONE);
+      roof(c, pal, [[32, 76], [56, 54], [244, 54], [268, 76]], SLATE, '#525a64');
+      rect(c, 128, 40, 44, 100, STONE_DK); rect(c, 132, 40, 36, 100, STONE);
+      roof(c, pal, [[124, 42], [150, 16], [176, 42]], SLATE, '#525a64');
+      dot(c, 150, 58, 11.5, GOLD); dot(c, 150, 58, 9.6, '#fdf7e6');
+      line(c, '#3b352e', 1.4, [[150, 58], [150, 51]]); line(c, '#3b352e', 1.4, [[150, 58], [155, 60]]);
+      // the tall windows, two rows, and the grand door up its steps
+      for (const x of [50, 72, 94, 182, 204, 226]) { windowAt(c, x, 84, 12, 19, '#efe8d8', GLASS, 2, 3, false); windowAt(c, x, 112, 12, 24, '#efe8d8', GLASS, 2, 3, false); }
+      doorAt(c, 139, 104, 22, 36, '#3d5a86', true, '#fdeec2');
+      rect(c, 128, 140, 44, 4, '#cfc4af'); rect(c, 120, 144, 60, 4, '#c1b59f');
+      // wisteria over the stone, in flower unless the year says otherwise
+      const bloom = pal.snow ? null : pal.leaves ? '#c9b98a' : '#a58ad8';
+      if (bloom) for (let k = 0; k < 90; k++) { const x = 40 + r() * 88 + (r() < 0.5 ? 132 : 0); oval(c, Math.min(258, x), 74 + r() * 8 + (x % 19) * 0.6, 2.2, 3.4, r() < 0.5 ? bloom : U.shade(bloom, 0.16)); }
+      ledge(c, pal, 40, 74, 220);
+      // the gravel drive, the lawn either side and the fountain in its circle
+      rect(c, 0, 140, PW, PH - 140, pal.grass);
+      poly(c, [[118, 148], [182, 148], [262, PH], [38, PH]], pal.snow ? '#e6ecf1' : '#dccdb0');
+      for (let k = 0; k < 60; k++) dot(c, 70 + r() * 160, 150 + r() * 74, 0.7, pal.snow ? '#d5dee6' : 'rgba(130,110,80,0.4)');
+      oval(c, 150, 186, 44, 15, pal.snow ? '#f0f4f7' : '#cfc4af'); oval(c, 150, 184, 36, 11, pal.snow ? '#dbe7ef' : '#9ec9dc');
+      rect(c, 147, 166, 6, 18, '#c1b59f'); oval(c, 150, 166, 12, 3.5, '#d9cfbc');
+      if (!pal.snow) for (const k of [-1, 1]) line(c, '#d7ecf5', 1, [[150, 166], [150 + k * 7, 172], [150 + k * 11, 182]]);
+      // clipped topiary down both sides
+      for (const [x, y, k] of [[28, 156, 1], [64, 150, 0.8], [272, 156, 1], [236, 150, 0.8], [14, 190, 1.3], [286, 190, 1.3]]) {
+        const col = pal.snow ? '#e3ebf0' : '#4f7f4a';
+        oval(c, x, y + 10 * k, 12 * k, 3 * k, 'rgba(40,50,30,0.2)'); dot(c, x, y, 10 * k, col); dot(c, x, y - 12 * k, 6.6 * k, U.shade(col, 0.1));
+      }
     } },
   };
   const WHERE = Object.keys(MOTIFS);

@@ -1053,6 +1053,21 @@
       c.restore();
     }
     // a stylised breaking wave: the crest curling over in bands, two swells below it
+    // a theatre mask: a rounded shield with arched eyes and a wide smile
+    function maskIcon(c, x, y, s) {
+      c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-s * 1.12, -s * 0.92);
+      c.quadraticCurveTo(0, -s * 1.3, s * 1.12, -s * 0.92);
+      c.bezierCurveTo(s * 1.24, s * 0.2, s * 0.72, s * 1.12, 0, s * 1.24);
+      c.bezierCurveTo(-s * 0.72, s * 1.12, -s * 1.24, s * 0.2, -s * 1.12, -s * 0.92);
+      c.closePath();
+      c.fillStyle = '#f6ecd6'; c.fill(); c.strokeStyle = '#d8ae4e'; c.lineWidth = s * 0.16; c.stroke();
+      c.fillStyle = '#2b2233';
+      for (const k of [-1, 1]) { c.beginPath(); c.moveTo(k * s * 0.72, -s * 0.2); c.quadraticCurveTo(k * s * 0.44, -s * 0.74, k * s * 0.16, -s * 0.2); c.quadraticCurveTo(k * s * 0.44, -s * 0.36, k * s * 0.72, -s * 0.2); c.closePath(); c.fill(); }
+      c.beginPath(); c.moveTo(-s * 0.62, s * 0.28); c.quadraticCurveTo(0, s * 0.42, s * 0.62, s * 0.28); c.quadraticCurveTo(s * 0.34, s * 1.0, 0, s * 0.98); c.quadraticCurveTo(-s * 0.34, s * 1.0, -s * 0.62, s * 0.28); c.closePath();
+      c.fillStyle = '#8c2f39'; c.fill();
+      c.restore();
+    }
     function waveIcon(c, x, y, s) {
       c.save(); c.translate(x, y); c.lineJoin = 'round'; c.lineCap = 'round';
       const shape = () => {
@@ -1437,6 +1452,7 @@
         else if (opts.icon === 'horseshoe') horseshoeIcon(c, cx, iy0 + 47 + iy, 16);
         else if (opts.icon === 'star') starIcon(c, cx, iy0 + 46 + iy, 16);
         else if (opts.icon === 'wave') waveIcon(c, cx, iy0 + 40 + iy, 15);
+        else if (opts.icon === 'mask') maskIcon(c, cx, iy0 + 46 + iy, 16);
         else cup(c, cx, iy0 + 44, 14);
         for (const [t, y, size] of tl.lines) letters(c, t, y, size);
         letters(c, sub, iy1 - 32, fit(c, sub, 17));

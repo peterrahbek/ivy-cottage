@@ -1,11 +1,11 @@
 // Caches the game so it works offline once it has been opened.
 // Bump CACHE whenever a file changes, or phones keep the old version.
-const CACHE = "ivy-cottage-v25-1";
+const CACHE = "ivy-cottage-v26";
 const ASSETS = [
   "./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png",
-  "./js/util.js", "./js/tools.js", "./js/scenes.js", "./js/scenes2.js", "./js/scenes3.js", "./js/scenes4.js", "./js/scenes5.js", "./js/scenes6.js", "./js/scenes7.js", "./js/scenes8.js", "./js/scenes9.js", "./js/scenes10.js", "./js/scenes11.js", "./js/scenes12.js", "./js/scenes13.js", "./js/scenes14.js", "./js/scenes15.js", "./js/scenes16.js", "./js/scenes17.js",
-  "./js/puzzles.js", "./js/pz-cups.js", "./js/pz-feed.js", "./js/pz-hose.js", "./js/pz-beds.js", "./js/pz-plan.js", "./js/pz-books.js", "./js/pz-pack.js", "./js/pz-wheel.js", "./js/pz-owners.js", "./js/pz-post.js", "./js/pz-seek.js", "./js/pz-beads.js", "./js/pz-buttons.js", "./js/pz-lock.js", "./js/pz-jigsaw.js", "./js/paintings.js", "./js/pz-numbers.js", "./js/pz-stars.js", "./js/pz-mix.js",
-  "./js/data.js", "./js/house.js", "./js/cafe.js", "./js/cove.js", "./js/rescue.js", "./js/glasshouse.js", "./js/canal.js", "./js/books.js", "./js/pottery.js", "./js/halt.js", "./js/beads.js", "./js/curio.js", "./js/stables.js", "./js/loft.js", "./js/observatory.js", "./js/lido.js", "./js/beta.js", "./js/audio.js", "./js/engine.js", "./js/main.js",
+  "./js/util.js", "./js/tools.js", "./js/scenes.js", "./js/scenes2.js", "./js/scenes3.js", "./js/scenes4.js", "./js/scenes5.js", "./js/scenes6.js", "./js/scenes7.js", "./js/scenes8.js", "./js/scenes9.js", "./js/scenes10.js", "./js/scenes11.js", "./js/scenes12.js", "./js/scenes13.js", "./js/scenes14.js", "./js/scenes15.js", "./js/scenes16.js", "./js/scenes17.js", "./js/scenes18.js", "./js/scenes19.js",
+  "./js/puzzles.js", "./js/pz-cups.js", "./js/pz-feed.js", "./js/pz-hose.js", "./js/pz-beds.js", "./js/pz-plan.js", "./js/pz-books.js", "./js/pz-pack.js", "./js/pz-wheel.js", "./js/pz-owners.js", "./js/pz-post.js", "./js/pz-seek.js", "./js/pz-beads.js", "./js/pz-buttons.js", "./js/pz-lock.js", "./js/pz-jigsaw.js", "./js/paintings.js", "./js/pz-numbers.js", "./js/pz-stars.js", "./js/pz-mix.js", "./js/pz-letters.js", "./js/pz-maze.js",
+  "./js/data.js", "./js/house.js", "./js/cafe.js", "./js/cove.js", "./js/rescue.js", "./js/glasshouse.js", "./js/canal.js", "./js/books.js", "./js/pottery.js", "./js/halt.js", "./js/beads.js", "./js/curio.js", "./js/stables.js", "./js/loft.js", "./js/observatory.js", "./js/lido.js", "./js/theatre.js", "./js/manor.js", "./js/beta.js", "./js/audio.js", "./js/engine.js", "./js/main.js",
 ];
 // how long to wait for the network before falling back to the cached copy
 const PATIENCE = 2500;

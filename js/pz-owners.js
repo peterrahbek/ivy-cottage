@@ -552,6 +552,18 @@
   }
 
   // ---------------------------------------------------------------- VARIANTS
+  // Who took the top hat? Numbered slips, one for each note on the wall.
+  const slip = (n) => ({ name: 'Note ' + n, draw(c) {
+    c.save(); c.rotate(-0.06);
+    c.fillStyle = '#fffaf1'; c.beginPath(); c.roundRect(-23, -17, 46, 34, 6); c.fill();
+    c.strokeStyle = EDGE; c.lineWidth = 1.2; c.stroke();
+    c.strokeStyle = '#d98b63'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(-15, 1); c.lineTo(-9, 8); c.lineTo(-3, -6); c.stroke();
+    PZ.text(c, String(n), 11, 1, { size: 22, weight: 900, color: INK });
+    c.restore();
+  } });
+  Object.assign(THINGS, { note1: slip(1), note2: slip(2), note3: slip(3) });
+  const HAT_ENDS = ['It was only borrowed for the cat, who wanted a warm bed.', 'It was for the cat, asleep in it all along.', 'Taken for the cat, who likes a warm bed best.'];
+
   const COATS = ['#9cc5a1', '#d98b63', '#3d5a86', '#e3b65a', '#bba9df', '#c9474f', '#8fbfe6', '#7d8f6a'];
   const SKINS = ['#f6d3b3', '#e8b48f', '#c98d63', '#8d5a3b', '#f1c9a5', '#a8714c'];
   const HAIRS = ['#6b4a32', '#3b2a22', '#c4703f', '#e8c87a', '#9a948c', '#8a5a3a'];
@@ -575,6 +587,11 @@
       people: false, traits: DOG_TRAITS, things: ['lead', 'bell', 'starcoat', 'hearttag', 'jumper', 'checks'],
       verb: 'goes to', verbs: 'go to', who: 'a dog', anyone: 'a dog', ask: 'Read the notes, then give every dog its own',
       exclude: [['spots', 'patch']],
+    },
+    hat: {
+      people: true, whodunnit: true, traits: PEOPLE_TRAITS, things: ['note1', 'note2', 'note3'],
+      verb: 'clears', verbs: 'clear', who: 'someone', anyone: 'anyone', ask: 'Read the notes, then work out who took it',
+      exclude: [['hat', 'bow'], ['beard', 'bow'], ['dog', 'basket'], ['beard', 'scarf']],
     },
     saddles: {
       ponies: true, traits: PONY_TRAITS, things: ['saddle', 'halter', 'blanket', 'brush', 'rosette', 'bucket', 'horseshoe'],
@@ -660,6 +677,23 @@
     return null;
   }
 
+  // Who took the top hat? Four people and three notes. Each note names a trait
+  // only one of them has, and clears that one; whoever is left took it, and the
+  // reason is always a kind one. Nothing here can go wrong: a slip given to the
+  // wrong person just comes back.
+  function makeHat(r, V) {
+    const clash = (a, b) => V.exclude.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+    for (let tries = 0; tries < 400; tries++) {
+      const [a, b, c, d, e, f, g] = PZ.shuffle(r, Object.keys(V.traits));
+      const sets = [[a, f], [b, g], [c, d], [d, e]];         // the last of them took it
+      if (sets.some(([x, y]) => clash(x, y))) continue;
+      const order = PZ.shuffle(r, [0, 1, 2, 3]), owners = [];
+      sets.forEach((tr, k) => { owners[order[k]] = { key: tr.slice().sort().join(), tr: new Set(tr) }; });
+      return { owners, things: V.things.slice(), sol: order, culprit: order[3], clues: [{ t: 0, X: a, pos: true }, { t: 1, X: b, pos: true }, { t: 2, X: c, pos: true }] };
+    }
+    return null;
+  }
+
   // ---------------------------------------------------------------- SCENE
   const GX = [50, 136.7, 223.3, 310], FEET = 426;
   const TX = [50, 136.7, 223.3, 310], TY = 518;
@@ -668,8 +702,10 @@
   function owners(S) {
     const r = S.r, what = VARIANTS[S.opts.what] ? S.opts.what : 'lost', V = VARIANTS[what];
     const TALL = V.people || V.ponies; // grown people and ponies stand taller than the dogs
-    let P = makePuzzle(r, V);
-    for (let k = 0; !P && k < 20; k++) P = makePuzzle(U.rng(9001 + k), V);
+    const make = V.whodunnit ? makeHat : makePuzzle;
+    let P = make(r, V);
+    for (let k = 0; !P && k < 20; k++) P = make(U.rng(9001 + k), V);
+    const hatEnd = V.whodunnit ? U.pick(r, HAT_ENDS) : '';
     const sol = P.sol;
     // how each owner looks, beyond the two traits the notes talk about
     const looks = PZ.shuffle(r, [0, 1, 2, 3, 4, 5, 6, 7]);
@@ -702,10 +738,10 @@
       return f;
     });
     const items = P.things.map((id, t) => {
-      const hx = TX[t] + (r() - 0.5) * 16, hy = TY + (r() - 0.5) * 22, rot = (r() - 0.5) * 0.3;
+      const hx = (V.whodunnit ? 93.3 + t * 86.7 : TX[t]) + (r() - 0.5) * 16, hy = TY + (r() - 0.5) * 22, rot = (r() - 0.5) * 0.3;
       return { t, id, hx, hy, rot, x: hx, y: hy, tx: hx, ty: hy, given: false };
     });
-    const n = 4;
+    const n = items.length;
     const CW = 336, CH = 44, top = 30 + (206 - (P.clues.length * 50 - 6)) / 2;
     const cards = P.clues.map((cl, k) => ({ cl, x: 12, y: top + k * 50, tick: 0 }));
     let held = null, gdx = 0, gdy = 0, hint = null, hintT = 0, fx = null, clock = 0;
@@ -718,6 +754,7 @@
 
     function noteWords(cl) {
       const T = THINGS[P.things[cl.t]], X = V.traits[cl.X];
+      if (V.whodunnit) return ['It was not anyone', X.say];
       const verb = cl.pos ? (T.many ? V.verbs : V.verb) : T.many ? 'are not for' : 'is not for';
       return [`${T.name} ${verb}`, `${cl.pos ? V.who : V.anyone} ${X.say}`];
     }
@@ -725,7 +762,13 @@
     // ------------------------------------------------------------ the room
     function wall(c) {
       const { x0, y0, x1, y1 } = S.bleed, rr = U.rng(733);
-      if (what === 'saddles') {
+      if (V.whodunnit) {
+        // backstage: a dark red curtain behind them and the boards under their feet
+        c.fillStyle = '#6e2630'; c.fillRect(x0, y0, x1 - x0, FEET - y0);
+        for (let x = Math.floor(x0 / 24) * 24; x < x1; x += 24) { c.fillStyle = 'rgba(30,8,14,0.24)'; c.fillRect(x, y0, 10, FEET - y0); c.fillStyle = 'rgba(255,200,190,0.07)'; c.fillRect(x + 13, y0, 4, FEET - y0); }
+        c.fillStyle = '#a97f4f'; c.fillRect(x0, FEET - 2, x1 - x0, 448 - FEET);
+        c.fillStyle = 'rgba(90,60,30,0.24)'; for (let y = FEET + 6; y < 446; y += 9) c.fillRect(x0, y, x1 - x0, 1.2);
+      } else if (what === 'saddles') {
         // the tack room: limewashed boards and a cork board for the notes
         c.fillStyle = '#e9dcc2'; c.fillRect(x0, y0, x1 - x0, FEET - y0);
         for (let x = Math.floor(x0 / 30) * 30; x < x1; x += 30) {
@@ -796,7 +839,7 @@
         c.fillStyle = '#c4a57a'; c.fillRect(x0, FEET - 2, x1 - x0, 448 - FEET);
         c.fillStyle = 'rgba(90,60,30,0.2)'; for (let y = FEET + 6; y < 446; y += 9) c.fillRect(x0, y, x1 - x0, 1.2);
       }
-      PZ.text(c, V.ask, 180, 16, { size: 13, color: INK2, weight: 700, maxW: 340 });
+      PZ.text(c, V.ask, 180, 16, { size: 13, color: V.whodunnit ? '#f3e7d2' : INK2, weight: 700, maxW: 340 });
     }
     // the counter (a table at the rescue) the things wait on
     function counter(c) {
@@ -815,7 +858,7 @@
         c.fillStyle = 'rgba(90,60,30,0.16)'; for (let y = 494; y < 600; y += 40) c.fillRect(x0, y, x1 - x0, 1.5);
       }
       // a label tag in the corner says what this is
-      const label = what === 'cafe' ? 'LEFT BEHIND' : what === 'leads' ? 'LEADS & COATS' : what === 'saddles' ? 'SADDLES & TACK' : 'LOST PROPERTY';
+      const label = V.whodunnit ? 'BACKSTAGE' : what === 'cafe' ? 'LEFT BEHIND' : what === 'leads' ? 'LEADS & COATS' : what === 'saddles' ? 'SADDLES & TACK' : 'LOST PROPERTY';
       c.save(); c.translate(180, 580); c.rotate(-0.02);
       c.fillStyle = 'rgba(60,40,20,0.2)'; PZ.rr(c, -61, -9, 124, 22, 4); c.fill();
       c.fillStyle = what === 'cafe' ? '#4f5a58' : '#f6efe3'; PZ.rr(c, -62, -11, 124, 22, 4); c.fill();
@@ -832,7 +875,7 @@
       c.save(); c.translate(x + 28, cy); c.scale(0.62, 0.62); THINGS[P.things[cl.t]].draw(c); c.restore();
       dot(c, x + CW - 28, cy, 19, '#f3e9d4');
       c.save(); c.translate(x + CW - 28, cy); V.traits[cl.X].icon(c, folk.find((f) => f.tr.has(cl.X))); c.restore();
-      if (!cl.pos) {
+      if (!cl.pos || V.whodunnit) {
         c.strokeStyle = 'rgba(217,139,99,0.9)'; c.lineWidth = 3; c.lineCap = 'round';
         c.beginPath(); c.moveTo(x + CW - 40, cy - 12); c.lineTo(x + CW - 16, cy + 12); c.moveTo(x + CW - 16, cy - 12); c.lineTo(x + CW - 40, cy + 12); c.stroke();
       }
@@ -853,6 +896,26 @@
       if (V.people) person(c, f, o); else if (V.ponies) pony(c, f, o); else sitDog(c, f, o);
       c.restore();
       if (f.joy >= 0 && f.joy < 1.4) { const k = f.joy / 1.4; heart(c, GX[i] + 10, FEET - (V.people ? 160 : V.ponies ? 136 : 108) - k * 24, 6 + k * 2, `rgba(233,128,140,${(1 - k).toFixed(2)})`); }
+    }
+    // the end of the mystery: the top hat upside down by whoever took it, a cat
+    // asleep inside, and the reason on a card
+    function reveal(c) {
+      const x = GX[P.culprit] + (P.culprit < 2 ? 40 : -40), y = FEET + 8;
+      c.save(); c.translate(x, y);
+      PZ.shadow(c, 0, 2, 30, 6, 0.2);
+      c.fillStyle = '#2b2233'; c.beginPath(); c.moveTo(-20, 0); c.lineTo(-23, -34); c.lineTo(23, -34); c.lineTo(20, 0); c.closePath(); c.fill();
+      c.fillStyle = '#8c2f39'; c.fillRect(-22, -14, 44, 7);
+      c.fillStyle = '#e39a4f'; c.beginPath(); c.arc(0, -40, 15, 0, 7); c.fill();
+      for (const k of [-1, 1]) { c.beginPath(); c.moveTo(k * 13, -46); c.lineTo(k * 14, -62); c.lineTo(k * 3, -53); c.closePath(); c.fill(); }
+      c.strokeStyle = '#6b3f28'; c.lineWidth = 1.8; c.lineCap = 'round';
+      for (const k of [-1, 1]) { c.beginPath(); c.arc(k * 6, -41, 3.4, 0.2, Math.PI - 0.2); c.stroke(); }
+      c.fillStyle = '#2b2233'; c.beginPath(); c.ellipse(0, -34, 29, 7, 0, 0, 7); c.fill();
+      c.fillStyle = '#e39a4f'; c.beginPath(); c.arc(0, -40, 13, 0.1, Math.PI - 0.1); c.fill();
+      c.strokeStyle = '#6b3f28'; for (const k of [-1, 1]) { c.beginPath(); c.arc(k * 6, -43, 3.4, 0.2, Math.PI - 0.2); c.stroke(); }
+      c.restore();
+      c.fillStyle = 'rgba(50,40,30,0.25)'; PZ.rr(c, 15, 242, 334, 30, 10); c.fill();
+      c.fillStyle = PAPER; PZ.rr(c, 13, 239, 334, 30, 10); c.fill();
+      PZ.text(c, hatEnd, 180, 254.5, { size: 13.5, weight: 800, color: INK, maxW: 318 });
     }
     function drawItem(c, it, s) {
       c.save(); c.translate(it.x, it.y); c.rotate(it === held ? 0 : it.rot); c.scale(s, s); THINGS[it.id].draw(c); c.restore();
@@ -879,6 +942,7 @@
           drawItem(c, it, 1);
         }
         if (held && !still) { PZ.shadow(c, held.x + 4, held.y + 34, 22, 5, 0.13); drawItem(c, held, 1.1); }
+        if (V.whodunnit && solved()) reveal(c);
       },
       step(dt) {
         clock += dt; hintT -= dt;

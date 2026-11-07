@@ -59,6 +59,7 @@ const BETA = (() => {
     ['post', 'Parcels', '#bba9df', '#f2d88a'], ['seek', 'Finding', '#c6dcb4', '#8fbfe6'], ['beads', 'Beads', '#efb4ae', '#a6d3d4'],
     ['buttons', 'Buttons', '#f2d88a', '#efb4ae'], ['lock', 'Locked box', '#d6b07e', '#bba9df'], ['jigsaw', 'Jigsaw', '#a6d3d4', '#f2d88a'],
     ['numbers', 'Painting', '#efb4ae', '#8fbfe6'], ['stars', 'Stars', '#bba9df', '#f2d88a'], ['mix', 'Mixing', '#f2d88a', '#6f9a6a'],
+    ['letters', 'Letters', '#efb4ae', '#a6d3d4'], ['maze', 'Maze', '#c6dcb4', '#d98b63'],
   ];
   const MAKING = new Set(['wheel', 'beads', 'buttons', 'numbers', 'mix']);
   const BOARDS = { think: { name: 'Thinking', other: 'make' }, make: { name: 'Making', other: 'think' } };
@@ -437,6 +438,29 @@ const BETA = (() => {
       s += E(56.6, 58, 4.2, 4.2, '#e9bf4f') + E(56.6, 58, 1.8, 1.8, '#eaf4f4') + L('M60.8 58 H70 M66.4 58 v4 M69.6 58 v3', '#c99a2e', 2);
       s += L(ovalD(62, 58, 16, 16), '#c99a2e', 3.4) + L('M54 49 q4 -4 9 -4', '#fff', 1.4);
       return s + L('M73.6 69.6 L88 88', '#6b4a32', 5.4);
+    },
+    // letters on the marquee: F and O are up, the X is on its way to its place
+    letters() {
+      const ch = (x, y, d, size, col) => `<text x="${x}" y="${y}" text-anchor="middle" font-family="${FONT}" font-size="${size}" font-weight="900" fill="${COL ? col : PEN}">${d}</text>`;
+      const tile = (x, d) => P(`M${x - 11} 30 h22 v25 h-22Z`, '#fffaf1') + ch(x, 49, d, 19, '#3b352e');
+      let s = P('M8 16 H92 V68 H8Z', '#7c2d35', true) + P('M13 27 H87 V58 H13Z', '#fbf1d6');
+      for (let x = 14; x <= 86; x += 12) s += E(x, 21.6, 2.3, 2.3, '#f2d88a') + E(x, 62.6, 2.3, 2.3, '#f2d88a');
+      s += tile(26, 'F') + tile(50, 'O');
+      s += `<rect x="63" y="30" width="22" height="25" fill="none" stroke="${COL ? '#b58a2e' : PEN}" stroke-width="1" stroke-dasharray="2.4 2"/><g opacity="0.45">${ch(74, 49, 'X', 19, '#b5a27f')}</g>`;
+      // the doors underneath, and the last letter coming up from the tray
+      s += P('M18 68 H52 V94 H18Z', '#9c3a43', true) + L('M35 68 V94', dark('#9c3a43', 0.4), 1.2);
+      s += `<g transform="rotate(8 74 83)">${P('M63 71 h22 v25 h-22Z', '#fffaf1')}${ch(74, 90, 'X', 19, '#3b352e')}</g>`;
+      return s + L('M90 76 q3 -4 0 -9 M58 79 q-2 -3 0 -7', '#e9bf4f', 1.2);
+    },
+    // the maze from above: a way round the hedges to the fountain in the middle
+    maze() {
+      const hedges = 'M42 92 H10 V12 H90 V92 H58 M42 28 H74 V76 H26 V28 M42 60 V44 H58 V60';
+      let s = P('M10 12 H90 V92 H10Z', '#ece1ca');
+      s += L(hedges, '#3f7a4a', 5.4) + L(hedges, '#7fb26e', 1.6);
+      // the line of light, most of the way there, and the last bit still dotted
+      s += L('M50 96 V84 H18 V20 H34 V36 H66 V68', '#e9962c', 3.2);
+      s += `<path d="M66 68 H50 V57" fill="none" stroke="${COL ? '#e9962c' : PEN}" stroke-width="1.6" stroke-dasharray="0.1 3.6" stroke-linecap="round"/>`;
+      return s + E(50, 52, 4.8, 4.8, '#86c4d6') + E(50, 52, 1.7, 1.7, '#fffaf1');
     },
   };
 

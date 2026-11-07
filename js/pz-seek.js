@@ -970,6 +970,43 @@
     },
     // the curiosity shop: a tall glass-fronted cabinet against a deep green
     // wall, a clock and an old map above it and a rug on the floor
+    // the portrait gallery at the manor: little things tucked into the frames
+    manor: {
+      items: ['key', 'compass', 'quill', 'feather', 'glasses', 'bell', 'candle', 'hourglass', 'watch', 'inkpot', 'magnifier', 'teacup', 'envelope', 'ship', 'spyglass'],
+      spots: [...row(156, xs5), ...row(252, xs5), ...row(348, xs5), ...row(438, [70, 180, 290])],
+      clutter: ['vase', 'stack', 'vase'],
+      fill: ['mini'],
+      back(c, b, rr) {
+        c.fillStyle = '#34503f'; c.fillRect(b.x0, b.y0, b.x1 - b.x0, 392 - b.y0);
+        for (let y = 40, k = 0; y < 392; y += 30, k++) for (let x = Math.floor(b.x0 / 30) * 30 + (k % 2 ? 21 : 6); x < b.x1; x += 30) { c.fillStyle = 'rgba(214,180,90,0.16)'; c.beginPath(); c.arc(x, y, 1.6, 0, TAU); c.arc(x - 3, y + 3.4, 1.1, 0, TAU); c.arc(x + 3, y + 3.4, 1.1, 0, TAU); c.fill(); }
+        c.fillStyle = 'rgba(15,25,15,0.3)'; PZ.rr(c, 90, 45, 180, 28, 5); c.fill();
+        c.fillStyle = '#c9a14a'; PZ.rr(c, 88, 42, 180, 28, 5); c.fill();
+        c.strokeStyle = 'rgba(110,80,20,0.6)'; c.lineWidth = 1.2; PZ.rr(c, 92, 46, 172, 20, 3); c.stroke();
+        PZ.text(c, 'THE LONG GALLERY', 178, 56.5, { size: 13.5, weight: 900, color: '#4a3510' });
+        // a gilt frame round every spot, a dim sitter inside, a picture rail under each row
+        const coats = ['#6e2630', '#2b3a66', '#4e6b4a', '#5a4a6e', '#7a5a3a'], skins = ['#d9b896', '#c9a07c', '#e4c6a8'];
+        for (const y of [156, 252, 348]) {
+          for (const x of xs5) {
+            const fx = x - 30, fy = y - 88, fw = 60, fh = 84;
+            c.fillStyle = 'rgba(10,20,10,0.32)'; c.fillRect(fx + 3, fy + 4, fw, fh);
+            c.fillStyle = '#c49a35'; c.fillRect(fx, fy, fw, fh);
+            c.fillStyle = 'rgba(255,240,190,0.5)'; c.fillRect(fx, fy, fw, 1.6);
+            c.fillStyle = '#ead7a4'; c.fillRect(fx + 5, fy + 5, fw - 10, fh - 10);
+            c.fillStyle = U.mix('#2d2a26', U.pick(rr, ['#4a3a2a', '#2f3d36', '#3a3448']), 0.6); c.fillRect(fx + 7, fy + 7, fw - 14, fh - 14);
+            c.save(); c.beginPath(); c.rect(fx + 7, fy + 7, fw - 14, fh - 14); c.clip();
+            const k = (rr() * 5) | 0, sk = skins[(rr() * 3) | 0];
+            c.fillStyle = U.mix(coats[k], '#22201c', 0.3); c.beginPath(); c.ellipse(x, fy + fh - 4, 24, 26, 0, 0, TAU); c.fill();
+            c.fillStyle = U.mix(sk, '#22201c', 0.28); c.beginPath(); c.arc(x, fy + 32, 11, 0, TAU); c.fill();
+            c.fillStyle = 'rgba(40,30,25,0.8)'; c.beginPath(); c.arc(x, fy + 28, 12, Math.PI, 0); c.fill();
+            c.restore();
+          }
+          shelf(c, rr, 8, 352, y, '#6b3f28');
+        }
+        c.fillStyle = '#6b3f28'; c.fillRect(b.x0, 380, b.x1 - b.x0, 12); c.fillStyle = 'rgba(255,230,190,0.25)'; c.fillRect(b.x0, 380, b.x1 - b.x0, 1.4);
+        floorboards(c, b.x0, 392, b.x1, BOT, '#a97f4f', rr);
+        c.fillStyle = 'rgba(140,40,50,0.86)'; c.fillRect(30, 400, 300, BOT - 412); c.strokeStyle = '#d8ae4e'; c.lineWidth = 2; c.strokeRect(38, 408, 284, BOT - 428);
+      },
+    },
     curio: {
       items: ['key', 'compass', 'quill', 'magnifier', 'hourglass', 'candle', 'inkpot', 'glasses', 'bell', 'teacup', 'ship', 'spyglass', 'shell', 'dice', 'mask'],
       spots: [...row(156, xs5), ...row(252, xs5), ...row(348, xs5), ...row(438, [70, 180, 290])],

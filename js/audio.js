@@ -379,6 +379,28 @@ const AUDIO = (() => {
         [[0, 8, 1.5], [1.5, 10, 0.5], [2, 13, 2]], [[0, 12, 1], [1, 10, 1], [2, 8, 2]], [[0, 9, 1], [1, 11, 1], [2, 9, 2]], [[0, 8, 4]],
       ],
     },
+    // the little theatre: a slow variety waltz on the old upright, leaning a little on every phrase
+    theatre: {
+      beats: 3, bpm: 80,
+      chords: [[1], [6], [2, 1], [5], [1], [3], [4], [5], [1], [6], [4], [1], [2, 1], [5], [1], [1]],
+      melody: [
+        [[0, 5, 1], [1, 8, 1], [2, 10, 1]], [[0, 10, 1.5], [1.5, 9, 0.5], [2, 8, 1]], [[0, 9, 2], [2, 7, 1]], [[0, 7, 1], [1, 6, 1], [2, 5, 1]],
+        [[0, 5, 1], [1, 8, 1], [2, 10, 1]], [[0, 10, 1], [1, 12, 1], [2, 10, 1]], [[0, 11, 1.5], [1.5, 10, 0.5], [2, 8, 1]], [[0, 9, 3]],
+        [[0, 12, 1], [1, 10, 1], [2, 8, 1]], [[0, 10, 1.5], [1.5, 8, 0.5], [2, 6, 1]], [[0, 8, 1], [1, 6, 1], [2, 4, 1]], [[0, 5, 2], [2, 8, 1]],
+        [[0, 9, 1.5], [1.5, 10, 0.5], [2, 9, 1]], [[0, 7, 1], [1, 9, 1], [2, 12, 1]], [[0, 10, 1], [1, 9, 1], [2, 10, 1]], [[0, 8, 3]],
+      ],
+    },
+    // the manor: the cottage's own first tune again, slowly and like a hymn, on a soft organ
+    manor: {
+      bpm: 54, lead: 'organ', sparse: true,
+      chords: [[1], [5], [6], [4], [1], [4], [2], [5], [4], [1], [6], [5], [4], [1], [5], [1]],
+      melody: [
+        [[0, 3, 2], [2, 5, 1], [3, 8, 1]], [[0, 7, 2], [2, 5, 2]], [[0, 6, 2], [2, 3, 2]], [[0, 4, 2], [2, 2, 2]],
+        [[0, 3, 2], [2, 5, 1], [3, 8, 1]], [[0, 10, 2], [2, 8, 2]], [[0, 9, 2], [2, 6, 2]], [[0, 5, 4]],
+        [[0, 6, 2], [2, 8, 2]], [[0, 9, 2], [2, 8, 2]], [[0, 6, 2], [2, 8, 2]], [[0, 7, 4]],
+        [[0, 4, 2], [2, 6, 1], [3, 8, 1]], [[0, 10, 2], [2, 8, 2]], [[0, 9, 2], [2, 7, 2]], [[0, 8, 4]],
+      ],
+    },
   };
   const KEY = { spring: 65, summer: 60, autumn: 62, winter: 67 };
   let theme = { place: 'cottage', season: 'spring', night: false }, nextTheme = null;
@@ -397,6 +419,17 @@ const AUDIO = (() => {
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(lp); o2.connect(g2); g2.connect(lp); lp.connect(g); out(g, 0.35);
     o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
+  }
+  // a soft organ: three partials that swell in and hold, far back in the room
+  function organ(f, t, vol, dur) {
+    const g = ac.createGain();
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.16); g.gain.setValueAtTime(vol, t + Math.max(0.2, dur - 0.1)); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.5);
+    [[1, 1], [2, 0.34], [3, 0.12]].forEach(([k, a]) => {
+      const o = ac.createOscillator(), p = ac.createGain();
+      o.type = 'sine'; o.frequency.value = f * k; p.gain.value = a;
+      o.connect(p); p.connect(g); o.start(t); o.stop(t + dur + 0.6);
+    });
+    out(g, 0.6);
   }
   // music box: a pure tone with a faint, quickly fading bell partial
   function box(f, t, vol) {
@@ -535,7 +568,7 @@ const AUDIO = (() => {
       for (const [at, d, len] of tune.melody[i]) {
         if (theme.night && r() < 0.25) continue;
         const f = midi(note(tonic + 12 + up - (tune.under || 0), d)), v = 0.07 * (len >= 2 ? 1 : 0.85);
-        if (tune.lead === 'bowl') bowl(f, t + at * beat, v * 1.25, len * beat); else if (tune.lead === 'vibes') vibes(f, t + at * beat, v * 0.95); else if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else if (tune.lead === 'uke') uke(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
+        if (tune.lead === 'bowl') bowl(f, t + at * beat, v * 1.25, len * beat); else if (tune.lead === 'organ') organ(f, t + at * beat, v * 0.62, len * beat); else if (tune.lead === 'vibes') vibes(f, t + at * beat, v * 0.95); else if (tune.lead === 'mallet') mallet(f, t + at * beat, v * 0.9); else if (tune.lead === 'comb') comb(f, t + at * beat, v * 0.95); else if (tune.lead === 'uke') uke(f, t + at * beat, v * 0.9); else box(f, t + at * beat, v);
       }
     }
   }
